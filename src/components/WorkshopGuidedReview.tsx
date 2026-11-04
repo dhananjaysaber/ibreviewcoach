@@ -15,7 +15,7 @@ function relevance(f:WorkshopFinding, check:WorkshopCheck){
 }
 type VerifiedResult={id:string;status:'complete'|'partial'|'missing'|'not_applicable'|'unverified';reason:string;action:string;evidence_excerpt:string|null;source_location:string|null};
 type AuditRow={checks:VerifiedResult[];source_completeness:string;created_at:string};
-const auditEnabled=import.meta.env.VITE_ENABLE_WORKSHOP_AUDIT==='true';
+const auditEnabled=import.meta.env.VITE_ENABLE_WORKSHOP_AUDIT!=='false';
 export function WorkshopGuidedReview({findings,criteria,freePreview=false,submissionId}:{findings:WorkshopFinding[];criteria:WorkshopCriterion[];freePreview?:boolean;submissionId?:string}){
  const [sectionId,setSectionId]=useState('rq');
  const [expanded,setExpanded]=useState<string[]>([]);
