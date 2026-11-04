@@ -52,7 +52,6 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
  const [selected,setSelected]=useState<string|null>(null);
  const [showHelp,setShowHelp]=useState(false);
  const [showEvidence,setShowEvidence]=useState(false);
- const [showAllChecks,setShowAllChecks]=useState(false);
  const [verified,setVerified]=useState<Record<string,AuditRow>>({});
  const [loading,setLoading]=useState(false);
  const [message,setMessage]=useState('');
@@ -84,7 +83,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
    setVerified(old=>({...old,[sectionId]:data.audit as AuditRow}));
   }catch(e){setMessage(e instanceof Error?e.message:'Unable to audit this section.')}finally{setLoading(false)}
  }
- function chooseSection(id:string){setSectionId(id);setSelected(null);setShowHelp(false);setShowEvidence(false);setShowAllChecks(false);setMessage('')}
+ function chooseSection(id:string){setSectionId(id);setSelected(null);setShowHelp(false);setShowEvidence(false);setMessage('')}
  function chooseFinding(id:string){setSelected(id);setShowHelp(false);setShowEvidence(false)}
  const quoted=active?meaningfulExcerpt(active.finding.evidence_excerpt):null;
  return <section className="wg2" aria-label="IA annotated improvement coach">
