@@ -23,11 +23,11 @@ function sectionFor(f:WorkshopFinding):EnrichedFinding{
  let best:{sectionId:string;check:WorkshopCheck|null;score:number}={sectionId:candidates[0]?.id||'rq',check:null,score:-1};
  const material=[f.issue,f.rubric_requirement,f.specific_action,(f.required_elements||[]).join(' '),target].join(' ').toLowerCase();
  for(const s of candidates){
-  const sectionName=s.name.toLowerCase();
+  const sectionName=s.name.toLowerCase().replace(/^\d+\s*[·.\-]\s*/, '');
   let sectionScore=target&&(target.includes(sectionName)||sectionName.includes(target))?9:0;
   if(s.id==='rq'&&/research question/.test(material))sectionScore+=3;
   if(s.id==='background'&&/background|literature|introduction|scientific rationale/.test(material))sectionScore+=4;
-  if(s.id==='methodology'&&/protocol|testing procedure|warm.up|randomis|reproduc|participant selection/.test(material))sectionScore+=4;
+  if(s.id==='method'&&/protocol|testing procedure|warm.up|randomis|reproduc|participant selection/.test(material))sectionScore+=4;
   if(s.id==='variables'&&/controlled variable|independent variable|dependent variable|confound/.test(material))sectionScore+=4;
   if(s.id==='safety'&&/safety|consent|ethical|hazard/.test(material))sectionScore+=5;
   if(s.id==='data'&&/graph|statistic|analysis|raw data|anova|standard deviation/.test(material))sectionScore+=4;
