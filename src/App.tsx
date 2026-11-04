@@ -5771,6 +5771,7 @@ function CompletionWorkspace({
                     criteria={reviewData.criteria}
                     freePreview={isFreeReview}
                     submissionId={submission?.id}
+                    onOpenAnnotatedIa={canOpenAnnotatedIa ? handleOpenAnnotatedIa : undefined}
                   />
                 )}
 
