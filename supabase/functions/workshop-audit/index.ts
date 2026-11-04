@@ -1,5 +1,5 @@
 /**
- * IA Workshop Audit — local staging source; DO NOT DEPLOY TO PRODUCTION YET.
+ * IA Workshop Audit — additive server-side evidence audit for IB Review Coach.
  * Additive section-at-a-time audit with evidence verification.
  * Existing IB SEHS rubric and published review functions are never mutated.
  *
