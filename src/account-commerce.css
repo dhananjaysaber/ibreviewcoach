@@ -1,0 +1,1039 @@
+/* ==========================================================================
+   SEHS IA Review Coach — My Account purchases, credits and invoice
+   Create at: src/account-commerce.css
+   ========================================================================== */
+
+.auth-panel-account {
+  width: min(840px, 100%);
+}
+
+.account-commerce {
+  margin-top: 18px;
+  padding-top: 22px;
+  display: grid;
+  gap: 18px;
+  border-top: 1px solid #e1e7f0;
+}
+
+.account-commerce-loading {
+  min-height: 130px;
+  place-items: center;
+  align-content: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.account-commerce-spinner {
+  width: 18px;
+  height: 18px;
+  animation: account-commerce-spin 850ms linear infinite;
+}
+
+@keyframes account-commerce-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.account-commerce-heading,
+.account-purchase-section-heading,
+.account-purchase-title-row,
+.account-invoice-heading,
+.account-invoice-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.account-commerce-heading > div,
+.account-purchase-section-heading > div,
+.account-invoice-heading > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.account-commerce-heading span,
+.account-purchase-section-heading span,
+.account-invoice-heading > div > span {
+  color: var(--blue);
+  font-size: 0.67rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.account-commerce-heading h3,
+.account-purchase-section-heading h4,
+.account-invoice-heading h3 {
+  margin: 0;
+  color: var(--navy);
+}
+
+.account-commerce-heading h3 {
+  font-size: 1.12rem;
+}
+
+.account-purchase-section-heading h4 {
+  font-size: 1rem;
+}
+
+.account-commerce-icon-button,
+.account-invoice-close {
+  flex: 0 0 auto;
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d4deeb;
+  border-radius: 12px;
+  color: var(--blue);
+  background: white;
+  cursor: pointer;
+}
+
+.account-commerce-icon-button:hover,
+.account-invoice-close:hover {
+  border-color: #afc1dc;
+  background: #f4f7fc;
+}
+
+.account-commerce-icon-button svg,
+.account-invoice-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.account-credit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.account-credit-card {
+  min-width: 0;
+  padding: 16px;
+  display: grid;
+  gap: 5px;
+  border: 1px solid #dce4ef;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #ffffff, #f7f9fd);
+  box-shadow: 0 8px 20px rgba(21, 52, 95, 0.05);
+}
+
+.account-credit-card-icon {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: white;
+  background: linear-gradient(145deg, var(--navy), var(--blue));
+}
+
+.account-credit-card-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.account-credit-card > span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.account-credit-card > strong {
+  color: var(--navy);
+  font-size: 1.34rem;
+}
+
+.account-credit-card > small {
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.4;
+}
+
+.account-credit-breakdown {
+  padding: 11px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  border: 1px solid #dfe6f0;
+  border-radius: 13px;
+  background: #f8faff;
+}
+
+.account-credit-breakdown span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.account-credit-breakdown strong {
+  color: var(--navy);
+  font-size: 0.8rem;
+}
+
+.account-commerce-notice,
+.account-pending-banner,
+.account-purchase-failure {
+  padding: 13px 15px;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  border-radius: 14px;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.account-commerce-notice svg,
+.account-pending-banner svg,
+.account-purchase-failure svg {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+.account-commerce-notice > div,
+.account-pending-banner > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.account-commerce-notice strong,
+.account-pending-banner strong {
+  font-size: 0.78rem;
+}
+
+.account-commerce-notice-success {
+  border: 1px solid #bce1d2;
+  color: #17684e;
+  background: #eff9f5;
+}
+
+.account-commerce-notice-warning,
+.account-pending-banner {
+  border: 1px solid #ead39c;
+  color: #795519;
+  background: #fff8e6;
+}
+
+.account-commerce-notice-error,
+.account-purchase-failure {
+  border: 1px solid #ebc5bf;
+  color: #8b382f;
+  background: #fff1ef;
+}
+
+.account-purchase-section {
+  display: grid;
+  gap: 12px;
+}
+
+.account-purchase-section-heading > strong {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.account-purchase-list {
+  display: grid;
+  gap: 12px;
+}
+
+.account-purchase-card {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  border: 1px solid #dce4ef;
+  border-radius: 17px;
+  background: white;
+  box-shadow: 0 8px 22px rgba(21, 52, 95, 0.045);
+}
+
+.account-purchase-primary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.account-purchase-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.account-purchase-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.account-purchase-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.account-purchase-title-row {
+  align-items: flex-start;
+}
+
+.account-purchase-title-row > strong {
+  color: var(--navy);
+  font-size: 0.88rem;
+}
+
+.account-purchase-copy > span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.account-purchase-copy > small {
+  color: #8490a1;
+  font-size: 0.68rem;
+}
+
+.account-payment-status {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.account-payment-status-paid {
+  border-color: #bce1d2;
+  color: #17684e;
+  background: #eff9f5;
+}
+
+.account-payment-status-pending {
+  border-color: #e9d199;
+  color: #76521a;
+  background: #fff7e2;
+}
+
+.account-payment-status-failed {
+  border-color: #ebc5bf;
+  color: #8b382f;
+  background: #fff1ef;
+}
+
+.account-purchase-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.account-purchase-detail {
+  min-width: 0;
+  padding: 10px 11px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid #e4e9f1;
+  border-radius: 11px;
+  background: #fafcff;
+}
+
+.account-purchase-detail span {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.account-purchase-detail strong {
+  color: var(--navy);
+  overflow-wrap: anywhere;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.account-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', monospace;
+}
+
+.account-purchase-failure {
+  padding: 10px 12px;
+}
+
+.account-purchase-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.account-commerce-primary-button,
+.account-commerce-secondary-button {
+  min-height: 39px;
+  padding: 9px 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 11px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.account-commerce-primary-button {
+  border: 1px solid var(--blue);
+  color: white;
+  background: var(--blue);
+  box-shadow: 0 7px 16px rgba(49, 86, 163, 0.17);
+}
+
+.account-commerce-primary-button:hover:not(:disabled) {
+  border-color: var(--navy);
+  background: var(--navy);
+}
+
+.account-commerce-secondary-button {
+  border: 1px solid #ced9e8;
+  color: var(--navy);
+  background: white;
+}
+
+.account-commerce-secondary-button:hover:not(:disabled) {
+  border-color: #acbfd9;
+  background: #f6f8fc;
+}
+
+.account-commerce-primary-button:disabled,
+.account-commerce-secondary-button:disabled {
+  cursor: wait;
+  opacity: 0.66;
+}
+
+.account-commerce-primary-button svg,
+.account-commerce-secondary-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.account-purchase-empty {
+  min-height: 130px;
+  padding: 20px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 5px;
+  border: 1px dashed #cbd7e7;
+  border-radius: 16px;
+  color: var(--muted);
+  background: #fafcff;
+  text-align: center;
+}
+
+.account-purchase-empty svg {
+  width: 25px;
+  height: 25px;
+  color: var(--blue);
+}
+
+.account-purchase-empty strong {
+  color: var(--navy);
+  font-size: 0.84rem;
+}
+
+.account-purchase-empty span {
+  max-width: 330px;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.account-invoice-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  padding: 22px;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  background: rgba(11, 24, 45, 0.72);
+  backdrop-filter: blur(7px);
+}
+
+.account-invoice-modal {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: calc(100vh - 44px);
+  overflow-y: auto;
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 28px 75px rgba(8, 23, 47, 0.3);
+}
+
+.account-invoice-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.account-invoice-brand {
+  margin-bottom: 24px;
+  display: grid;
+  gap: 2px;
+}
+
+.account-invoice-brand span {
+  color: var(--blue);
+  font-size: 1.08rem;
+  font-weight: 900;
+}
+
+.account-invoice-brand strong {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.account-invoice-heading {
+  padding-right: 45px;
+}
+
+.account-invoice-heading h3 {
+  font-size: 1.3rem;
+  overflow-wrap: anywhere;
+}
+
+.account-invoice-meta,
+.account-invoice-payment-details {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.account-invoice-line {
+  margin-top: 22px;
+  padding: 18px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid #dfe6ef;
+  border-bottom: 1px solid #dfe6ef;
+}
+
+.account-invoice-line > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.account-invoice-line > div strong {
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+.account-invoice-line > div span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.account-invoice-line > strong {
+  flex: 0 0 auto;
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+.account-invoice-total {
+  padding: 18px 0 4px;
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 24px;
+}
+
+.account-invoice-total span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.account-invoice-total strong {
+  color: var(--blue);
+  font-size: 1.42rem;
+}
+
+.account-invoice-payment-details > div {
+  min-width: 0;
+  padding: 12px;
+  display: grid;
+  gap: 5px;
+  border-radius: 12px;
+  background: #f5f8fc;
+}
+
+.account-invoice-payment-details span {
+  color: var(--muted);
+  font-size: 0.61rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.account-invoice-payment-details strong {
+  color: var(--navy);
+  overflow-wrap: anywhere;
+  font-size: 0.7rem;
+}
+
+.account-invoice-note {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.55;
+}
+
+.account-invoice-actions {
+  margin-top: 22px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 720px) {
+  .auth-panel-account {
+    width: 100%;
+  }
+
+  .account-credit-grid,
+  .account-purchase-details {
+    grid-template-columns: 1fr;
+  }
+
+  .account-invoice-meta,
+  .account-invoice-payment-details {
+    grid-template-columns: 1fr;
+  }
+
+  .account-commerce-heading,
+  .account-purchase-section-heading,
+  .account-purchase-title-row,
+  .account-invoice-heading,
+  .account-invoice-line {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .account-commerce-heading,
+  .account-purchase-section-heading,
+  .account-invoice-heading,
+  .account-invoice-line,
+  .account-invoice-actions {
+    flex-direction: column;
+  }
+
+  .account-commerce-icon-button {
+    align-self: flex-end;
+  }
+
+  .account-purchase-actions,
+  .account-invoice-actions {
+    width: 100%;
+  }
+
+  .account-commerce-primary-button,
+  .account-commerce-secondary-button {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+     Dedicated My Account page
+     ========================================================================== */
+
+.account-page-main {
+  min-height: calc(100vh - 78px);
+  padding: clamp(26px, 4vw, 54px) 20px 64px;
+  background: radial-gradient(
+      circle at 15% 8%,
+      rgba(63, 103, 179, 0.12),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 88% 18%,
+      rgba(210, 172, 85, 0.12),
+      transparent 24%
+    ),
+    linear-gradient(180deg, #f7f9fd 0%, #eef3f9 100%);
+}
+
+.account-page-shell {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 20px;
+}
+
+.account-page-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.account-page-back-button,
+.account-page-security {
+  min-height: 39px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.account-page-back-button {
+  padding: 8px 12px;
+  border: 1px solid #d2ddea;
+  border-radius: 11px;
+  color: var(--navy);
+  background: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+}
+
+.account-page-back-button:hover {
+  border-color: #afc0d8;
+  background: white;
+}
+
+.account-page-back-button svg,
+.account-page-security svg {
+  width: 17px;
+  height: 17px;
+}
+
+.account-page-security {
+  color: #48617f;
+}
+
+.account-page-hero {
+  padding: clamp(24px, 4vw, 40px);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(250px, auto);
+  gap: 22px;
+  align-items: center;
+  border: 1px solid rgba(211, 222, 236, 0.95);
+  border-radius: 24px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.98),
+    rgba(247, 250, 255, 0.96)
+  );
+  box-shadow: 0 20px 55px rgba(19, 44, 80, 0.1);
+}
+
+.account-page-hero-mark {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  color: white;
+  background: linear-gradient(145deg, var(--navy), var(--blue));
+  box-shadow: 0 14px 28px rgba(40, 74, 139, 0.25);
+}
+
+.account-page-hero-mark svg {
+  width: 29px;
+  height: 29px;
+}
+
+.account-page-hero-copy {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.account-page-hero-copy > span {
+  color: var(--blue);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.account-page-hero-copy h1 {
+  margin: 0;
+  color: var(--navy);
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+  line-height: 1.08;
+}
+
+.account-page-hero-copy p {
+  max-width: 700px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+
+.account-page-identity {
+  min-width: 250px;
+  padding: 15px 17px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 11px;
+  align-items: center;
+  border: 1px solid #d8e2ef;
+  border-radius: 15px;
+  background: #f6f9fe;
+}
+
+.account-page-identity > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--blue);
+}
+
+.account-page-identity > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.account-page-identity span {
+  color: var(--muted);
+  font-size: 0.63rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.account-page-identity strong {
+  overflow-wrap: anywhere;
+  color: var(--navy);
+  font-size: 0.77rem;
+}
+
+.account-page-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 330px);
+  gap: 20px;
+  align-items: start;
+}
+
+.account-page-primary,
+.account-page-sidebar {
+  min-width: 0;
+}
+
+.account-page-primary {
+  padding: clamp(20px, 3vw, 30px);
+  border: 1px solid #d9e2ee;
+  border-radius: 22px;
+  background: white;
+  box-shadow: 0 14px 36px rgba(20, 46, 82, 0.07);
+}
+
+.account-page-primary .account-commerce {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.account-page-sidebar {
+  position: sticky;
+  top: 94px;
+  display: grid;
+  gap: 14px;
+}
+
+.account-page-action-card {
+  padding: 19px;
+  display: grid;
+  gap: 7px;
+  border: 1px solid #dbe4ef;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 10px 28px rgba(21, 48, 84, 0.06);
+}
+
+.account-page-action-icon {
+  width: 39px;
+  height: 39px;
+  margin-bottom: 3px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: white;
+  background: linear-gradient(145deg, var(--navy), var(--blue));
+}
+
+.account-page-action-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.account-page-action-card > span {
+  color: var(--blue);
+  font-size: 0.63rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.account-page-action-card h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+.account-page-action-card p {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.52;
+}
+
+.account-page-primary-button,
+.account-page-secondary-button,
+.account-page-signout-button {
+  min-height: 41px;
+  padding: 9px 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 11px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.account-page-primary-button {
+  border: 1px solid var(--blue);
+  color: white;
+  background: var(--blue);
+  box-shadow: 0 8px 18px rgba(42, 81, 157, 0.18);
+}
+
+.account-page-primary-button:hover:not(:disabled) {
+  border-color: var(--navy);
+  background: var(--navy);
+}
+
+.account-page-secondary-button {
+  border: 1px solid #cad7e7;
+  color: var(--navy);
+  background: #f8faff;
+}
+
+.account-page-secondary-button:hover:not(:disabled) {
+  border-color: #aebfd7;
+  background: #f0f5fb;
+}
+
+.account-page-signout-button {
+  border: 1px solid #e4c6c2;
+  color: #8a3a33;
+  background: #fff7f5;
+}
+
+.account-page-signout-button:hover:not(:disabled) {
+  border-color: #d7aaa4;
+  background: #fff0ed;
+}
+
+.account-page-primary-button:disabled,
+.account-page-secondary-button:disabled,
+.account-page-signout-button:disabled {
+  cursor: wait;
+  opacity: 0.66;
+}
+
+.account-page-primary-button svg,
+.account-page-secondary-button svg,
+.account-page-signout-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 980px) {
+  .account-page-hero {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .account-page-identity {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .account-page-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .account-page-sidebar {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-page-signout-button {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .account-page-main {
+    padding: 20px 12px 48px;
+  }
+
+  .account-page-topbar {
+    align-items: flex-start;
+  }
+
+  .account-page-security {
+    display: none;
+  }
+
+  .account-page-hero {
+    padding: 22px 18px;
+    grid-template-columns: 1fr;
+  }
+
+  .account-page-hero-mark {
+    width: 52px;
+    height: 52px;
+  }
+
+  .account-page-identity {
+    min-width: 0;
+  }
+
+  .account-page-primary {
+    padding: 17px 14px;
+  }
+
+  .account-page-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .account-page-signout-button {
+    grid-column: auto;
+  }
+}

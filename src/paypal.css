@@ -1,0 +1,349 @@
+.paypal-checkout-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  padding: 22px;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  background: rgba(9, 22, 45, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.paypal-checkout-modal {
+  position: relative;
+  width: min(590px, 100%);
+  padding: clamp(24px, 5vw, 36px);
+  border: 1px solid #d4dfef;
+  border-radius: 25px;
+  color: #17233d;
+  background: radial-gradient(
+      circle at 100% 0%,
+      rgba(74, 145, 245, 0.15),
+      transparent 30%
+    ),
+    linear-gradient(160deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 28px 85px rgba(6, 22, 50, 0.32);
+}
+
+.paypal-checkout-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d9e2ef;
+  border-radius: 12px;
+  color: #5a6980;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.paypal-checkout-close:hover:not(:disabled) {
+  color: #173d7a;
+  background: #eef4ff;
+}
+
+.paypal-checkout-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.paypal-checkout-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.paypal-checkout-heading {
+  padding-right: 44px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.paypal-checkout-icon {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  color: #2459a8;
+  background: linear-gradient(145deg, #e8f2ff, #f4efff);
+}
+
+.paypal-checkout-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.paypal-checkout-heading span {
+  color: #3970c6;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.paypal-checkout-heading h2 {
+  margin: 3px 0 0;
+  color: #15274a;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.paypal-order-summary {
+  margin: 23px 0 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.paypal-order-summary > div {
+  min-height: 88px;
+  padding: 14px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  border: 1px solid #dbe4f1;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.paypal-order-summary > div:nth-child(1) {
+  background: linear-gradient(145deg, #eef7ff, #ffffff);
+}
+
+.paypal-order-summary > div:nth-child(2) {
+  background: linear-gradient(145deg, #fff8e9, #ffffff);
+}
+
+.paypal-order-summary > div:nth-child(3) {
+  background: linear-gradient(145deg, #f4efff, #ffffff);
+}
+
+.paypal-order-summary span {
+  color: #6a7890;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.paypal-order-summary strong {
+  color: #183a70;
+  font-size: 1.03rem;
+}
+
+.paypal-checkout-status,
+.paypal-result {
+  margin-bottom: 16px;
+  padding: 13px 15px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 13px;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.paypal-checkout-status {
+  align-items: center;
+  color: #375779;
+  background: #eef6ff;
+}
+
+.paypal-checkout-spinner {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  animation: paypal-spin 0.85s linear infinite;
+}
+
+.paypal-result > svg {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+}
+
+.paypal-result strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.paypal-result p {
+  margin: 0;
+}
+
+.paypal-result span {
+  display: block;
+  margin-top: 7px;
+  font-weight: 850;
+}
+
+.paypal-result-success {
+  color: #14674f;
+  border: 1px solid #bfe4d6;
+  background: #ecf9f5;
+}
+
+.paypal-result-error {
+  color: #913b2f;
+  border: 1px solid #eccbc5;
+  background: #fff0ed;
+}
+
+.paypal-result-pending {
+  color: #76521a;
+  border: 1px solid #ecd49b;
+  background: #fff8e6;
+}
+
+.paypal-result-pending span {
+  color: #76521a;
+}
+
+.paypal-result-cancelled {
+  color: #7d5b21;
+  border: 1px solid #eedaa9;
+  background: #fff9e9;
+}
+
+.paypal-button-container {
+  min-height: 52px;
+}
+
+.paypal-button-container-loading {
+  min-height: 58px;
+  border-radius: 13px;
+  background: linear-gradient(90deg, #eef2f8 25%, #f8faff 50%, #eef2f8 75%);
+  background-size: 200% 100%;
+  animation: paypal-skeleton 1.25s ease infinite;
+}
+
+.paypal-success-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 9px;
+}
+
+.paypal-primary-action,
+.paypal-secondary-action {
+  min-height: 47px;
+  padding: 11px 17px;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.paypal-primary-action {
+  border: 1px solid #1f4f9a;
+  color: #ffffff;
+  background: #1f4f9a;
+}
+
+.paypal-primary-action:hover {
+  background: #173d7a;
+}
+
+.paypal-secondary-action {
+  border: 1px solid #c9d6e9;
+  color: #285595;
+  background: #ffffff;
+}
+
+.paypal-secondary-action:hover {
+  background: #eef4ff;
+}
+
+.paypal-wide-action {
+  width: 100%;
+}
+
+.paypal-security-note,
+.paypal-integrity-note {
+  margin-top: 14px;
+  padding: 11px 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  border-radius: 11px;
+  color: #65748b;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.paypal-security-note {
+  border: 1px solid #dce4ef;
+  background: #f7f9fc;
+}
+
+.paypal-integrity-note {
+  margin-top: 8px;
+  border: 1px solid #e8d9b6;
+  background: #fffaf0;
+}
+
+.paypal-security-note svg,
+.paypal-integrity-note svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.paypal-security-note svg {
+  color: #3a6db6;
+}
+
+.paypal-integrity-note svg {
+  color: #aa7924;
+}
+
+@keyframes paypal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes paypal-skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .paypal-checkout-backdrop {
+    padding: 10px;
+    align-items: end;
+  }
+
+  .paypal-checkout-modal {
+    padding: 23px 17px;
+    border-radius: 22px 22px 12px 12px;
+  }
+
+  .paypal-order-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .paypal-order-summary > div {
+    min-height: 68px;
+  }
+
+  .paypal-success-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .paypal-checkout-backdrop {
+    display: none !important;
+  }
+}

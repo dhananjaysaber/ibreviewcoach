@@ -1,0 +1,4938 @@
+import {
+  AlertCircle,
+  ArrowLeft,
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  Clock3,
+  BookOpen,
+  ChevronDown,
+  ClipboardList,
+  Download,
+  ExternalLink,
+  Eye,
+  FileCheck2,
+  FileText,
+  FolderOpen,
+  GraduationCap,
+  KeyRound,
+  Layers3,
+  ListChecks,
+  LogIn,
+  LogOut,
+  Mail,
+  LoaderCircle,
+  MapPin,
+  Printer,
+  Quote,
+  LockKeyhole,
+  RefreshCw,
+  RotateCcw,
+  SearchCheck,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  ChevronRight,
+  UserRound,
+  UserPlus,
+  UploadCloud,
+  X,
+} from 'lucide-react';
+
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type RefObject,
+} from 'react';
+
+import type { Session } from '@supabase/supabase-js';
+
+import {
+  completeCurrentReviewAccount,
+  ensureAnonymousSession,
+  getAccountSessionState,
+  getSignedInEmail,
+  requestCurrentReviewAccountEmail,
+  sendPasswordResetEmail,
+  signInWithEmailPassword,
+  signOutAccount,
+  subscribeToAuthChanges,
+  updateRecoveredPassword,
+} from './lib/anonymousSession';
+
+import { supabase } from './lib/supabase';
+
+import { FileValidationError, validateIaFile } from './lib/fileValidation';
+
+import {
+  createInitialPipelineProgress,
+  PIPELINE_STAGES,
+  PipelineError,
+  runIaPipelineToCompletion,
+} from './lib/pipeline';
+
+import { uploadIaSubmission } from './lib/uploadSubmission';
+
+import { DOCX_MIME_TYPE, PDF_MIME_TYPE } from './types/ia';
+
+import type {
+  IaSubmission,
+  PipelineCompletion,
+  PipelineProgress,
+  PipelineStageKey,
+  ValidatedIaFile,
+} from './types/ia';
+
+import './processing.css';
+import './auth.css';
+import './reports.css';
+
+type AppStatus =
+  | 'starting'
+  | 'ready'
+  | 'uploading'
+  | 'processing'
+  | 'complete'
+  | 'error';
+
+type ErrorContext = 'session' | 'file' | 'upload' | 'pipeline' | null;
+
+const COMPLETED_REVIEW_STORAGE_KEY = 'sehs-ia-completed-review';
+const ACCOUNT_CONVERSION_REVIEW_KEY = 'sehs-ia-account-conversion-review';
+const ACCOUNT_CONVERSION_EMAIL_KEY = 'sehs-ia-account-conversion-email';
+const OPEN_SAVED_REPORT_KEY = 'sehs-ia-open-saved-report';
+
+type AuthPanelMode =
+  | 'closed'
+  | 'choose'
+  | 'create'
+  | 'confirmation-sent'
+  | 'set-password'
+  | 'sign-in'
+  | 'forgot-password'
+  | 'reset-password'
+  | 'account';
+
+type MainWorkspaceView = 'workspace' | 'reports';
+
+type ReportSaveState = 'checking' | 'unsaved' | 'saving' | 'saved' | 'error';
+
+let reviewSessionRefreshPromise: Promise<void> | null = null;
+
+type SavedCompletedReview = {
+  submission: IaSubmission;
+  completion: PipelineCompletion;
+};
+
+type ReportHistoryRow = {
+  submission_id: string;
+  student_id: string;
+  project_id: string;
+  project_title: string;
+  research_question: string | null;
+  subject: string;
+  version_number: number;
+  original_filename: string;
+  mime_type: string;
+  file_size_bytes: number;
+  status: string;
+  uploaded_at: string;
+  report_generated_at: string | null;
+  saved_at: string | null;
+  retention_policy: string;
+  word_count: number | null;
+  page_count: number | null;
+  criterion_scores: unknown;
+  progress_plan_ready: boolean;
+  annotated_html_ready: boolean;
+  annotated_docx_ready: boolean;
+  is_latest_version: boolean;
+};
+
+type SavedReportLoadResult = {
+  submission: IaSubmission;
+  completion: PipelineCompletion;
+};
+
+function App() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const pipelineRunToken = useRef(0);
+
+  const [status, setStatus] = useState<AppStatus>('starting');
+
+  const [errorContext, setErrorContext] = useState<ErrorContext>(null);
+
+  const [selectedFile, setSelectedFile] = useState<ValidatedIaFile | null>(
+    null
+  );
+
+  const [submission, setSubmission] = useState<IaSubmission | null>(null);
+
+  const [pipelineProgress, setPipelineProgress] =
+    useState<PipelineProgress | null>(null);
+
+  const [completion, setCompletion] = useState<PipelineCompletion | null>(null);
+
+  const [message, setMessage] = useState('');
+
+  const [session, setSession] = useState<Session | null>(null);
+
+  const [authPanelMode, setAuthPanelMode] = useState<AuthPanelMode>('closed');
+
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authMessage, setAuthMessage] = useState('');
+  const [authError, setAuthError] = useState('');
+
+  const [reportSaveState, setReportSaveState] =
+    useState<ReportSaveState>('checking');
+
+  const [reportSaveMessage, setReportSaveMessage] = useState('');
+
+  const [mainView, setMainView] = useState<MainWorkspaceView>(
+    window.location.pathname.startsWith('/my-reports') ? 'reports' : 'workspace'
+  );
+
+  const [isViewingSavedReport, setIsViewingSavedReport] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const subscription = subscribeToAuthChanges((event, nextSession) => {
+      if (!active) {
+        return;
+      }
+
+      setSession(nextSession);
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setAuthPanelMode('reset-password');
+        setAuthMessage('Choose a new password for your account.');
+        setAuthError('');
+      }
+    });
+
+    async function startSecureSession() {
+      try {
+        const activeSession = await ensureAnonymousSession();
+
+        if (!active) {
+          return;
+        }
+
+        setSession(activeSession);
+
+        const currentPath = window.location.pathname;
+        const accountState = getAccountSessionState(activeSession);
+
+        if (
+          currentPath === '/my-reports/view' &&
+          accountState === 'permanent'
+        ) {
+          const openSubmissionId = window.sessionStorage.getItem(
+            OPEN_SAVED_REPORT_KEY
+          );
+
+          if (openSubmissionId) {
+            try {
+              const savedReport = await loadSavedReportVersion(
+                openSubmissionId
+              );
+
+              if (!active) {
+                return;
+              }
+
+              setSelectedFile(null);
+              setSubmission(savedReport.submission);
+              setCompletion(savedReport.completion);
+              setReportSaveState('saved');
+              setReportSaveMessage(
+                `Version ${savedReport.submission.draft_version} is saved to your account.`
+              );
+              setIsViewingSavedReport(true);
+              setMainView('workspace');
+              setStatus('complete');
+            } catch (error) {
+              console.error('Saved report could not be restored', error);
+
+              window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+
+              setMainView('reports');
+              replaceAppRoute('/my-reports');
+              setStatus('ready');
+            }
+          } else {
+            setMainView('reports');
+            replaceAppRoute('/my-reports');
+            setStatus('ready');
+          }
+        } else if (
+          currentPath.startsWith('/my-reports') &&
+          accountState === 'permanent'
+        ) {
+          setMainView('reports');
+          setStatus('ready');
+        } else {
+          const savedReview =
+            loadSavedCompletedReview() ?? loadAccountConversionReview();
+
+          if (savedReview) {
+            setSubmission(savedReview.submission);
+            setCompletion(savedReview.completion);
+            setStatus('complete');
+          } else {
+            setStatus('ready');
+          }
+        }
+
+        if (currentPath === '/account-confirmed') {
+          setAuthPanelMode('set-password');
+          setAuthMessage(
+            'Your email address is confirmed. Create your password to finish setting up the account.'
+          );
+        } else if (currentPath === '/reset-password') {
+          setAuthPanelMode('reset-password');
+          setAuthMessage('Choose a new password for your account.');
+        }
+
+        setErrorContext(null);
+      } catch (error) {
+        if (active) {
+          setMessage(getErrorMessage(error));
+          setErrorContext('session');
+          setStatus('error');
+        }
+      }
+    }
+
+    void startSecureSession();
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+      pipelineRunToken.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (status === 'complete' && submission && completion) {
+      saveCompletedReview(submission, completion);
+    }
+  }, [status, submission, completion]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkReportRetention() {
+      if (
+        status !== 'complete' ||
+        !submission?.id ||
+        getAccountSessionState(session) !== 'permanent'
+      ) {
+        if (active) {
+          setReportSaveState(status === 'complete' ? 'unsaved' : 'checking');
+          setReportSaveMessage('');
+        }
+
+        return;
+      }
+
+      setReportSaveState('checking');
+      setReportSaveMessage('Checking whether this version is saved…');
+
+      const { data, error } = await supabase
+        .from('ia_report_history')
+        .select('retention_policy')
+        .eq('submission_id', submission.id)
+        .maybeSingle();
+
+      if (!active) {
+        return;
+      }
+
+      if (error) {
+        console.error('Saved report status could not be checked', error);
+        setReportSaveState('unsaved');
+        setReportSaveMessage('');
+        return;
+      }
+
+      const isSaved = data?.retention_policy === 'account';
+
+      setReportSaveState(isSaved ? 'saved' : 'unsaved');
+      setReportSaveMessage(
+        isSaved
+          ? `Version ${submission.draft_version} is saved to your account.`
+          : ''
+      );
+    }
+
+    void checkReportRetention();
+
+    return () => {
+      active = false;
+    };
+  }, [status, submission?.id, submission?.draft_version, session]);
+
+  function handleChooseFile() {
+    fileInputRef.current?.click();
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    setMessage('');
+    clearSavedCompletedReview();
+    clearAccountConversionReview();
+    setSubmission(null);
+    setCompletion(null);
+    setPipelineProgress(null);
+
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+
+    try {
+      const validated = validateIaFile(file);
+
+      setSelectedFile(validated);
+      setErrorContext(null);
+      setStatus('ready');
+    } catch (error) {
+      setSelectedFile(null);
+      setMessage(getErrorMessage(error));
+      setErrorContext('file');
+      setStatus('error');
+
+      event.target.value = '';
+    }
+  }
+
+  function clearSelectedFile() {
+    pipelineRunToken.current += 1;
+
+    clearSavedCompletedReview();
+    clearAccountConversionReview();
+    window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+    setMainView('workspace');
+    setIsViewingSavedReport(false);
+    replaceAppRoute('/');
+    setSelectedFile(null);
+    setSubmission(null);
+    setCompletion(null);
+    setPipelineProgress(null);
+    setMessage('');
+    setErrorContext(null);
+    setStatus('ready');
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }
+
+  async function handleUploadAndReview() {
+    if (!selectedFile) {
+      setMessage('Please select a PDF or DOCX document first.');
+      setErrorContext('file');
+      setStatus('error');
+      return;
+    }
+
+    try {
+      setStatus('uploading');
+      setMessage('');
+      setErrorContext(null);
+
+      const createdSubmission = await uploadIaSubmission(selectedFile);
+
+      setSubmission(createdSubmission);
+
+      await startPipeline(createdSubmission);
+    } catch (error) {
+      setMessage(getErrorMessage(error));
+      setErrorContext('upload');
+      setStatus('error');
+    }
+  }
+
+  async function startPipeline(currentSubmission: IaSubmission) {
+    const currentRun = pipelineRunToken.current + 1;
+
+    pipelineRunToken.current = currentRun;
+
+    setStatus('processing');
+    setMessage('');
+    setErrorContext(null);
+    setCompletion(null);
+
+    setPipelineProgress(createInitialPipelineProgress(currentSubmission.id));
+
+    try {
+      const result = await runIaPipelineToCompletion({
+        submissionId: currentSubmission.id,
+
+        onProgress: (progress) => {
+          if (pipelineRunToken.current === currentRun) {
+            setPipelineProgress(progress);
+          }
+        },
+
+        isCancelled: () => pipelineRunToken.current !== currentRun,
+      });
+
+      if (pipelineRunToken.current !== currentRun) {
+        return;
+      }
+
+      saveCompletedReview(currentSubmission, result);
+      setIsViewingSavedReport(false);
+      setMainView('workspace');
+      replaceAppRoute('/');
+      setCompletion(result);
+      setStatus('complete');
+    } catch (error) {
+      if (pipelineRunToken.current !== currentRun) {
+        return;
+      }
+
+      setMessage(getErrorMessage(error));
+      setErrorContext('pipeline');
+      setStatus('error');
+    }
+  }
+
+  async function retrySecureSession() {
+    try {
+      setStatus('starting');
+      setMessage('');
+      setErrorContext(null);
+
+      await ensureAnonymousSession();
+
+      setStatus('ready');
+    } catch (error) {
+      setMessage(getErrorMessage(error));
+      setErrorContext('session');
+      setStatus('error');
+    }
+  }
+
+  async function retryPipeline() {
+    if (!submission) {
+      setMessage(
+        'The review session could not be resumed. Please upload the document again.'
+      );
+      setErrorContext('upload');
+      setStatus('error');
+      return;
+    }
+
+    await startPipeline(submission);
+  }
+
+  function resetReview() {
+    pipelineRunToken.current += 1;
+
+    clearSavedCompletedReview();
+    clearAccountConversionReview();
+    window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+    setMainView('workspace');
+    setIsViewingSavedReport(false);
+    replaceAppRoute('/');
+    setSelectedFile(null);
+    setSubmission(null);
+    setPipelineProgress(null);
+    setCompletion(null);
+    setMessage('');
+    setErrorContext(null);
+    setStatus('ready');
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }
+
+  const accountState = getAccountSessionState(session);
+  const signedInEmail = getSignedInEmail(session);
+
+  function openReportsDashboard() {
+    if (accountState !== 'permanent') {
+      openAccountPanel('sign-in');
+      return;
+    }
+
+    setAuthPanelMode('closed');
+    setAuthError('');
+    setAuthMessage('');
+    setMainView('reports');
+    setIsViewingSavedReport(false);
+    window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+    replaceAppRoute('/my-reports');
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }
+
+  async function openSavedReport(submissionId: string): Promise<void> {
+    if (accountState !== 'permanent') {
+      throw new Error('Sign in to open a saved report.');
+    }
+
+    const savedReport = await loadSavedReportVersion(submissionId);
+
+    window.sessionStorage.setItem(OPEN_SAVED_REPORT_KEY, submissionId);
+
+    saveCompletedReview(savedReport.submission, savedReport.completion);
+
+    setSelectedFile(null);
+    setSubmission(savedReport.submission);
+    setCompletion(savedReport.completion);
+    setPipelineProgress(null);
+    setMessage('');
+    setErrorContext(null);
+    setReportSaveState('saved');
+    setReportSaveMessage(
+      `Version ${savedReport.submission.draft_version} is saved to your account.`
+    );
+    setIsViewingSavedReport(true);
+    setMainView('workspace');
+    setStatus('complete');
+    replaceAppRoute('/my-reports/view');
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }
+
+  function openAccountPanel(preferredMode?: Exclude<AuthPanelMode, 'closed'>) {
+    setAuthError('');
+    setAuthMessage('');
+
+    if (preferredMode) {
+      setAuthPanelMode(preferredMode);
+      return;
+    }
+
+    setAuthPanelMode(accountState === 'permanent' ? 'account' : 'choose');
+  }
+
+  function closeAccountPanel() {
+    if (
+      authBusy ||
+      authPanelMode === 'set-password' ||
+      authPanelMode === 'reset-password'
+    ) {
+      return;
+    }
+
+    setAuthPanelMode('closed');
+    setAuthError('');
+    setAuthMessage('');
+  }
+
+  async function handleCreateAccount(email: string) {
+    setAuthBusy(true);
+    setAuthError('');
+    setAuthMessage('');
+
+    try {
+      if (submission && completion) {
+        saveAccountConversionReview(submission, completion, email);
+      } else {
+        saveAccountConversionEmail(email);
+      }
+
+      await requestCurrentReviewAccountEmail(email);
+
+      setAuthPanelMode('confirmation-sent');
+      setAuthMessage(
+        'Check your email and open the confirmation link. You will then choose your password.'
+      );
+    } catch (error) {
+      setAuthError(getErrorMessage(error));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleSetAccountPassword(password: string) {
+    setAuthBusy(true);
+    setAuthError('');
+    setAuthMessage('');
+
+    try {
+      const updatedSession = await completeCurrentReviewAccount(password);
+
+      setSession(updatedSession);
+      replaceAppRoute('/');
+
+      const pendingReview = loadAccountConversionReview();
+      const submissionId =
+        submission?.id ?? pendingReview?.submission.id ?? null;
+
+      if (submissionId) {
+        await saveCompletedReportToAccount(submissionId);
+      }
+
+      clearAccountConversionReview();
+      setAuthPanelMode('account');
+      setAuthMessage(
+        submissionId
+          ? 'Your account is ready and this report has been saved.'
+          : 'Your account is ready.'
+      );
+    } catch (error) {
+      setAuthError(getErrorMessage(error));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleSignIn(email: string, password: string) {
+    if (accountState === 'temporary' && status === 'complete' && submission) {
+      setAuthError(
+        'This completed review belongs to the current temporary session. Create an account from this session to keep the report before signing in elsewhere.'
+      );
+      return;
+    }
+
+    setAuthBusy(true);
+    setAuthError('');
+    setAuthMessage('');
+
+    try {
+      const signedInSession = await signInWithEmailPassword(email, password);
+
+      setSession(signedInSession);
+      setAuthPanelMode('account');
+      setAuthMessage(
+        'You are signed in. Open My IA Reports to view saved versions.'
+      );
+    } catch (error) {
+      setAuthError(getErrorMessage(error));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleForgotPassword(email: string) {
+    setAuthBusy(true);
+    setAuthError('');
+    setAuthMessage('');
+
+    try {
+      await sendPasswordResetEmail(email);
+      setAuthMessage('Check your email for the password reset link.');
+    } catch (error) {
+      setAuthError(getErrorMessage(error));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleResetPassword(password: string) {
+    setAuthBusy(true);
+    setAuthError('');
+    setAuthMessage('');
+
+    try {
+      const updatedSession = await updateRecoveredPassword(password);
+
+      setSession(updatedSession);
+      replaceAppRoute('/');
+      setAuthPanelMode('account');
+      setAuthMessage('Your password has been updated.');
+    } catch (error) {
+      setAuthError(getErrorMessage(error));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function saveCompletedReportToAccount(submissionId: string) {
+    setReportSaveState('saving');
+    setReportSaveMessage('Saving this version to your account…');
+
+    const { data, error } = await supabase.rpc('save_ia_report_to_account', {
+      p_submission_id: submissionId,
+    });
+
+    if (error) {
+      console.error('Completed report could not be saved', error);
+      setReportSaveState('error');
+      setReportSaveMessage(
+        'The report could not be saved to your account. Try again.'
+      );
+      throw new Error(
+        'The report could not be saved to your account. Try again.'
+      );
+    }
+
+    const savedRow = Array.isArray(data) ? data[0] : data;
+
+    const versionNumber =
+      typeof savedRow?.version_number === 'number'
+        ? savedRow.version_number
+        : submission?.draft_version;
+
+    setReportSaveState('saved');
+    setReportSaveMessage(
+      versionNumber
+        ? `Version ${versionNumber} is saved to your account.`
+        : 'This report is saved to your account.'
+    );
+  }
+
+  async function handleSaveCurrentReport() {
+    if (!submission?.id) {
+      return;
+    }
+
+    if (accountState !== 'permanent') {
+      openAccountPanel('create');
+      return;
+    }
+
+    setAuthError('');
+
+    try {
+      await saveCompletedReportToAccount(submission.id);
+    } catch {
+      // The banner already shows the friendly save error.
+    }
+  }
+
+  async function handleSignOut() {
+    setAuthBusy(true);
+    setAuthError('');
+    setAuthMessage('');
+
+    try {
+      await signOutAccount();
+
+      clearSavedCompletedReview();
+      clearAccountConversionReview();
+
+      setSelectedFile(null);
+      setSubmission(null);
+      setPipelineProgress(null);
+      setCompletion(null);
+      setReportSaveState('checking');
+      setReportSaveMessage('');
+      setMainView('workspace');
+      setIsViewingSavedReport(false);
+      window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+      replaceAppRoute('/');
+      setStatus('starting');
+
+      const temporarySession = await ensureAnonymousSession();
+
+      setSession(temporarySession);
+      setStatus('ready');
+      setAuthPanelMode('closed');
+    } catch (error) {
+      setAuthError(getErrorMessage(error));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  if (status === 'starting') {
+    return (
+      <main className="app-loading">
+        <div className="loading-mark">
+          <GraduationCap aria-hidden="true" />
+        </div>
+
+        <div className="loading-spinner" aria-hidden="true" />
+
+        <h1>Preparing your secure review space</h1>
+
+        <p>This should take only a moment.</p>
+      </main>
+    );
+  }
+
+  const showProcessing =
+    status === 'processing' ||
+    (status === 'error' && errorContext === 'pipeline');
+
+  return (
+    <div className="app-shell">
+      <header className="site-header">
+        <div className="header-inner">
+          <a className="brand" href="/" aria-label="SEHS IA Review Coach home">
+            <span className="brand-mark">
+              <GraduationCap aria-hidden="true" />
+            </span>
+
+            <span className="brand-copy">
+              <strong>SEHS IA Review Coach</strong>
+
+              <span>Reflect. Improve. Take ownership.</span>
+            </span>
+          </a>
+
+          <div className="header-account-group">
+            <div
+              className={`secure-session-badge ${
+                accountState === 'permanent'
+                  ? 'secure-session-badge-account'
+                  : ''
+              }`}
+            >
+              {accountState === 'permanent' ? (
+                <UserRound aria-hidden="true" />
+              ) : (
+                <ShieldCheck aria-hidden="true" />
+              )}
+
+              <span>
+                {accountState === 'permanent'
+                  ? signedInEmail ?? 'Account connected'
+                  : 'Temporary private session'}
+              </span>
+            </div>
+
+            {accountState === 'permanent' && (
+              <button
+                className="header-reports-button"
+                type="button"
+                onClick={openReportsDashboard}
+              >
+                <ClipboardList aria-hidden="true" />
+                My IA Reports
+              </button>
+            )}
+
+            <button
+              className="header-account-button"
+              type="button"
+              onClick={() => openAccountPanel()}
+            >
+              {accountState === 'permanent' ? (
+                <UserRound aria-hidden="true" />
+              ) : (
+                <LogIn aria-hidden="true" />
+              )}
+
+              {accountState === 'permanent'
+                ? 'My account'
+                : 'Sign in / Create account'}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {mainView === 'reports' && accountState === 'permanent' ? (
+        <ReportsDashboard
+          signedInEmail={signedInEmail}
+          onOpenReport={openSavedReport}
+          onStartNewReview={resetReview}
+          onOpenAccount={() => openAccountPanel('account')}
+        />
+      ) : showProcessing ? (
+        <ProcessingWorkspace
+          selectedFile={selectedFile}
+          progress={pipelineProgress}
+          errorMessage={status === 'error' ? message : ''}
+          onRetry={retryPipeline}
+        />
+      ) : status === 'complete' ? (
+        <CompletionWorkspace
+          selectedFile={selectedFile}
+          submission={submission}
+          completion={completion}
+          accountState={accountState}
+          signedInEmail={signedInEmail}
+          reportSaveState={reportSaveState}
+          reportSaveMessage={reportSaveMessage}
+          onOpenAccount={() => openAccountPanel('create')}
+          onSaveReport={handleSaveCurrentReport}
+          onReset={resetReview}
+          showBackToReports={
+            accountState === 'permanent' && isViewingSavedReport
+          }
+          onBackToReports={openReportsDashboard}
+        />
+      ) : (
+        <UploadWorkspace
+          fileInputRef={fileInputRef}
+          selectedFile={selectedFile}
+          status={status}
+          message={message}
+          errorContext={errorContext}
+          onChooseFile={handleChooseFile}
+          onFileChange={handleFileChange}
+          onClearFile={clearSelectedFile}
+          onUpload={handleUploadAndReview}
+          onRetrySession={retrySecureSession}
+        />
+      )}
+
+      {authPanelMode !== 'closed' && (
+        <AuthPanel
+          mode={authPanelMode}
+          session={session}
+          busy={authBusy}
+          message={authMessage}
+          error={authError}
+          hasTemporaryReview={
+            accountState === 'temporary' &&
+            status === 'complete' &&
+            Boolean(submission)
+          }
+          reportSaveState={reportSaveState}
+          reportSaveMessage={reportSaveMessage}
+          onClose={closeAccountPanel}
+          onModeChange={(mode) => {
+            setAuthError('');
+            setAuthMessage('');
+            setAuthPanelMode(mode);
+          }}
+          onCreateAccount={handleCreateAccount}
+          onSetPassword={handleSetAccountPassword}
+          onSignIn={handleSignIn}
+          onForgotPassword={handleForgotPassword}
+          onResetPassword={handleResetPassword}
+          onSaveCurrentReport={handleSaveCurrentReport}
+          onOpenReports={openReportsDashboard}
+          onSignOut={handleSignOut}
+        />
+      )}
+
+      <footer className="site-footer">
+        <p>
+          Indicative guidance only. Final assessment decisions remain with your
+          teacher and the IB assessment process.
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+type AccountSaveBannerProps = {
+  accountState: ReturnType<typeof getAccountSessionState>;
+  signedInEmail: string | null;
+  versionNumber: number | null;
+  saveState: ReportSaveState;
+  message: string;
+  onOpenAccount: () => void;
+  onSave: () => void;
+};
+
+function AccountSaveBanner({
+  accountState,
+  signedInEmail,
+  versionNumber,
+  saveState,
+  message,
+  onOpenAccount,
+  onSave,
+}: AccountSaveBannerProps) {
+  const isSaved = saveState === 'saved';
+  const isSaving = saveState === 'saving';
+
+  return (
+    <section
+      className={`account-save-banner ${
+        isSaved ? 'account-save-banner-saved' : ''
+      } ${saveState === 'error' ? 'account-save-banner-error' : ''}`}
+      aria-label="Save this IA review"
+    >
+      <span className="account-save-icon">
+        {isSaved ? (
+          <CheckCircle2 aria-hidden="true" />
+        ) : (
+          <ShieldCheck aria-hidden="true" />
+        )}
+      </span>
+
+      <div className="account-save-copy">
+        <strong>
+          {isSaved
+            ? `Version ${versionNumber ?? ''} saved to My IA Reports`
+            : accountState === 'permanent'
+            ? `Save Version ${versionNumber ?? ''} to your account`
+            : 'Keep this report and future IA versions'}
+        </strong>
+
+        <span>
+          {message ||
+            (accountState === 'permanent'
+              ? `Signed in as ${
+                  signedInEmail ?? 'your account'
+                }. Save this completed version so it remains available in report history.`
+              : 'Create an account from this temporary session so the completed report stays connected to you.')}
+        </span>
+      </div>
+
+      {!isSaved && (
+        <button
+          className="account-save-button"
+          type="button"
+          onClick={accountState === 'permanent' ? onSave : onOpenAccount}
+          disabled={isSaving || saveState === 'checking'}
+        >
+          {isSaving || saveState === 'checking' ? (
+            <LoaderCircle className="stage-spinner" aria-hidden="true" />
+          ) : accountState === 'permanent' ? (
+            <FileCheck2 aria-hidden="true" />
+          ) : (
+            <UserPlus aria-hidden="true" />
+          )}
+
+          {isSaving
+            ? 'Saving report…'
+            : saveState === 'checking'
+            ? 'Checking report…'
+            : accountState === 'permanent'
+            ? 'Save this version'
+            : 'Create account and save'}
+        </button>
+      )}
+    </section>
+  );
+}
+
+type AuthPanelProps = {
+  mode: Exclude<AuthPanelMode, 'closed'>;
+  session: Session | null;
+  busy: boolean;
+  message: string;
+  error: string;
+  hasTemporaryReview: boolean;
+  reportSaveState: ReportSaveState;
+  reportSaveMessage: string;
+  onClose: () => void;
+  onModeChange: (mode: Exclude<AuthPanelMode, 'closed'>) => void;
+  onCreateAccount: (email: string) => Promise<void>;
+  onSetPassword: (password: string) => Promise<void>;
+  onSignIn: (email: string, password: string) => Promise<void>;
+  onForgotPassword: (email: string) => Promise<void>;
+  onResetPassword: (password: string) => Promise<void>;
+  onSaveCurrentReport: () => Promise<void>;
+  onOpenReports: () => void;
+  onSignOut: () => Promise<void>;
+};
+
+function AuthPanel({
+  mode,
+  session,
+  busy,
+  message,
+  error,
+  hasTemporaryReview,
+  reportSaveState,
+  reportSaveMessage,
+  onClose,
+  onModeChange,
+  onCreateAccount,
+  onSetPassword,
+  onSignIn,
+  onForgotPassword,
+  onResetPassword,
+  onSaveCurrentReport,
+  onOpenReports,
+  onSignOut,
+}: AuthPanelProps) {
+  const [email, setEmail] = useState(
+    loadAccountConversionEmail() ?? session?.user.email ?? ''
+  );
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [localError, setLocalError] = useState('');
+
+  const requiresCompletion =
+    mode === 'set-password' || mode === 'reset-password';
+
+  function validateMatchingPasswords(): boolean {
+    if (password.length < 8) {
+      setLocalError('Use at least 8 characters for your password.');
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      setLocalError('The passwords do not match.');
+      return false;
+    }
+
+    setLocalError('');
+    return true;
+  }
+
+  async function submitCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLocalError('');
+    await onCreateAccount(email);
+  }
+
+  async function submitSignIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLocalError('');
+    await onSignIn(email, password);
+  }
+
+  async function submitForgot(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLocalError('');
+    await onForgotPassword(email);
+  }
+
+  async function submitPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!validateMatchingPasswords()) {
+      return;
+    }
+
+    if (mode === 'reset-password') {
+      await onResetPassword(password);
+    } else {
+      await onSetPassword(password);
+    }
+  }
+
+  return (
+    <div className="auth-backdrop" role="presentation">
+      <section
+        className="auth-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-panel-title"
+      >
+        {!requiresCompletion && (
+          <button
+            className="auth-close-button"
+            type="button"
+            onClick={onClose}
+            aria-label="Close account panel"
+          >
+            <X aria-hidden="true" />
+          </button>
+        )}
+
+        <div className="auth-brand-mark">
+          <GraduationCap aria-hidden="true" />
+        </div>
+
+        <AuthPanelHeading mode={mode} />
+
+        {(error || localError) && (
+          <div className="auth-message auth-message-error" role="alert">
+            <AlertCircle aria-hidden="true" />
+            <span>{localError || error}</span>
+          </div>
+        )}
+
+        {message && (
+          <div className="auth-message auth-message-success" role="status">
+            <CheckCircle2 aria-hidden="true" />
+            <span>{message}</span>
+          </div>
+        )}
+
+        {mode === 'choose' && (
+          <div className="auth-choice-grid">
+            {hasTemporaryReview && (
+              <div className="auth-review-preservation-note">
+                <ShieldCheck aria-hidden="true" />
+                <div>
+                  <strong>Keep the review currently open</strong>
+                  <span>
+                    Create the account from this session so the report remains
+                    connected to the same student record.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <button
+              className="auth-primary-button"
+              type="button"
+              onClick={() => onModeChange('create')}
+            >
+              <UserPlus aria-hidden="true" />
+              Create account
+            </button>
+
+            <button
+              className="auth-secondary-button"
+              type="button"
+              onClick={() => onModeChange('sign-in')}
+            >
+              <LogIn aria-hidden="true" />
+              Sign in
+            </button>
+          </div>
+        )}
+
+        {mode === 'create' && (
+          <form className="auth-form" onSubmit={submitCreate}>
+            <AuthEmailField
+              value={email}
+              onChange={setEmail}
+              disabled={busy}
+              autoFocus
+            />
+
+            <div className="auth-process-note">
+              <Mail aria-hidden="true" />
+              <span>
+                First confirm your email address. The confirmation page will
+                then ask you to choose your password.
+              </span>
+            </div>
+
+            <button
+              className="auth-primary-button"
+              type="submit"
+              disabled={busy}
+            >
+              {busy ? (
+                <LoaderCircle className="stage-spinner" aria-hidden="true" />
+              ) : (
+                <Mail aria-hidden="true" />
+              )}
+              {busy ? 'Sending confirmation…' : 'Continue with email'}
+            </button>
+
+            <button
+              className="auth-text-button"
+              type="button"
+              onClick={() => onModeChange('choose')}
+              disabled={busy}
+            >
+              Back
+            </button>
+          </form>
+        )}
+
+        {mode === 'confirmation-sent' && (
+          <div className="auth-confirmation-state">
+            <span className="auth-confirmation-icon">
+              <Mail aria-hidden="true" />
+            </span>
+            <strong>Open the confirmation email</strong>
+            <p>
+              Keep this browser available. The confirmation link will return you
+              to the app to create your password and save the report.
+            </p>
+            <button
+              className="auth-secondary-button"
+              type="button"
+              onClick={() => onModeChange('create')}
+            >
+              Use a different email
+            </button>
+          </div>
+        )}
+
+        {(mode === 'set-password' || mode === 'reset-password') && (
+          <form className="auth-form" onSubmit={submitPassword}>
+            <AuthPasswordField
+              label="New password"
+              value={password}
+              onChange={setPassword}
+              disabled={busy}
+              autoFocus
+            />
+
+            <AuthPasswordField
+              label="Confirm password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              disabled={busy}
+            />
+
+            <p className="auth-password-guidance">
+              Use at least 8 characters. A longer, unique password is safer.
+            </p>
+
+            <button
+              className="auth-primary-button"
+              type="submit"
+              disabled={busy}
+            >
+              {busy ? (
+                <LoaderCircle className="stage-spinner" aria-hidden="true" />
+              ) : (
+                <KeyRound aria-hidden="true" />
+              )}
+              {busy
+                ? 'Saving password…'
+                : mode === 'reset-password'
+                ? 'Update password'
+                : 'Create account password'}
+            </button>
+          </form>
+        )}
+
+        {mode === 'sign-in' && (
+          <form className="auth-form" onSubmit={submitSignIn}>
+            {hasTemporaryReview && (
+              <div className="auth-message auth-message-warning">
+                <ShieldCheck aria-hidden="true" />
+                <span>
+                  Create an account from this session to keep the completed
+                  report. Signing in to another account will not transfer it.
+                </span>
+              </div>
+            )}
+
+            <AuthEmailField
+              value={email}
+              onChange={setEmail}
+              disabled={busy}
+              autoFocus
+            />
+
+            <AuthPasswordField
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              disabled={busy}
+            />
+
+            <button
+              className="auth-primary-button"
+              type="submit"
+              disabled={busy || hasTemporaryReview}
+            >
+              {busy ? (
+                <LoaderCircle className="stage-spinner" aria-hidden="true" />
+              ) : (
+                <LogIn aria-hidden="true" />
+              )}
+              {busy ? 'Signing in…' : 'Sign in'}
+            </button>
+
+            <div className="auth-link-row">
+              <button
+                className="auth-text-button"
+                type="button"
+                onClick={() => onModeChange('forgot-password')}
+                disabled={busy}
+              >
+                Forgot password?
+              </button>
+
+              <button
+                className="auth-text-button"
+                type="button"
+                onClick={() => onModeChange('create')}
+                disabled={busy}
+              >
+                Create account
+              </button>
+            </div>
+          </form>
+        )}
+
+        {mode === 'forgot-password' && (
+          <form className="auth-form" onSubmit={submitForgot}>
+            <AuthEmailField
+              value={email}
+              onChange={setEmail}
+              disabled={busy}
+              autoFocus
+            />
+
+            <button
+              className="auth-primary-button"
+              type="submit"
+              disabled={busy}
+            >
+              {busy ? (
+                <LoaderCircle className="stage-spinner" aria-hidden="true" />
+              ) : (
+                <Mail aria-hidden="true" />
+              )}
+              {busy ? 'Sending reset email…' : 'Send reset email'}
+            </button>
+
+            <button
+              className="auth-text-button"
+              type="button"
+              onClick={() => onModeChange('sign-in')}
+              disabled={busy}
+            >
+              Back to sign in
+            </button>
+          </form>
+        )}
+
+        {mode === 'account' && (
+          <div className="account-panel-content">
+            <div className="account-identity-card">
+              <UserRound aria-hidden="true" />
+              <div>
+                <span>Signed in as</span>
+                <strong>{session?.user.email ?? 'Your account'}</strong>
+              </div>
+            </div>
+
+            {hasTemporaryReview || reportSaveState !== 'checking' ? (
+              <div className="account-report-state">
+                <FileCheck2 aria-hidden="true" />
+                <div>
+                  <strong>
+                    {reportSaveState === 'saved'
+                      ? 'Current report saved'
+                      : 'Save the current report'}
+                  </strong>
+                  <span>
+                    {reportSaveMessage ||
+                      'Saved reports will appear in My IA Reports with their date and version.'}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
+            {reportSaveState !== 'saved' && hasTemporaryReview && (
+              <button
+                className="auth-primary-button"
+                type="button"
+                onClick={onSaveCurrentReport}
+                disabled={busy || reportSaveState === 'saving'}
+              >
+                {reportSaveState === 'saving' ? (
+                  <LoaderCircle className="stage-spinner" aria-hidden="true" />
+                ) : (
+                  <FileCheck2 aria-hidden="true" />
+                )}
+                {reportSaveState === 'saving'
+                  ? 'Saving report…'
+                  : 'Save current report'}
+              </button>
+            )}
+
+            <button
+              className="auth-primary-button"
+              type="button"
+              onClick={onOpenReports}
+              disabled={busy}
+            >
+              <ClipboardList aria-hidden="true" />
+              Open My IA Reports
+            </button>
+
+            <button
+              className="auth-secondary-button"
+              type="button"
+              onClick={onSignOut}
+              disabled={busy}
+            >
+              {busy ? (
+                <LoaderCircle className="stage-spinner" aria-hidden="true" />
+              ) : (
+                <LogOut aria-hidden="true" />
+              )}
+              Sign out
+            </button>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+type AuthPanelHeadingProps = {
+  mode: Exclude<AuthPanelMode, 'closed'>;
+};
+
+function AuthPanelHeading({ mode }: AuthPanelHeadingProps) {
+  const content: Record<
+    Exclude<AuthPanelMode, 'closed'>,
+    { eyebrow: string; title: string; description: string }
+  > = {
+    choose: {
+      eyebrow: 'Your private account',
+      title: 'Save and revisit your IA reports',
+      description:
+        'Use an account to keep dated review versions, annotated files and progress plans.',
+    },
+    create: {
+      eyebrow: 'Create account',
+      title: 'Connect this review to your email',
+      description:
+        'Your current review stays connected while the email address is verified.',
+    },
+    'confirmation-sent': {
+      eyebrow: 'Confirmation sent',
+      title: 'Check your email',
+      description:
+        'Open the Supabase confirmation email to return and create your password.',
+    },
+    'set-password': {
+      eyebrow: 'Email confirmed',
+      title: 'Create your account password',
+      description:
+        'This completes the account without changing ownership of the current review.',
+    },
+    'sign-in': {
+      eyebrow: 'Welcome back',
+      title: 'Sign in to your account',
+      description:
+        'Use the email address and password linked to your saved IA reports.',
+    },
+    'forgot-password': {
+      eyebrow: 'Password help',
+      title: 'Reset your password',
+      description:
+        'We will send a secure reset link to the account email address.',
+    },
+    'reset-password': {
+      eyebrow: 'Secure password reset',
+      title: 'Choose a new password',
+      description: 'After saving it, you will return to your account.',
+    },
+    account: {
+      eyebrow: 'My account',
+      title: 'Account and report access',
+      description:
+        'Manage this session and confirm that the current review is saved.',
+    },
+  };
+
+  const selected = content[mode];
+
+  return (
+    <div className="auth-panel-heading">
+      <span>{selected.eyebrow}</span>
+      <h2 id="auth-panel-title">{selected.title}</h2>
+      <p>{selected.description}</p>
+    </div>
+  );
+}
+
+type AuthEmailFieldProps = {
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+  autoFocus?: boolean;
+};
+
+function AuthEmailField({
+  value,
+  onChange,
+  disabled,
+  autoFocus = false,
+}: AuthEmailFieldProps) {
+  return (
+    <label className="auth-field">
+      <span>Email address</span>
+      <div className="auth-input-shell">
+        <Mail aria-hidden="true" />
+        <input
+          type="email"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="student@example.com"
+          autoComplete="email"
+          disabled={disabled}
+          autoFocus={autoFocus}
+          required
+        />
+      </div>
+    </label>
+  );
+}
+
+type AuthPasswordFieldProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+  autoFocus?: boolean;
+};
+
+function AuthPasswordField({
+  label,
+  value,
+  onChange,
+  disabled,
+  autoFocus = false,
+}: AuthPasswordFieldProps) {
+  return (
+    <label className="auth-field">
+      <span>{label}</span>
+      <div className="auth-input-shell">
+        <KeyRound aria-hidden="true" />
+        <input
+          type="password"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="Enter your password"
+          autoComplete={
+            label === 'Password' ? 'current-password' : 'new-password'
+          }
+          disabled={disabled}
+          autoFocus={autoFocus}
+          required
+        />
+      </div>
+    </label>
+  );
+}
+
+type ReportsDashboardProps = {
+  signedInEmail: string | null;
+  onOpenReport: (submissionId: string) => Promise<void>;
+  onStartNewReview: () => void;
+  onOpenAccount: () => void;
+};
+
+function ReportsDashboard({
+  signedInEmail,
+  onOpenReport,
+  onStartNewReview,
+  onOpenAccount,
+}: ReportsDashboardProps) {
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>(
+    'loading'
+  );
+  const [reports, setReports] = useState<ReportHistoryRow[]>([]);
+  const [loadError, setLoadError] = useState('');
+  const [openingSubmissionId, setOpeningSubmissionId] = useState<string | null>(
+    null
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadReports() {
+      try {
+        setLoadState('loading');
+        setLoadError('');
+
+        await ensureFreshReviewSession();
+
+        const { data, error } = await supabase
+          .from('ia_report_history')
+          .select('*')
+          .eq('retention_policy', 'account')
+          .order('project_title', { ascending: true })
+          .order('version_number', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        if (!active) {
+          return;
+        }
+
+        setReports(normalizeReportHistoryRows(data));
+        setLoadState('ready');
+      } catch (error) {
+        console.error('Saved IA reports could not be loaded', error);
+
+        if (active) {
+          setLoadError(
+            'Your saved IA reports could not be loaded. Refresh this page and try again.'
+          );
+          setLoadState('error');
+        }
+      }
+    }
+
+    void loadReports();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const projects = useMemo(
+    () => groupReportHistoryByProject(reports),
+    [reports]
+  );
+
+  async function handleOpen(submissionId: string) {
+    if (openingSubmissionId) {
+      return;
+    }
+
+    setOpeningSubmissionId(submissionId);
+    setLoadError('');
+
+    try {
+      await onOpenReport(submissionId);
+    } catch (error) {
+      console.error('Saved report could not be opened', error);
+
+      setLoadError(getErrorMessage(error));
+      setOpeningSubmissionId(null);
+    }
+  }
+
+  return (
+    <main className="reports-main">
+      <section className="reports-hero">
+        <div className="reports-hero-copy">
+          <span className="reports-eyebrow">Saved report history</span>
+          <h1>My IA Reports</h1>
+          <p>
+            Open any saved version to return to the same detailed review,
+            annotated IA and progress-plan interface.
+          </p>
+        </div>
+
+        <div className="reports-hero-actions">
+          <button
+            className="reports-primary-action"
+            type="button"
+            onClick={onStartNewReview}
+          >
+            <UploadCloud aria-hidden="true" />
+            Start new review
+          </button>
+        </div>
+      </section>
+
+      <section className="reports-overview-grid">
+        <article>
+          <FolderOpen aria-hidden="true" />
+          <div>
+            <span>IA projects</span>
+            <strong>{projects.length}</strong>
+          </div>
+        </article>
+
+        <article>
+          <Layers3 aria-hidden="true" />
+          <div>
+            <span>Saved versions</span>
+            <strong>{reports.length}</strong>
+          </div>
+        </article>
+
+        <article>
+          <CalendarDays aria-hidden="true" />
+          <div>
+            <span>Latest report</span>
+            <strong>
+              {reports.length > 0
+                ? formatReportDate(
+                    reports
+                      .slice()
+                      .sort(
+                        (left, right) =>
+                          getReportTimestamp(right) - getReportTimestamp(left)
+                      )[0].report_generated_at ??
+                      reports[0].saved_at ??
+                      reports[0].uploaded_at
+                  )
+                : 'No saved report'}
+            </strong>
+          </div>
+        </article>
+      </section>
+
+      {loadError && (
+        <div className="reports-error" role="alert">
+          <AlertCircle aria-hidden="true" />
+          <span>{loadError}</span>
+        </div>
+      )}
+
+      {loadState === 'loading' ? (
+        <section className="reports-loading-card">
+          <LoaderCircle className="stage-spinner" aria-hidden="true" />
+          <div>
+            <strong>Loading saved IA reports</strong>
+            <span>Your dated versions are being prepared.</span>
+          </div>
+        </section>
+      ) : loadState === 'error' ? (
+        <section className="reports-empty-card">
+          <ClipboardList aria-hidden="true" />
+          <h2>Reports are temporarily unavailable</h2>
+          <p>{loadError}</p>
+        </section>
+      ) : projects.length === 0 ? (
+        <section className="reports-empty-card">
+          <ClipboardList aria-hidden="true" />
+          <h2>No saved IA reports yet</h2>
+          <p>
+            Complete a review and save it to your account. Each later draft will
+            appear as a dated version of the same IA.
+          </p>
+          <button
+            className="reports-primary-action"
+            type="button"
+            onClick={onStartNewReview}
+          >
+            <UploadCloud aria-hidden="true" />
+            Review an IA draft
+          </button>
+        </section>
+      ) : (
+        <section className="reports-project-list">
+          {projects.map((project) => (
+            <article className="reports-project-card" key={project.projectId}>
+              <header className="reports-project-header">
+                <div>
+                  <span className="reports-project-subject">
+                    {project.subject}
+                  </span>
+                  <h2>{project.title}</h2>
+                  {project.researchQuestion && (
+                    <p>{project.researchQuestion}</p>
+                  )}
+                </div>
+
+                <span className="reports-version-count">
+                  {project.versions.length}{' '}
+                  {project.versions.length === 1 ? 'version' : 'versions'}
+                </span>
+              </header>
+
+              <div className="reports-version-list">
+                {project.versions.map((report) => {
+                  const markSummary = deriveReportMarkSummary(
+                    report.criterion_scores
+                  );
+
+                  const isOpening =
+                    openingSubmissionId === report.submission_id;
+
+                  return (
+                    <button
+                      className="reports-version-card"
+                      type="button"
+                      key={report.submission_id}
+                      onClick={() => void handleOpen(report.submission_id)}
+                      disabled={Boolean(openingSubmissionId)}
+                    >
+                      <span className="reports-version-icon">
+                        <FileText aria-hidden="true" />
+                      </span>
+
+                      <span className="reports-version-main">
+                        <span className="reports-version-title-row">
+                          <strong>Version {report.version_number}</strong>
+
+                          {report.is_latest_version && (
+                            <span className="reports-latest-badge">
+                              Latest version
+                            </span>
+                          )}
+                        </span>
+
+                        <span className="reports-version-file">
+                          {report.original_filename}
+                        </span>
+
+                        <span className="reports-version-date">
+                          Generated{' '}
+                          {formatReviewDateTime(
+                            report.report_generated_at ??
+                              report.saved_at ??
+                              report.uploaded_at
+                          )}
+                        </span>
+
+                        <span className="reports-artifact-row">
+                          {report.annotated_html_ready && (
+                            <span>Annotated IA</span>
+                          )}
+
+                          {report.annotated_docx_ready && (
+                            <span>Word comments</span>
+                          )}
+
+                          {report.progress_plan_ready && (
+                            <span>Progress plan</span>
+                          )}
+                        </span>
+                      </span>
+
+                      <span className="reports-version-score">
+                        <span>Indicative range</span>
+                        <strong>
+                          {markSummary
+                            ? `${markSummary.range[0]}–${markSummary.range[1]} / ${markSummary.maximum}`
+                            : 'Open report'}
+                        </strong>
+                      </span>
+
+                      <span className="reports-version-open">
+                        {isOpening ? (
+                          <LoaderCircle
+                            className="stage-spinner"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <ChevronRight aria-hidden="true" />
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
+    </main>
+  );
+}
+
+type UploadWorkspaceProps = {
+  fileInputRef: RefObject<HTMLInputElement | null>;
+
+  selectedFile: ValidatedIaFile | null;
+  status: AppStatus;
+  message: string;
+  errorContext: ErrorContext;
+
+  onChooseFile: () => void;
+  onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onClearFile: () => void;
+  onUpload: () => void;
+  onRetrySession: () => void;
+};
+
+function UploadWorkspace({
+  fileInputRef,
+  selectedFile,
+  status,
+  message,
+  errorContext,
+  onChooseFile,
+  onFileChange,
+  onClearFile,
+  onUpload,
+  onRetrySession,
+}: UploadWorkspaceProps) {
+  return (
+    <main className="main-content">
+      <section className="hero-section">
+        <div className="hero-copy">
+          <span className="eyebrow">
+            IB Sports, Exercise and Health Science
+          </span>
+
+          <h1>Strengthen your IA through guided reflection</h1>
+
+          <p>
+            Upload your draft to receive rubric-linked guidance, reflective
+            questions and a clear improvement plan.
+          </p>
+        </div>
+
+        <div className="integrity-card">
+          <Sparkles aria-hidden="true" />
+
+          <div>
+            <strong>A review coach, not a report writer</strong>
+
+            <p>
+              The coach identifies evidence and guides your next steps. It does
+              not write or rewrite your investigation.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="workspace-grid">
+        <div className="upload-card">
+          <div className="section-heading">
+            <span className="section-number">1</span>
+
+            <div>
+              <h2>Upload your current IA draft</h2>
+
+              <p>Choose a searchable PDF or a DOCX document.</p>
+            </div>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            className="visually-hidden"
+            type="file"
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onChange={onFileChange}
+          />
+
+          {!selectedFile ? (
+            <button
+              className="drop-zone"
+              type="button"
+              onClick={onChooseFile}
+              disabled={status === 'uploading'}
+            >
+              <span className="upload-icon">
+                <UploadCloud aria-hidden="true" />
+              </span>
+
+              <span className="drop-zone-title">Select your IA document</span>
+
+              <span className="drop-zone-copy">
+                PDF or DOCX · Maximum 20 MB
+              </span>
+
+              <span className="secondary-button">Choose file</span>
+            </button>
+          ) : (
+            <div className="selected-file">
+              <span className="file-icon">
+                <FileText aria-hidden="true" />
+              </span>
+
+              <div className="file-details">
+                <strong>{selectedFile.filename}</strong>
+
+                <span>
+                  {selectedFile.extension.toUpperCase()}
+                  {' · '}
+                  {selectedFile.sizeLabel}
+                </span>
+              </div>
+
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Remove selected file"
+                onClick={onClearFile}
+                disabled={status === 'uploading'}
+              >
+                <X aria-hidden="true" />
+              </button>
+            </div>
+          )}
+
+          {message && (
+            <div className="message message-error" role="alert">
+              <AlertCircle aria-hidden="true" />
+
+              <span>{message}</span>
+            </div>
+          )}
+
+          {errorContext === 'session' && (
+            <button
+              className="retry-button"
+              type="button"
+              onClick={onRetrySession}
+            >
+              <RefreshCw aria-hidden="true" />
+              Retry secure session
+            </button>
+          )}
+
+          <button
+            className="primary-button"
+            type="button"
+            onClick={onUpload}
+            disabled={!selectedFile || status === 'uploading'}
+          >
+            {status === 'uploading' ? (
+              <>
+                <span className="button-spinner" aria-hidden="true" />
+                Uploading securely…
+              </>
+            ) : (
+              <>
+                <Sparkles aria-hidden="true" />
+                Review my IA
+              </>
+            )}
+          </button>
+        </div>
+
+        <PrivacyCard />
+      </section>
+
+      <section className="process-preview">
+        <div className="section-heading">
+          <span className="section-number">2</span>
+
+          <div>
+            <h2>What your review will include</h2>
+
+            <p>
+              A clear sequence from evidence identification to an actionable
+              progress plan.
+            </p>
+          </div>
+        </div>
+
+        <div className="process-steps">
+          {PIPELINE_STAGES.map((stage) => (
+            <div className="process-step" key={stage.key}>
+              <span>{stage.number}</span>
+              <p>{stage.title}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function PrivacyCard() {
+  return (
+    <aside className="privacy-card">
+      <div className="privacy-heading">
+        <span className="privacy-icon">
+          <LockKeyhole aria-hidden="true" />
+        </span>
+
+        <div>
+          <h2>Your privacy</h2>
+          <p>Designed around temporary processing.</p>
+        </div>
+      </div>
+
+      <div className="privacy-list">
+        {[
+          {
+            title: 'Private upload',
+            copy: 'Your document is not placed in a public folder.',
+          },
+          {
+            title: 'Original file removed',
+            copy: 'The uploaded PDF or DOCX is scheduled for deletion after approximately one hour.',
+          },
+          {
+            title: 'No visible account required',
+            copy: 'A temporary secure session is created automatically.',
+          },
+          {
+            title: 'Academic integrity protected',
+            copy: 'Guidance focuses on reflection and actions, not copy-ready writing.',
+          },
+        ].map((item) => (
+          <div className="privacy-item" key={item.title}>
+            <CheckCircle2 aria-hidden="true" />
+
+            <div>
+              <strong>{item.title}</strong>
+              <span>{item.copy}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+type ProcessingWorkspaceProps = {
+  selectedFile: ValidatedIaFile | null;
+  progress: PipelineProgress | null;
+  errorMessage: string;
+  onRetry: () => void;
+};
+
+function ProcessingWorkspace({
+  selectedFile,
+  progress,
+  errorMessage,
+  onRetry,
+}: ProcessingWorkspaceProps) {
+  const percentage = progress?.progressPercent ?? 0;
+
+  return (
+    <main className="processing-main">
+      <section className="processing-card">
+        <div className="processing-heading">
+          <span className="processing-heading-icon">
+            <SearchCheck aria-hidden="true" />
+          </span>
+
+          <div>
+            <span className="processing-eyebrow">Review in progress</span>
+
+            <h1>Preparing your IA review</h1>
+
+            <p>Keep this page open while each review stage is completed.</p>
+          </div>
+        </div>
+
+        {selectedFile && (
+          <div className="processing-file">
+            <FileText aria-hidden="true" />
+
+            <div>
+              <strong>{selectedFile.filename}</strong>
+
+              <span>
+                {selectedFile.extension.toUpperCase()}
+                {' · '}
+                {selectedFile.sizeLabel}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className="progress-summary">
+          <div className="progress-summary-row">
+            <strong>
+              {errorMessage
+                ? 'Review paused'
+                : progress?.message ?? 'Preparing your review.'}
+            </strong>
+
+            <span>{percentage}%</span>
+          </div>
+
+          <div
+            className="pipeline-progress-track"
+            role="progressbar"
+            aria-label="IA review progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={percentage}
+          >
+            <span
+              style={{
+                width: `${percentage}%`,
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="pipeline-stage-list">
+          {PIPELINE_STAGES.map((stage) => {
+            const stageState = getStageState(
+              stage.key,
+              progress,
+              Boolean(errorMessage)
+            );
+
+            return (
+              <div
+                className={`pipeline-stage pipeline-stage-${stageState}`}
+                key={stage.key}
+              >
+                <span className="pipeline-stage-icon">
+                  {stageState === 'complete' ? (
+                    <Check aria-hidden="true" />
+                  ) : stageState === 'active' ? (
+                    <LoaderCircle
+                      className="stage-spinner"
+                      aria-hidden="true"
+                    />
+                  ) : stageState === 'error' ? (
+                    <AlertCircle aria-hidden="true" />
+                  ) : (
+                    stage.number
+                  )}
+                </span>
+
+                <div className="pipeline-stage-copy">
+                  <strong>{stage.title}</strong>
+                  <span>{stage.description}</span>
+                </div>
+
+                <span className="pipeline-stage-status">
+                  {stageState === 'complete'
+                    ? 'Complete'
+                    : stageState === 'active'
+                    ? 'In progress'
+                    : stageState === 'error'
+                    ? 'Needs retry'
+                    : 'Waiting'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {errorMessage ? (
+          <div className="processing-error" role="alert">
+            <AlertCircle aria-hidden="true" />
+
+            <div>
+              <strong>This stage needs another attempt</strong>
+
+              <p>{errorMessage}</p>
+
+              <button
+                className="primary-button processing-retry"
+                type="button"
+                onClick={onRetry}
+              >
+                <RefreshCw aria-hidden="true" />
+                Continue review
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="processing-notice">
+            <LockKeyhole aria-hidden="true" />
+
+            <span>
+              Your document remains private while the review is prepared.
+            </span>
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}
+
+type ReviewTab = 'detailed' | 'annotated' | 'plan';
+
+type ReviewLoadState = 'loading' | 'ready' | 'error';
+
+type FindingPriority = 'high' | 'medium' | 'low';
+
+type DetailedFinding = {
+  id: string;
+  coaching_output_id: string;
+  criterion_code: string;
+  finding_index: number;
+  finding_type: string;
+  priority: FindingPriority;
+  block_id: string | null;
+  section_title: string | null;
+  paragraph_index: number | null;
+  page_number: number | null;
+  sentence_ids: string[];
+  evidence_excerpt: string | null;
+  rubric_requirement: string;
+  issue: string;
+  specific_action: string;
+  required_elements: string[];
+  completion_check: string;
+  why: string;
+};
+
+type CoachingWhy = {
+  source_type?: string;
+  trigger_sentence_ids?: string[];
+  trigger_gap?: string | null;
+  explanation?: string;
+};
+
+type CoachingStrength = {
+  id?: string;
+  summary?: string;
+  rubric_target?: string;
+  why?: CoachingWhy;
+};
+
+type CoachingQuestion = {
+  id?: string;
+  question?: string;
+  rubric_target?: string;
+  why?: CoachingWhy;
+};
+
+type CoachingChecklistItem = {
+  id?: string;
+  priority?: FindingPriority;
+  action?: string;
+  completion_check?: string;
+  rubric_target?: string;
+  why?: CoachingWhy;
+};
+
+type CriterionCoaching = {
+  criterion: string;
+  criterion_name: string;
+  criterion_max_marks: number | null;
+  indicative_band: string | null;
+  indicative_mark_range: [number, number] | null;
+  confidence: string | null;
+  command_term_level: string | null;
+  why_this_range: string | null;
+  strengths: CoachingStrength[];
+  reflective_questions: CoachingQuestion[];
+  improvement_checklist: CoachingChecklistItem[];
+};
+
+type ProgressTarget = {
+  id: string;
+  criterion: string;
+  priority: FindingPriority;
+  action: string;
+  successEvidence: string | null;
+  why: string | null;
+};
+
+type ProgressPlanView = {
+  summary: string | null;
+  nextCheckinDate: string | null;
+  targets: ProgressTarget[];
+};
+
+type DetailedReviewData = {
+  findings: DetailedFinding[];
+  criteria: CriterionCoaching[];
+  progressPlan: ProgressPlanView;
+  annotatedIaUrl: string | null;
+  annotatedArtifactBucket: string | null;
+  annotatedArtifactPath: string | null;
+  annotatedArtifactExpiresAt: string | null;
+};
+
+type AnnotatedDocxResponse = {
+  submission_id?: string;
+  artifact_id?: string;
+  artifact_type?: string;
+  status?: string;
+  signed_url?: string;
+  filename?: string;
+  comment_count?: number;
+  skipped_finding_count?: number;
+  generated_at?: string;
+  expires_at?: string;
+  cached?: boolean;
+};
+
+type CompletionWorkspaceProps = {
+  selectedFile: ValidatedIaFile | null;
+  submission: IaSubmission | null;
+  completion: PipelineCompletion | null;
+  accountState: ReturnType<typeof getAccountSessionState>;
+  signedInEmail: string | null;
+  reportSaveState: ReportSaveState;
+  reportSaveMessage: string;
+  onOpenAccount: () => void;
+  onSaveReport: () => void;
+  onReset: () => void;
+  showBackToReports: boolean;
+  onBackToReports: () => void;
+};
+
+function CompletionWorkspace({
+  selectedFile,
+  submission,
+  completion,
+  accountState,
+  signedInEmail,
+  reportSaveState,
+  reportSaveMessage,
+  onOpenAccount,
+  onSaveReport,
+  onReset,
+  showBackToReports,
+  onBackToReports,
+}: CompletionWorkspaceProps) {
+  const [activeTab, setActiveTab] = useState<ReviewTab>('detailed');
+  const [reviewLoadState, setReviewLoadState] =
+    useState<ReviewLoadState>('loading');
+  const [reviewError, setReviewError] = useState('');
+  const [reviewData, setReviewData] = useState<DetailedReviewData | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const [isOpeningAnnotatedIa, setIsOpeningAnnotatedIa] = useState(false);
+  const [annotatedIaOpenError, setAnnotatedIaOpenError] = useState('');
+  const [isDownloadingAnnotatedDocx, setIsDownloadingAnnotatedDocx] =
+    useState(false);
+  const [annotatedDocxError, setAnnotatedDocxError] = useState('');
+  const [annotatedDocxSuccess, setAnnotatedDocxSuccess] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSavedReview() {
+      if (!submission?.id) {
+        if (active) {
+          setReviewLoadState('error');
+          setReviewError(
+            'The completed review could not be linked to this submission.'
+          );
+        }
+        return;
+      }
+
+      try {
+        setReviewLoadState('loading');
+        setReviewError('');
+
+        const data = await loadDetailedReviewData(submission.id, completion);
+
+        if (active) {
+          setReviewData(data);
+          setReviewLoadState('ready');
+        }
+      } catch (error) {
+        console.error('Detailed review could not be loaded', error);
+
+        if (active) {
+          setReviewError(
+            'The saved detailed review could not be displayed. Please try loading it again.'
+          );
+          setReviewLoadState('error');
+        }
+      }
+    }
+
+    void loadSavedReview();
+
+    return () => {
+      active = false;
+    };
+  }, [submission?.id, completion, reloadToken]);
+
+  const annotatedIaUrl =
+    reviewData?.annotatedIaUrl ?? completion?.annotatedIaUrl ?? null;
+
+  const canOpenAnnotatedIa =
+    Boolean(
+      reviewData?.annotatedArtifactBucket && reviewData?.annotatedArtifactPath
+    ) || Boolean(annotatedIaUrl);
+
+  async function handleOpenAnnotatedIa() {
+    if (!canOpenAnnotatedIa || isOpeningAnnotatedIa) {
+      return;
+    }
+
+    setIsOpeningAnnotatedIa(true);
+    setAnnotatedIaOpenError('');
+
+    try {
+      await openAnnotatedIaDocument({
+        bucket: reviewData?.annotatedArtifactBucket ?? null,
+        path: reviewData?.annotatedArtifactPath ?? null,
+        signedUrl: annotatedIaUrl,
+      });
+    } catch (error) {
+      console.error('Annotated IA could not be opened', error);
+
+      setAnnotatedIaOpenError(
+        isExpiredJwtError(error)
+          ? 'The private session expired. Select Open annotated IA again to request a fresh secure session.'
+          : 'The annotated IA could not be displayed. Try opening it again.'
+      );
+    } finally {
+      setIsOpeningAnnotatedIa(false);
+    }
+  }
+
+  const canDownloadAnnotatedDocx = submission?.mime_type === DOCX_MIME_TYPE;
+
+  async function handleDownloadAnnotatedDocx() {
+    if (
+      !submission?.id ||
+      !canDownloadAnnotatedDocx ||
+      isDownloadingAnnotatedDocx
+    ) {
+      return;
+    }
+
+    setIsDownloadingAnnotatedDocx(true);
+    setAnnotatedDocxError('');
+    setAnnotatedDocxSuccess('');
+
+    try {
+      await ensureFreshReviewSession();
+
+      let result = await supabase.functions.invoke<AnnotatedDocxResponse>(
+        'generate-annotated-docx',
+        {
+          body: {
+            submission_id: submission.id,
+            force: false,
+          },
+        }
+      );
+
+      if (result.error && isExpiredJwtError(result.error)) {
+        await ensureFreshReviewSession();
+
+        result = await supabase.functions.invoke<AnnotatedDocxResponse>(
+          'generate-annotated-docx',
+          {
+            body: {
+              submission_id: submission.id,
+              force: false,
+            },
+          }
+        );
+      }
+
+      if (result.error) {
+        throw new Error(
+          await readEdgeFunctionErrorMessage(
+            result.error,
+            'The annotated Word copy could not be generated.'
+          )
+        );
+      }
+
+      const signedUrl = result.data?.signed_url;
+
+      if (typeof signedUrl !== 'string' || !signedUrl) {
+        throw new Error(
+          'The annotated Word copy was generated, but its secure download link was unavailable.'
+        );
+      }
+
+      const filename =
+        result.data?.filename?.trim() ||
+        buildAnnotatedDocxFilename(submission.original_filename);
+
+      await downloadFileFromSignedUrl(signedUrl, filename);
+
+      const commentCount =
+        typeof result.data?.comment_count === 'number'
+          ? result.data.comment_count
+          : null;
+
+      setAnnotatedDocxSuccess(
+        commentCount !== null
+          ? `Annotated Word copy downloaded with ${commentCount} review comment${
+              commentCount === 1 ? '' : 's'
+            }.`
+          : 'Annotated Word copy downloaded successfully.'
+      );
+    } catch (error) {
+      console.error('Annotated Word copy could not be downloaded', error);
+
+      setAnnotatedDocxError(getErrorMessage(error));
+    } finally {
+      setIsDownloadingAnnotatedDocx(false);
+    }
+  }
+
+  function printDetailedReport() {
+    setActiveTab('detailed');
+
+    window.setTimeout(() => {
+      window.print();
+    }, 180);
+  }
+
+  return (
+    <main className="completion-main">
+      {showBackToReports && (
+        <button
+          className="back-to-reports-button"
+          type="button"
+          onClick={onBackToReports}
+        >
+          <ArrowLeft aria-hidden="true" />
+          Back to My IA Reports
+        </button>
+      )}
+
+      <AccountSaveBanner
+        accountState={accountState}
+        signedInEmail={signedInEmail}
+        versionNumber={submission?.draft_version ?? null}
+        saveState={reportSaveState}
+        message={reportSaveMessage}
+        onOpenAccount={onOpenAccount}
+        onSave={onSaveReport}
+      />
+
+      <section className="completion-card completion-card-results">
+        <div className="completion-hero">
+          <div className="completion-mark">
+            <CheckCircle2 aria-hidden="true" />
+          </div>
+
+          <div className="completion-hero-copy">
+            <span className="completion-eyebrow">Review complete</span>
+
+            <h1>Your IA guidance is ready</h1>
+
+            <p className="completion-intro">
+              Review the exact evidence identified in your draft, the specific
+              action required for each criterion, your annotated IA and your
+              prioritised progress plan.
+            </p>
+          </div>
+        </div>
+
+        {(selectedFile?.filename || submission?.original_filename) && (
+          <div className="completion-file">
+            <FileCheck2 aria-hidden="true" />
+
+            <div>
+              <strong>
+                {selectedFile?.filename ?? submission?.original_filename}
+              </strong>
+              <span>Secure detailed review completed</span>
+            </div>
+          </div>
+        )}
+
+        <div className="completion-summary-grid">
+          <div className="completion-summary-item">
+            <SearchCheck aria-hidden="true" />
+
+            <div>
+              <span>Indicative range</span>
+
+              <strong>
+                {completion?.overallMarkRange
+                  ? `${completion.overallMarkRange[0]}–${completion.overallMarkRange[1]}`
+                  : 'Ready'}
+                {completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
+              </strong>
+            </div>
+          </div>
+
+          <div className="completion-summary-item">
+            <ListChecks aria-hidden="true" />
+
+            <div>
+              <span>Rubric criteria</span>
+              <strong>4 reviewed</strong>
+            </div>
+          </div>
+
+          <div className="completion-summary-item">
+            <Target aria-hidden="true" />
+
+            <div>
+              <span>Detailed findings</span>
+              <strong>{reviewData?.findings.length ?? 'Saved'}</strong>
+            </div>
+          </div>
+
+          <div className="completion-summary-item">
+            <Clock3 aria-hidden="true" />
+
+            <div>
+              <span>Suggested check-in</span>
+
+              <strong>
+                {reviewData?.progressPlan.nextCheckinDate
+                  ? formatReviewDate(reviewData.progressPlan.nextCheckinDate)
+                  : completion?.nextCheckinDate
+                  ? formatReviewDate(completion.nextCheckinDate)
+                  : 'Included in plan'}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="completion-toolbar">
+          <button
+            className="report-action-button"
+            type="button"
+            onClick={printDetailedReport}
+          >
+            <Printer aria-hidden="true" />
+            Print or save report
+          </button>
+
+          {canOpenAnnotatedIa && (
+            <button
+              className="report-action-button report-action-primary"
+              type="button"
+              onClick={handleOpenAnnotatedIa}
+              disabled={isOpeningAnnotatedIa}
+            >
+              {isOpeningAnnotatedIa ? (
+                <LoaderCircle className="stage-spinner" aria-hidden="true" />
+              ) : (
+                <ExternalLink aria-hidden="true" />
+              )}
+
+              {isOpeningAnnotatedIa
+                ? 'Opening annotated IA…'
+                : 'Open annotated IA'}
+            </button>
+          )}
+        </div>
+
+        {annotatedIaOpenError && (
+          <div className="annotated-open-error" role="alert">
+            <AlertCircle aria-hidden="true" />
+
+            <div>
+              <strong>The annotated IA could not be opened</strong>
+              <span>{annotatedIaOpenError}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="review-results-shell">
+          <div
+            className="review-tabs"
+            role="tablist"
+            aria-label="IA review sections"
+          >
+            <button
+              className={`review-tab ${
+                activeTab === 'detailed' ? 'review-tab-active' : ''
+              }`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'detailed'}
+              aria-controls="detailed-review-panel"
+              onClick={() => setActiveTab('detailed')}
+            >
+              <BookOpen aria-hidden="true" />
+              <span>
+                <strong>Detailed Review</strong>
+                <small>Evidence, actions and checks</small>
+              </span>
+            </button>
+
+            <button
+              className={`review-tab ${
+                activeTab === 'annotated' ? 'review-tab-active' : ''
+              }`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'annotated'}
+              aria-controls="annotated-review-panel"
+              onClick={() => setActiveTab('annotated')}
+            >
+              <Eye aria-hidden="true" />
+              <span>
+                <strong>Annotated IA</strong>
+                <small>Highlights linked to comments</small>
+              </span>
+            </button>
+
+            <button
+              className={`review-tab ${
+                activeTab === 'plan' ? 'review-tab-active' : ''
+              }`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'plan'}
+              aria-controls="progress-plan-panel"
+              onClick={() => setActiveTab('plan')}
+            >
+              <ClipboardList aria-hidden="true" />
+              <span>
+                <strong>Progress Plan</strong>
+                <small>Prioritised next steps</small>
+              </span>
+            </button>
+          </div>
+
+          <div className="review-tab-content">
+            {reviewLoadState === 'loading' ? (
+              <ReviewDataLoading />
+            ) : reviewLoadState === 'error' ? (
+              <ReviewDataError
+                message={reviewError}
+                onRetry={() => setReloadToken((value) => value + 1)}
+              />
+            ) : reviewData ? (
+              <>
+                {activeTab === 'detailed' && (
+                  <DetailedReviewTab data={reviewData} />
+                )}
+
+                {activeTab === 'annotated' && (
+                  <AnnotatedIaTab
+                    canOpen={canOpenAnnotatedIa}
+                    isOpening={isOpeningAnnotatedIa}
+                    openError={annotatedIaOpenError}
+                    expiresAt={reviewData.annotatedArtifactExpiresAt}
+                    onOpen={handleOpenAnnotatedIa}
+                    onRefresh={() => setReloadToken((value) => value + 1)}
+                    canDownloadWord={canDownloadAnnotatedDocx}
+                    isDownloadingWord={isDownloadingAnnotatedDocx}
+                    wordDownloadError={annotatedDocxError}
+                    wordDownloadSuccess={annotatedDocxSuccess}
+                    onDownloadWord={handleDownloadAnnotatedDocx}
+                  />
+                )}
+
+                {activeTab === 'plan' && (
+                  <ProgressPlanTab plan={reviewData.progressPlan} />
+                )}
+              </>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="completion-footer-actions">
+          <p>
+            This is formative guidance. Make every revision independently and
+            confirm final decisions with your teacher.
+          </p>
+
+          <button
+            className="secondary-action-button"
+            type="button"
+            onClick={onReset}
+          >
+            <RotateCcw aria-hidden="true" />
+            Review another draft
+          </button>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function ReviewDataLoading() {
+  return (
+    <div className="review-data-state" role="status">
+      <LoaderCircle className="stage-spinner" aria-hidden="true" />
+      <div>
+        <strong>Loading your detailed review</strong>
+        <span>
+          Preparing the saved findings, annotation link and progress targets.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+type ReviewDataErrorProps = {
+  message: string;
+  onRetry: () => void;
+};
+
+function ReviewDataError({ message, onRetry }: ReviewDataErrorProps) {
+  return (
+    <div className="review-data-state review-data-state-error" role="alert">
+      <AlertCircle aria-hidden="true" />
+
+      <div>
+        <strong>Your review is saved but could not be displayed</strong>
+        <span>{message}</span>
+
+        <button className="retry-button" type="button" onClick={onRetry}>
+          <RefreshCw aria-hidden="true" />
+          Load review again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+type DetailedReviewTabProps = {
+  data: DetailedReviewData;
+};
+
+function DetailedReviewTab({ data }: DetailedReviewTabProps) {
+  const criterionSections = useMemo(
+    () => buildCriterionSections(data.criteria, data.findings),
+    [data.criteria, data.findings]
+  );
+
+  return (
+    <section
+      className="detailed-review-panel"
+      id="detailed-review-panel"
+      role="tabpanel"
+    >
+      <div className="review-panel-heading">
+        <div>
+          <span className="review-panel-eyebrow">
+            Specific criterion guidance
+          </span>
+          <h2>What the draft demonstrates and what must change</h2>
+          <p>
+            Every finding is linked to the submitted IA and includes a precise
+            action, required elements, an observable completion check and an
+            explanation of why the change matters.
+          </p>
+        </div>
+
+        <span className="finding-count-badge">
+          {data.findings.length} findings
+        </span>
+      </div>
+
+      <nav className="criterion-jump-list" aria-label="Jump to criterion">
+        {criterionSections.map((section, index) => (
+          <a key={section.code} href={`#criterion-${section.code}`}>
+            <span>{index + 1}</span>
+            {section.name}
+          </a>
+        ))}
+      </nav>
+
+      <div className="criterion-review-list">
+        {criterionSections.map((section, index) => (
+          <CriterionReviewSection
+            key={section.code}
+            section={section}
+            number={index + 1}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+type CriterionSection = {
+  code: string;
+  name: string;
+  coaching: CriterionCoaching | null;
+  findings: DetailedFinding[];
+};
+
+type CriterionReviewSectionProps = {
+  section: CriterionSection;
+  number: number;
+};
+
+function CriterionReviewSection({
+  section,
+  number,
+}: CriterionReviewSectionProps) {
+  const scoreRange = section.coaching?.indicative_mark_range;
+  const maximumMark = section.coaching?.criterion_max_marks;
+
+  return (
+    <article
+      className={`criterion-review criterion-${getCriterionClass(
+        section.code
+      )}`}
+      id={`criterion-${section.code}`}
+    >
+      <header className="criterion-review-header">
+        <div className="criterion-title-group">
+          <span className="criterion-number">{number}</span>
+
+          <div>
+            <span className="criterion-label">SEHS criterion</span>
+            <h2>{section.name}</h2>
+          </div>
+        </div>
+
+        <div className="criterion-score-group">
+          <span>Indicative range</span>
+          <strong>
+            {scoreRange ? `${scoreRange[0]}–${scoreRange[1]}` : 'Review ready'}
+            {maximumMark ? ` / ${maximumMark}` : ''}
+          </strong>
+          {section.coaching?.confidence && (
+            <small>{capitalize(section.coaching.confidence)} confidence</small>
+          )}
+        </div>
+      </header>
+
+      {section.coaching?.why_this_range && (
+        <div className="criterion-range-rationale">
+          <SearchCheck aria-hidden="true" />
+          <div>
+            <strong>Why this range</strong>
+            <p>{section.coaching.why_this_range}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="criterion-findings">
+        {section.findings.length > 0 ? (
+          section.findings.map((finding, index) => (
+            <FindingCard
+              key={finding.id}
+              finding={finding}
+              number={index + 1}
+            />
+          ))
+        ) : (
+          <div className="empty-review-message">
+            No separate detailed findings were saved for this criterion.
+          </div>
+        )}
+      </div>
+
+      <div className="criterion-coaching-grid">
+        <ReflectiveQuestions
+          questions={section.coaching?.reflective_questions ?? []}
+        />
+        <CriterionChecklist
+          items={section.coaching?.improvement_checklist ?? []}
+        />
+      </div>
+    </article>
+  );
+}
+
+type FindingCardProps = {
+  finding: DetailedFinding;
+  number: number;
+};
+
+function FindingCard({ finding, number }: FindingCardProps) {
+  const location = formatFindingLocation(finding);
+  const isStrength = finding.finding_type === 'strength';
+
+  return (
+    <article className={`finding-card finding-${finding.priority}`}>
+      <div className="finding-card-header">
+        <div className="finding-card-title">
+          <span className="finding-number">{number}</span>
+
+          <div>
+            <span className="finding-type-label">
+              {getFindingTypeLabel(finding.finding_type)}
+            </span>
+            <h3>{finding.issue}</h3>
+          </div>
+        </div>
+
+        <span className={`priority-pill priority-${finding.priority}`}>
+          {capitalize(finding.priority)} priority
+        </span>
+      </div>
+
+      <div className="finding-location">
+        <MapPin aria-hidden="true" />
+        <span>{location}</span>
+      </div>
+
+      {finding.evidence_excerpt && (
+        <blockquote className="finding-evidence">
+          <Quote aria-hidden="true" />
+          <div>
+            <strong>Evidence from the submitted IA</strong>
+            <p>{finding.evidence_excerpt}</p>
+          </div>
+        </blockquote>
+      )}
+
+      <div className="finding-detail-grid">
+        <div className="finding-detail-block">
+          <span>Rubric requirement</span>
+          <p>{finding.rubric_requirement}</p>
+        </div>
+
+        <div className="finding-detail-block finding-action-block">
+          <span>
+            {isStrength ? 'How to retain this strength' : 'Specific action'}
+          </span>
+          <p>{finding.specific_action}</p>
+
+          {finding.required_elements.length > 0 && (
+            <ul>
+              {finding.required_elements.map((element) => (
+                <li key={element}>{element}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="finding-detail-block finding-check-block">
+          <span>Completion check</span>
+          <p>{finding.completion_check}</p>
+        </div>
+
+        <div className="finding-detail-block finding-why-block">
+          <span>Why this matters</span>
+          <p>{finding.why}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+type ReflectiveQuestionsProps = {
+  questions: CoachingQuestion[];
+};
+
+function ReflectiveQuestions({ questions }: ReflectiveQuestionsProps) {
+  return (
+    <section className="criterion-coaching-card">
+      <div className="criterion-coaching-heading">
+        <Sparkles aria-hidden="true" />
+        <div>
+          <h3>Reflective questions</h3>
+          <p>Answer these before revising the criterion.</p>
+        </div>
+      </div>
+
+      {questions.length > 0 ? (
+        <ol className="reflective-question-list">
+          {questions.map((question, index) => (
+            <li key={question.id ?? `${question.question}-${index}`}>
+              <strong>{question.question}</strong>
+              {question.why?.explanation && (
+                <span>{question.why.explanation}</span>
+              )}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="empty-coaching-copy">
+          No separate reflective questions were saved.
+        </p>
+      )}
+    </section>
+  );
+}
+
+type CriterionChecklistProps = {
+  items: CoachingChecklistItem[];
+};
+
+function CriterionChecklist({ items }: CriterionChecklistProps) {
+  return (
+    <section className="criterion-coaching-card">
+      <div className="criterion-coaching-heading">
+        <ListChecks aria-hidden="true" />
+        <div>
+          <h3>Criterion checklist</h3>
+          <p>Use the completion evidence to check your revision.</p>
+        </div>
+      </div>
+
+      {items.length > 0 ? (
+        <div className="criterion-checklist">
+          {items.map((item, index) => (
+            <div
+              className="criterion-checklist-item"
+              key={item.id ?? `${item.action}-${index}`}
+            >
+              <span
+                className={`priority-dot priority-${item.priority ?? 'medium'}`}
+              />
+              <div>
+                <strong>{item.action}</strong>
+                {item.completion_check && <span>{item.completion_check}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="empty-coaching-copy">
+          No separate checklist items were saved.
+        </p>
+      )}
+    </section>
+  );
+}
+
+type AnnotatedIaTabProps = {
+  canOpen: boolean;
+  isOpening: boolean;
+  openError: string;
+  expiresAt: string | null;
+  onOpen: () => void;
+  onRefresh: () => void;
+  canDownloadWord: boolean;
+  isDownloadingWord: boolean;
+  wordDownloadError: string;
+  wordDownloadSuccess: string;
+  onDownloadWord: () => void;
+};
+
+function AnnotatedIaTab({
+  canOpen,
+  isOpening,
+  openError,
+  expiresAt,
+  onOpen,
+  onRefresh,
+  canDownloadWord,
+  isDownloadingWord,
+  wordDownloadError,
+  wordDownloadSuccess,
+  onDownloadWord,
+}: AnnotatedIaTabProps) {
+  return (
+    <section
+      className="annotated-review-panel"
+      id="annotated-review-panel"
+      role="tabpanel"
+    >
+      <div className="annotated-hero-card">
+        <span className="annotated-hero-icon">
+          <Eye aria-hidden="true" />
+        </span>
+
+        <div>
+          <span className="review-panel-eyebrow">
+            Your submitted IA, annotated
+          </span>
+
+          <h2>Open the highlighted document</h2>
+
+          <p>
+            The annotated view follows the order of your draft. Highlighted
+            passages and numbered markers connect directly to the relevant
+            criterion finding, specific action and completion check.
+          </p>
+        </div>
+
+        <div className="annotated-action-group">
+          {canOpen ? (
+            <button
+              className="annotated-open-button"
+              type="button"
+              onClick={onOpen}
+              disabled={isOpening}
+            >
+              {isOpening ? (
+                <LoaderCircle className="stage-spinner" aria-hidden="true" />
+              ) : (
+                <ExternalLink aria-hidden="true" />
+              )}
+
+              {isOpening ? 'Opening annotated IA…' : 'Open annotated IA'}
+            </button>
+          ) : (
+            <button
+              className="annotated-open-button"
+              type="button"
+              onClick={onRefresh}
+            >
+              <RefreshCw aria-hidden="true" />
+              Refresh secure artifact
+            </button>
+          )}
+
+          {canDownloadWord && (
+            <button
+              className="annotated-download-button"
+              type="button"
+              onClick={onDownloadWord}
+              disabled={isDownloadingWord}
+            >
+              {isDownloadingWord ? (
+                <LoaderCircle className="stage-spinner" aria-hidden="true" />
+              ) : (
+                <Download aria-hidden="true" />
+              )}
+
+              {isDownloadingWord
+                ? 'Preparing Word copy…'
+                : 'Download annotated Word copy'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {openError && (
+        <div className="annotated-open-error" role="alert">
+          <AlertCircle aria-hidden="true" />
+
+          <div>
+            <strong>The annotated IA could not be opened</strong>
+            <span>{openError}</span>
+          </div>
+        </div>
+      )}
+
+      {wordDownloadError && (
+        <div className="annotated-open-error" role="alert">
+          <AlertCircle aria-hidden="true" />
+
+          <div>
+            <strong>The annotated Word copy could not be downloaded</strong>
+            <span>{wordDownloadError}</span>
+          </div>
+        </div>
+      )}
+
+      {wordDownloadSuccess && (
+        <div className="annotated-download-success" role="status">
+          <CheckCircle2 aria-hidden="true" />
+
+          <div>
+            <strong>Annotated Word copy ready</strong>
+            <span>{wordDownloadSuccess}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="annotated-feature-grid">
+        <div className="annotated-feature-card">
+          <SearchCheck aria-hidden="true" />
+          <strong>Exact evidence</strong>
+          <span>
+            Highlights are calculated from saved sentence and paragraph
+            locations.
+          </span>
+        </div>
+
+        <div className="annotated-feature-card">
+          <ListChecks aria-hidden="true" />
+          <strong>Numbered comments</strong>
+          <span>
+            Select a marker to move directly to its detailed criterion comment.
+          </span>
+        </div>
+
+        <div className="annotated-feature-card">
+          <Download aria-hidden="true" />
+          <strong>Word comment copy</strong>
+          <span>
+            DOCX submissions can be downloaded with genuine Microsoft Word
+            comments attached to the relevant text.
+          </span>
+        </div>
+
+        <div className="annotated-feature-card">
+          <Printer aria-hidden="true" />
+          <strong>Printable view</strong>
+          <span>
+            Use the browser print command in the annotated view to save a PDF
+            copy.
+          </span>
+        </div>
+      </div>
+
+      <div className="annotated-privacy-note">
+        <ShieldCheck aria-hidden="true" />
+
+        <div>
+          <strong>Temporary private artifact</strong>
+
+          <p>
+            The annotated file is available only through a temporary private
+            session.
+            {expiresAt
+              ? ` It is currently scheduled to expire on ${formatReviewDateTime(
+                  expiresAt
+                )}.`
+              : ' Refresh the secure artifact if it is no longer available.'}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+type ProgressPlanTabProps = {
+  plan: ProgressPlanView;
+};
+
+function ProgressPlanTab({ plan }: ProgressPlanTabProps) {
+  return (
+    <section
+      className="progress-plan-panel"
+      id="progress-plan-panel"
+      role="tabpanel"
+    >
+      <div className="review-panel-heading progress-plan-heading">
+        <div>
+          <span className="review-panel-eyebrow">
+            Prioritised revision sequence
+          </span>
+          <h2>Your progress plan</h2>
+          <p>
+            Complete high-priority targets first. Do not move on until the
+            success evidence can be seen in your revised IA.
+          </p>
+        </div>
+
+        {plan.nextCheckinDate && (
+          <div className="plan-checkin-card">
+            <Clock3 aria-hidden="true" />
+            <span>Suggested check-in</span>
+            <strong>{formatReviewDate(plan.nextCheckinDate)}</strong>
+          </div>
+        )}
+      </div>
+
+      {plan.summary && (
+        <div className="completion-plan-summary progress-plan-summary">
+          <Target aria-hidden="true" />
+          <div>
+            <strong>Plan overview</strong>
+            <p>{plan.summary}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="progress-target-list">
+        {plan.targets.length > 0 ? (
+          plan.targets.map((target, index) => (
+            <article
+              className={`progress-target priority-border-${target.priority}`}
+              key={target.id}
+            >
+              <div className="progress-target-number">{index + 1}</div>
+
+              <div className="progress-target-content">
+                <div className="progress-target-meta">
+                  <span>{target.criterion}</span>
+                  <span className={`priority-pill priority-${target.priority}`}>
+                    {capitalize(target.priority)} priority
+                  </span>
+                </div>
+
+                <h3>{target.action}</h3>
+
+                {target.successEvidence && (
+                  <div className="progress-success-evidence">
+                    <CheckCircle2 aria-hidden="true" />
+                    <div>
+                      <strong>Success evidence</strong>
+                      <span>{target.successEvidence}</span>
+                    </div>
+                  </div>
+                )}
+
+                {target.why && (
+                  <details className="progress-target-why">
+                    <summary>
+                      <ChevronDown aria-hidden="true" />
+                      Why this target matters
+                    </summary>
+                    <p>{target.why}</p>
+                  </details>
+                )}
+              </div>
+            </article>
+          ))
+        ) : (
+          <div className="empty-review-message">
+            The plan summary is available, but no separate targets were saved.
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+async function readEdgeFunctionErrorMessage(
+  error: unknown,
+  fallback: string
+): Promise<string> {
+  const record =
+    typeof error === 'object' && error !== null
+      ? (error as Record<string, unknown>)
+      : null;
+
+  const context = record?.context;
+
+  if (context instanceof Response) {
+    try {
+      const payload = (await context.clone().json()) as Record<string, unknown>;
+
+      if (typeof payload.error === 'string' && payload.error.trim()) {
+        return payload.error.trim();
+      }
+    } catch {
+      try {
+        const text = await context.clone().text();
+
+        if (text.trim()) {
+          return text.trim();
+        }
+      } catch {
+        // Use the normal fallback below.
+      }
+    }
+  }
+
+  if (typeof record?.message === 'string' && record.message.trim()) {
+    return record.message.trim();
+  }
+
+  return fallback;
+}
+
+async function downloadFileFromSignedUrl(
+  signedUrl: string,
+  filename: string
+): Promise<void> {
+  const response = await fetch(signedUrl, {
+    method: 'GET',
+    cache: 'no-store',
+    credentials: 'omit',
+  });
+
+  if (!response.ok) {
+    const responseText = await response.text();
+
+    throw new Error(
+      responseText || `The secure Word copy returned ${response.status}.`
+    );
+  }
+
+  const blob = await response.blob();
+
+  const objectUrl = URL.createObjectURL(blob);
+
+  const anchor = document.createElement('a');
+
+  anchor.href = objectUrl;
+
+  anchor.download = filename;
+
+  anchor.style.display = 'none';
+
+  document.body.appendChild(anchor);
+
+  anchor.click();
+  anchor.remove();
+
+  window.setTimeout(() => {
+    URL.revokeObjectURL(objectUrl);
+  }, 60_000);
+}
+
+function buildAnnotatedDocxFilename(originalFilename: string): string {
+  const base = originalFilename.replace(/\.docx$/iu, '').trim() || 'IA';
+
+  return `${base}-Annotated.docx`;
+}
+
+async function ensureFreshReviewSession(): Promise<void> {
+  if (reviewSessionRefreshPromise) {
+    return reviewSessionRefreshPromise;
+  }
+
+  reviewSessionRefreshPromise = (async () => {
+    const { data: currentSessionData, error: currentSessionError } =
+      await supabase.auth.getSession();
+
+    if (currentSessionError) {
+      throw currentSessionError;
+    }
+
+    if (!currentSessionData.session) {
+      await ensureAnonymousSession();
+
+      const { data: restoredSessionData, error: restoredSessionError } =
+        await supabase.auth.getSession();
+
+      if (restoredSessionError || !restoredSessionData.session) {
+        throw new Error(
+          'Your private review session could not be restored. Keep this page open and try again.'
+        );
+      }
+
+      return;
+    }
+
+    const { data: refreshedSessionData, error: refreshError } =
+      await supabase.auth.refreshSession(currentSessionData.session);
+
+    if (refreshError || !refreshedSessionData.session) {
+      throw new Error(
+        'Your private review session has expired and could not be refreshed. Keep this page open and try again.'
+      );
+    }
+  })();
+
+  try {
+    await reviewSessionRefreshPromise;
+  } finally {
+    reviewSessionRefreshPromise = null;
+  }
+}
+
+function isExpiredJwtError(error: unknown): boolean {
+  const record =
+    typeof error === 'object' && error !== null
+      ? (error as Record<string, unknown>)
+      : null;
+
+  const parts = [
+    typeof error === 'string' ? error : '',
+    typeof record?.message === 'string' ? record.message : '',
+    typeof record?.error === 'string' ? record.error : '',
+  ];
+
+  try {
+    parts.push(JSON.stringify(error));
+  } catch {
+    // Some browser error objects cannot be serialised.
+  }
+
+  return /invalidjwt|jwt[^\n]*expired|exp[^\n]*timestamp|timestamp check failed/iu.test(
+    parts.join(' ')
+  );
+}
+
+async function fetchAnnotatedHtml(signedUrl: string): Promise<string> {
+  const response = await fetch(signedUrl, {
+    method: 'GET',
+    cache: 'no-store',
+    credentials: 'omit',
+    headers: {
+      Accept: 'text/html, text/plain;q=0.9, */*;q=0.8',
+    },
+  });
+
+  if (!response.ok) {
+    const responseText = await response.text();
+
+    throw new Error(
+      responseText ||
+        `The secure annotated artifact returned ${response.status}.`
+    );
+  }
+
+  return response.text();
+}
+
+type OpenAnnotatedIaOptions = {
+  bucket: string | null;
+  path: string | null;
+  signedUrl: string | null;
+};
+
+async function openAnnotatedIaDocument({
+  bucket,
+  path,
+  signedUrl,
+}: OpenAnnotatedIaOptions): Promise<void> {
+  const previewWindow = window.open('', '_blank');
+
+  if (!previewWindow) {
+    throw new Error(
+      'The browser blocked the annotated IA window. Allow pop-ups for this site and try again.'
+    );
+  }
+
+  previewWindow.opener = null;
+
+  previewWindow.document.open();
+
+  previewWindow.document.write(`<!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1"
+        />
+        <title>Preparing annotated IA</title>
+      </head>
+
+      <body style="margin:0">
+        <main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#f4f7fb;color:#172033;font-family:Inter,Arial,sans-serif;text-align:center">
+          <div>
+            <h1 style="margin:0 0 10px;font-size:24px">
+              Preparing your annotated IA
+            </h1>
+
+            <p style="margin:0;color:#61708a">
+              Refreshing the private session and preparing the document.
+            </p>
+          </div>
+        </main>
+      </body>
+    </html>`);
+
+  previewWindow.document.close();
+
+  try {
+    await ensureFreshReviewSession();
+
+    let html = '';
+    let lastError: unknown = null;
+
+    if (bucket && path) {
+      let downloadResult = await supabase.storage.from(bucket).download(path);
+
+      if (downloadResult.error && isExpiredJwtError(downloadResult.error)) {
+        await ensureFreshReviewSession();
+
+        downloadResult = await supabase.storage.from(bucket).download(path);
+      }
+
+      lastError = downloadResult.error;
+
+      if (!downloadResult.error && downloadResult.data) {
+        html = await downloadResult.data.text();
+      }
+
+      if (!html) {
+        let signedUrlResult = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(path, 30 * 60);
+
+        if (signedUrlResult.error && isExpiredJwtError(signedUrlResult.error)) {
+          await ensureFreshReviewSession();
+
+          signedUrlResult = await supabase.storage
+            .from(bucket)
+            .createSignedUrl(path, 30 * 60);
+        }
+
+        if (!signedUrlResult.error && signedUrlResult.data?.signedUrl) {
+          html = await fetchAnnotatedHtml(signedUrlResult.data.signedUrl);
+        } else if (signedUrlResult.error) {
+          lastError = signedUrlResult.error;
+        }
+      }
+    }
+
+    /*
+      The completion-time URL is only a final fallback because its embedded
+      expiry may already have passed.
+    */
+    if (!html && signedUrl) {
+      html = await fetchAnnotatedHtml(signedUrl);
+    }
+
+    if (!html && lastError) {
+      throw lastError;
+    }
+
+    const normalizedHtml = html.replace(/^\uFEFF/u, '').trimStart();
+
+    if (
+      !normalizedHtml ||
+      !/^<!doctype\s+html|^<html(?:\s|>)/iu.test(normalizedHtml)
+    ) {
+      throw new Error(
+        'The annotated artifact did not contain a valid HTML document.'
+      );
+    }
+
+    /*
+      Render the downloaded private HTML locally. The browser never navigates
+      to the Supabase object URL, so text/plain Storage responses are not shown
+      as source code.
+    */
+    previewWindow.document.open('text/html', 'replace');
+
+    previewWindow.document.write(normalizedHtml);
+
+    previewWindow.document.close();
+    previewWindow.focus();
+  } catch (error) {
+    previewWindow.document.open();
+
+    previewWindow.document.write(`<!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+          />
+          <title>Annotated IA unavailable</title>
+        </head>
+
+        <body style="margin:0">
+          <main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#fff5f4;color:#8a1c14;font-family:Inter,Arial,sans-serif;text-align:center">
+            <div>
+              <h1 style="margin:0 0 10px;font-size:24px">
+                The annotated IA could not be opened
+              </h1>
+
+              <p style="margin:0;color:#9f3a32">
+                Return to the review page and select Open annotated IA again.
+                The app will request a fresh private session.
+              </p>
+            </div>
+          </main>
+        </body>
+      </html>`);
+
+    previewWindow.document.close();
+
+    throw error;
+  }
+}
+
+async function loadSavedReportVersion(
+  submissionId: string
+): Promise<SavedReportLoadResult> {
+  await ensureFreshReviewSession();
+
+  const [historyResult, submissionResult, progressPlanResult, artifactResult] =
+    await Promise.all([
+      supabase
+        .from('ia_report_history')
+        .select('*')
+        .eq('submission_id', submissionId)
+        .eq('retention_policy', 'account')
+        .maybeSingle(),
+
+      supabase
+        .from('ia_submissions')
+        .select(
+          [
+            'id',
+            'student_id',
+            'subject',
+            'draft_version',
+            'original_filename',
+            'mime_type',
+            'file_size_bytes',
+            'raw_file_bucket',
+            'raw_file_path',
+            'raw_file_expires_at',
+            'status',
+            'uploaded_at',
+          ].join(',')
+        )
+        .eq('id', submissionId)
+        .maybeSingle(),
+
+      supabase
+        .from('progress_plans')
+        .select('next_checkin_date')
+        .eq('current_submission_id', submissionId)
+        .maybeSingle(),
+
+      supabase
+        .from('ia_review_artifacts')
+        .select('id, expires_at')
+        .eq('submission_id', submissionId)
+        .eq('artifact_type', 'annotated_html')
+        .eq('status', 'ready')
+        .is('deleted_at', null)
+        .maybeSingle(),
+    ]);
+
+  if (historyResult.error) {
+    throw historyResult.error;
+  }
+
+  if (submissionResult.error) {
+    throw submissionResult.error;
+  }
+
+  if (!historyResult.data || !submissionResult.data) {
+    throw new Error('The selected saved report was not found.');
+  }
+
+  const history = normalizeReportHistoryRow(historyResult.data);
+
+  if (!history) {
+    throw new Error(
+      'The selected saved report contains incomplete history information.'
+    );
+  }
+
+  const submission = normalizeSavedSubmission(submissionResult.data);
+
+  const markSummary = deriveReportMarkSummary(history.criterion_scores);
+
+  const artifact = artifactResult.data;
+
+  const completion: PipelineCompletion = {
+    submissionId: submission.id,
+    overallMarkRange: markSummary?.range ?? null,
+    maximumMark: markSummary?.maximum ?? null,
+    planSummary: null,
+    nextCheckinDate:
+      typeof progressPlanResult.data?.next_checkin_date === 'string'
+        ? progressPlanResult.data.next_checkin_date
+        : null,
+    annotatedIaUrl: null,
+    annotatedArtifactId: typeof artifact?.id === 'string' ? artifact.id : null,
+    annotatedArtifactExpiresAt:
+      typeof artifact?.expires_at === 'string' ? artifact.expires_at : null,
+    completedAt:
+      history.report_generated_at ?? history.saved_at ?? history.uploaded_at,
+  };
+
+  return {
+    submission,
+    completion,
+  };
+}
+
+function normalizeSavedSubmission(value: unknown): IaSubmission {
+  if (!isRecord(value)) {
+    throw new Error('The saved submission details could not be read.');
+  }
+
+  const mimeType =
+    value.mime_type === DOCX_MIME_TYPE
+      ? DOCX_MIME_TYPE
+      : value.mime_type === PDF_MIME_TYPE
+      ? PDF_MIME_TYPE
+      : null;
+
+  if (!mimeType) {
+    throw new Error('The saved report uses an unsupported document type.');
+  }
+
+  const id = asText(value.id);
+  const studentId = asText(value.student_id);
+  const subject = asText(value.subject);
+  const originalFilename = asText(value.original_filename);
+  const rawFileBucket = asText(value.raw_file_bucket);
+  const rawFilePath = asText(value.raw_file_path);
+  const rawFileExpiresAt = asText(value.raw_file_expires_at);
+  const status = asText(value.status);
+  const uploadedAt = asText(value.uploaded_at);
+  const draftVersion = asNumber(value.draft_version);
+  const fileSizeBytes = asNumber(value.file_size_bytes);
+
+  if (
+    !id ||
+    !studentId ||
+    !subject ||
+    !originalFilename ||
+    !rawFileBucket ||
+    !rawFilePath ||
+    !rawFileExpiresAt ||
+    !status ||
+    !uploadedAt ||
+    draftVersion === null ||
+    fileSizeBytes === null
+  ) {
+    throw new Error('The saved submission details are incomplete.');
+  }
+
+  return {
+    id,
+    student_id: studentId,
+    subject,
+    draft_version: draftVersion,
+    original_filename: originalFilename,
+    mime_type: mimeType,
+    file_size_bytes: fileSizeBytes,
+    raw_file_bucket: rawFileBucket,
+    raw_file_path: rawFilePath,
+    raw_file_expires_at: rawFileExpiresAt,
+    status,
+    uploaded_at: uploadedAt,
+  };
+}
+
+function normalizeReportHistoryRows(value: unknown): ReportHistoryRow[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map(normalizeReportHistoryRow)
+    .filter((row): row is ReportHistoryRow => row !== null);
+}
+
+function normalizeReportHistoryRow(value: unknown): ReportHistoryRow | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const submissionId = asText(value.submission_id);
+  const studentId = asText(value.student_id);
+  const projectId = asText(value.project_id);
+  const projectTitle = asText(value.project_title);
+  const subject = asText(value.subject);
+  const originalFilename = asText(value.original_filename);
+  const mimeType = asText(value.mime_type);
+  const status = asText(value.status);
+  const uploadedAt = asText(value.uploaded_at);
+  const retentionPolicy = asText(value.retention_policy);
+  const versionNumber = asNumber(value.version_number);
+  const fileSizeBytes = asNumber(value.file_size_bytes);
+
+  if (
+    !submissionId ||
+    !studentId ||
+    !projectId ||
+    !projectTitle ||
+    !subject ||
+    !originalFilename ||
+    !mimeType ||
+    !status ||
+    !uploadedAt ||
+    !retentionPolicy ||
+    versionNumber === null ||
+    fileSizeBytes === null
+  ) {
+    return null;
+  }
+
+  return {
+    submission_id: submissionId,
+    student_id: studentId,
+    project_id: projectId,
+    project_title: projectTitle,
+    research_question: asText(value.research_question),
+    subject,
+    version_number: versionNumber,
+    original_filename: originalFilename,
+    mime_type: mimeType,
+    file_size_bytes: fileSizeBytes,
+    status,
+    uploaded_at: uploadedAt,
+    report_generated_at: asText(value.report_generated_at),
+    saved_at: asText(value.saved_at),
+    retention_policy: retentionPolicy,
+    word_count: asNumber(value.word_count),
+    page_count: asNumber(value.page_count),
+    criterion_scores: value.criterion_scores,
+    progress_plan_ready: value.progress_plan_ready === true,
+    annotated_html_ready: value.annotated_html_ready === true,
+    annotated_docx_ready: value.annotated_docx_ready === true,
+    is_latest_version: value.is_latest_version === true,
+  };
+}
+
+function groupReportHistoryByProject(reports: ReportHistoryRow[]): Array<{
+  projectId: string;
+  title: string;
+  subject: string;
+  researchQuestion: string | null;
+  versions: ReportHistoryRow[];
+}> {
+  const grouped = new Map<
+    string,
+    {
+      projectId: string;
+      title: string;
+      subject: string;
+      researchQuestion: string | null;
+      versions: ReportHistoryRow[];
+    }
+  >();
+
+  for (const report of reports) {
+    const existing = grouped.get(report.project_id);
+
+    if (existing) {
+      existing.versions.push(report);
+      continue;
+    }
+
+    grouped.set(report.project_id, {
+      projectId: report.project_id,
+      title: report.project_title,
+      subject: report.subject,
+      researchQuestion: report.research_question,
+      versions: [report],
+    });
+  }
+
+  return Array.from(grouped.values())
+    .map((project) => ({
+      ...project,
+      versions: project.versions
+        .slice()
+        .sort((left, right) => right.version_number - left.version_number),
+    }))
+    .sort((left, right) => left.title.localeCompare(right.title));
+}
+
+function deriveReportMarkSummary(criterionScores: unknown): {
+  range: [number, number];
+  maximum: number;
+} | null {
+  if (!Array.isArray(criterionScores)) {
+    return null;
+  }
+
+  let minimum = 0;
+  let maximum = 0;
+  let totalMaximum = 0;
+  let found = 0;
+
+  for (const rawScore of criterionScores) {
+    if (!isRecord(rawScore)) {
+      continue;
+    }
+
+    const rawRange = rawScore.indicative_mark_range;
+
+    if (!Array.isArray(rawRange) || rawRange.length < 2) {
+      continue;
+    }
+
+    const rangeMinimum = asNumber(rawRange[0]);
+    const rangeMaximum = asNumber(rawRange[1]);
+    const criterionMaximum = asNumber(rawScore.criterion_max_marks);
+
+    if (rangeMinimum === null || rangeMaximum === null) {
+      continue;
+    }
+
+    minimum += rangeMinimum;
+    maximum += rangeMaximum;
+    totalMaximum += criterionMaximum ?? rangeMaximum;
+    found += 1;
+  }
+
+  if (found === 0) {
+    return null;
+  }
+
+  return {
+    range: [minimum, maximum],
+    maximum: totalMaximum,
+  };
+}
+
+function getReportTimestamp(report: ReportHistoryRow): number {
+  return (
+    Date.parse(
+      report.report_generated_at ?? report.saved_at ?? report.uploaded_at
+    ) || 0
+  );
+}
+
+function formatReportDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Date unavailable';
+  }
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
+
+async function loadDetailedReviewData(
+  submissionId: string,
+
+  completion: PipelineCompletion | null
+): Promise<DetailedReviewData> {
+  await ensureFreshReviewSession();
+
+  const [findingsResult, progressPlanResult, artifactResult] =
+    await Promise.all([
+      supabase
+        .from('ia_detailed_findings')
+        .select('*')
+        .eq('submission_id', submissionId)
+        .order('finding_index', { ascending: true }),
+
+      supabase
+        .from('progress_plans')
+        .select('*')
+        .eq('current_submission_id', submissionId)
+        .maybeSingle(),
+
+      supabase
+        .from('ia_review_artifacts')
+        .select(
+          'id, artifact_type, storage_bucket, storage_path, status, expires_at, deleted_at'
+        )
+        .eq('submission_id', submissionId)
+        .eq('artifact_type', 'annotated_html')
+        .maybeSingle(),
+    ]);
+
+  if (findingsResult.error) {
+    throw findingsResult.error;
+  }
+
+  const findings = normalizeDetailedFindings(findingsResult.data);
+
+  let criteria: CriterionCoaching[] = [];
+  const coachingOutputId = findings[0]?.coaching_output_id;
+
+  if (coachingOutputId) {
+    const coachingResult = await supabase
+      .from('coaching_outputs')
+      .select('id, per_criterion')
+      .eq('id', coachingOutputId)
+      .maybeSingle();
+
+    if (coachingResult.error) {
+      throw coachingResult.error;
+    }
+
+    criteria = normalizeCriterionCoaching(coachingResult.data?.per_criterion);
+  }
+
+  if (progressPlanResult.error) {
+    console.error(
+      'Progress plan could not be loaded',
+      progressPlanResult.error
+    );
+  }
+
+  if (artifactResult.error) {
+    console.error(
+      'Annotated IA artifact could not be loaded',
+      artifactResult.error
+    );
+  }
+
+  const progressPlan = normalizeProgressPlan(
+    progressPlanResult.data,
+    completion,
+    criteria
+  );
+
+  let annotatedIaUrl = completion?.annotatedIaUrl ?? null;
+  let annotatedArtifactBucket: string | null = null;
+  let annotatedArtifactPath: string | null = null;
+  let annotatedArtifactExpiresAt =
+    completion?.annotatedArtifactExpiresAt ?? null;
+
+  const artifact = artifactResult.data;
+
+  if (
+    artifact &&
+    artifact.status === 'ready' &&
+    !artifact.deleted_at &&
+    typeof artifact.storage_bucket === 'string' &&
+    typeof artifact.storage_path === 'string'
+  ) {
+    annotatedArtifactBucket = artifact.storage_bucket;
+
+    annotatedArtifactPath = artifact.storage_path;
+
+    annotatedArtifactExpiresAt =
+      typeof artifact.expires_at === 'string'
+        ? artifact.expires_at
+        : annotatedArtifactExpiresAt;
+
+    const signedUrlResult = await supabase.storage
+      .from(artifact.storage_bucket)
+      .createSignedUrl(artifact.storage_path, 30 * 60);
+
+    if (!signedUrlResult.error && signedUrlResult.data?.signedUrl) {
+      annotatedIaUrl = signedUrlResult.data.signedUrl;
+    }
+  }
+
+  return {
+    findings,
+    criteria,
+    progressPlan,
+    annotatedIaUrl,
+    annotatedArtifactBucket,
+    annotatedArtifactPath,
+    annotatedArtifactExpiresAt,
+  };
+}
+
+function normalizeDetailedFindings(value: unknown): DetailedFinding[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isRecord)
+    .map((item, index) => ({
+      id: asText(item.id) ?? `finding-${index + 1}`,
+      coaching_output_id: asText(item.coaching_output_id) ?? '',
+      criterion_code: asText(item.criterion_code) ?? 'Other',
+      finding_index: asNumber(item.finding_index) ?? index,
+      finding_type: asText(item.finding_type) ?? 'missing_detail',
+      priority: normalizePriority(item.priority),
+      block_id: asText(item.block_id),
+      section_title: asText(item.section_title),
+      paragraph_index: asNumber(item.paragraph_index),
+      page_number: asNumber(item.page_number),
+      sentence_ids: asTextArray(item.sentence_ids),
+      evidence_excerpt: asText(item.evidence_excerpt),
+      rubric_requirement:
+        asText(item.rubric_requirement) ??
+        'Review the relevant rubric requirement.',
+      issue: asText(item.issue) ?? 'A specific review finding was identified.',
+      specific_action:
+        asText(item.specific_action) ??
+        'Review and address this finding independently.',
+      required_elements: asTextArray(item.required_elements),
+      completion_check:
+        asText(item.completion_check) ??
+        'Confirm that the required evidence is visible.',
+      why:
+        asText(item.why) ?? 'This affects the clarity of the rubric evidence.',
+    }))
+    .sort((left, right) => {
+      const criterionDifference =
+        getCriterionOrder(left.criterion_code) -
+        getCriterionOrder(right.criterion_code);
+
+      return criterionDifference !== 0
+        ? criterionDifference
+        : left.finding_index - right.finding_index;
+    });
+}
+
+function normalizeCriterionCoaching(value: unknown): CriterionCoaching[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isRecord)
+    .map((item) => ({
+      criterion: asText(item.criterion) ?? 'Other',
+      criterion_name:
+        asText(item.criterion_name) ??
+        getCriterionName(asText(item.criterion) ?? 'Other'),
+      criterion_max_marks: asNumber(item.criterion_max_marks),
+      indicative_band: asText(item.indicative_band),
+      indicative_mark_range: asNumberRange(item.indicative_mark_range),
+      confidence: asText(item.confidence),
+      command_term_level: asText(item.command_term_level),
+      why_this_range: asText(item.why_this_range),
+      strengths: normalizeObjectArray<CoachingStrength>(item.strengths),
+      reflective_questions: normalizeObjectArray<CoachingQuestion>(
+        item.reflective_questions
+      ),
+      improvement_checklist: normalizeObjectArray<CoachingChecklistItem>(
+        item.improvement_checklist
+      ),
+    }))
+    .sort(
+      (left, right) =>
+        getCriterionOrder(left.criterion) - getCriterionOrder(right.criterion)
+    );
+}
+
+function normalizeProgressPlan(
+  value: unknown,
+  completion: PipelineCompletion | null,
+  criteria: CriterionCoaching[]
+): ProgressPlanView {
+  const row = isRecord(value) ? value : {};
+
+  const rawTargets = firstArray(
+    row.targets,
+    row.progress_targets,
+    row.criterion_targets,
+    row.priorities,
+    row.actions
+  );
+
+  let targets = rawTargets
+    .filter(isRecord)
+    .map((item, index) => normalizeProgressTarget(item, index))
+    .filter((target): target is ProgressTarget => target !== null);
+
+  if (targets.length === 0) {
+    targets = criteria.flatMap((criterion) =>
+      criterion.improvement_checklist.map((item, index) => ({
+        id: item.id ?? `${criterion.criterion}-${index + 1}`,
+        criterion: criterion.criterion_name,
+        priority: normalizePriority(item.priority),
+        action: item.action ?? 'Complete the saved criterion action.',
+        successEvidence: item.completion_check ?? null,
+        why: item.why?.explanation ?? null,
+      }))
+    );
+  }
+
+  targets.sort((left, right) => {
+    const priorityDifference =
+      getPriorityOrder(left.priority) - getPriorityOrder(right.priority);
+
+    return priorityDifference !== 0
+      ? priorityDifference
+      : getCriterionOrder(left.criterion) - getCriterionOrder(right.criterion);
+  });
+
+  return {
+    summary:
+      firstText(
+        row.plan_summary,
+        row.summary,
+        row.overview,
+        row.plan_overview
+      ) ??
+      completion?.planSummary ??
+      null,
+
+    nextCheckinDate:
+      firstText(
+        row.next_checkin_date,
+        row.check_in_date,
+        row.suggested_checkin_date,
+        row.review_date
+      ) ??
+      completion?.nextCheckinDate ??
+      null,
+
+    targets,
+  };
+}
+
+function normalizeProgressTarget(
+  item: Record<string, unknown>,
+  index: number
+): ProgressTarget | null {
+  const action = firstText(
+    item.action,
+    item.target,
+    item.next_step,
+    item.improvement_action,
+    item.goal,
+    item.task
+  );
+
+  if (!action) {
+    return null;
+  }
+
+  return {
+    id: asText(item.id) ?? `target-${index + 1}`,
+    criterion:
+      firstText(
+        item.criterion_name,
+        item.criterion,
+        item.area,
+        item.category,
+        item.focus
+      ) ?? 'IA improvement',
+    priority: normalizePriority(item.priority ?? item.impact ?? item.urgency),
+    action,
+    successEvidence: firstText(
+      item.success_evidence,
+      item.success_criteria,
+      item.completion_check,
+      item.evidence,
+      item.check
+    ),
+    why: firstText(item.why, item.rationale, item.reason),
+  };
+}
+
+function buildCriterionSections(
+  criteria: CriterionCoaching[],
+  findings: DetailedFinding[]
+): CriterionSection[] {
+  const criterionCodes = Array.from(
+    new Set([
+      ...criteria.map((criterion) => criterion.criterion),
+      ...findings.map((finding) => finding.criterion_code),
+    ])
+  ).sort((left, right) => getCriterionOrder(left) - getCriterionOrder(right));
+
+  return criterionCodes.map((code) => {
+    const coaching =
+      criteria.find((criterion) => criterion.criterion === code) ?? null;
+
+    return {
+      code,
+      name: coaching?.criterion_name ?? getCriterionName(code),
+      coaching,
+      findings: findings.filter((finding) => finding.criterion_code === code),
+    };
+  });
+}
+
+function formatFindingLocation(finding: DetailedFinding): string {
+  const parts: string[] = [];
+
+  if (finding.section_title) {
+    parts.push(finding.section_title);
+  }
+
+  if (finding.page_number) {
+    parts.push(`Page ${finding.page_number}`);
+  }
+
+  if (finding.paragraph_index) {
+    parts.push(`Paragraph ${finding.paragraph_index}`);
+  }
+
+  return parts.length > 0 ? parts.join(' · ') : 'Structural requirement';
+}
+
+function getFindingTypeLabel(value: string): string {
+  const labels: Record<string, string> = {
+    strength: 'Demonstrated strength',
+    missing_detail: 'Missing detail',
+    unclear: 'Unclear evidence',
+    inaccurate: 'Accuracy concern',
+    unsupported: 'Unsupported statement',
+    incomplete_analysis: 'Incomplete analysis',
+    structural_gap: 'Structural gap',
+  };
+
+  return labels[value] ?? 'Review finding';
+}
+
+function getCriterionName(code: string): string {
+  const names: Record<string, string> = {
+    ResearchDesign: 'Research Design',
+    DataAnalysis: 'Data Analysis',
+    Conclusion: 'Conclusion',
+    Evaluation: 'Evaluation',
+  };
+
+  return names[code] ?? code.replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
+function getCriterionClass(code: string): string {
+  const classes: Record<string, string> = {
+    ResearchDesign: 'research-design',
+    DataAnalysis: 'data-analysis',
+    Conclusion: 'conclusion',
+    Evaluation: 'evaluation',
+  };
+
+  return classes[code] ?? 'other';
+}
+
+function getCriterionOrder(code: string): number {
+  const order = ['ResearchDesign', 'DataAnalysis', 'Conclusion', 'Evaluation'];
+  const directIndex = order.indexOf(code);
+
+  if (directIndex >= 0) {
+    return directIndex;
+  }
+
+  const normalized = code.replace(/\s+/g, '').toLowerCase();
+  const normalizedIndex = order.findIndex(
+    (criterion) => criterion.toLowerCase() === normalized
+  );
+
+  return normalizedIndex >= 0 ? normalizedIndex : order.length;
+}
+
+function getPriorityOrder(priority: FindingPriority): number {
+  return priority === 'high' ? 0 : priority === 'medium' ? 1 : 2;
+}
+
+function normalizePriority(value: unknown): FindingPriority {
+  const text = asText(value)?.toLowerCase();
+
+  return text === 'high' || text === 'low' ? text : 'medium';
+}
+
+function normalizeObjectArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value.filter(isRecord) as T[]) : [];
+}
+
+function asNumberRange(value: unknown): [number, number] | null {
+  if (
+    !Array.isArray(value) ||
+    value.length !== 2 ||
+    typeof value[0] !== 'number' ||
+    typeof value[1] !== 'number'
+  ) {
+    return null;
+  }
+
+  return [value[0], value[1]];
+}
+
+function asTextArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
+function firstArray(...values: unknown[]): unknown[] {
+  return values.find(Array.isArray) ?? [];
+}
+
+function firstText(...values: unknown[]): string | null {
+  for (const value of values) {
+    const text = asText(value);
+
+    if (text) {
+      return text;
+    }
+  }
+
+  return null;
+}
+
+function asText(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function asNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function capitalize(value: string): string {
+  return value ? value[0].toUpperCase() + value.slice(1) : value;
+}
+
+function formatReviewDateTime(dateValue: string): string {
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return dateValue;
+  }
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function saveAccountConversionReview(
+  submission: IaSubmission,
+  completion: PipelineCompletion,
+  email: string
+): void {
+  try {
+    window.localStorage.setItem(
+      ACCOUNT_CONVERSION_REVIEW_KEY,
+      JSON.stringify({
+        submission,
+        completion,
+      } satisfies SavedCompletedReview)
+    );
+
+    saveAccountConversionEmail(email);
+  } catch (error) {
+    console.warn('The account conversion bridge could not be saved', error);
+  }
+}
+
+function loadAccountConversionReview(): SavedCompletedReview | null {
+  try {
+    const raw = window.localStorage.getItem(ACCOUNT_CONVERSION_REVIEW_KEY);
+
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<SavedCompletedReview>;
+
+    if (
+      !parsed.submission?.id ||
+      !parsed.completion?.submissionId ||
+      parsed.submission.id !== parsed.completion.submissionId
+    ) {
+      clearAccountConversionReview();
+      return null;
+    }
+
+    return parsed as SavedCompletedReview;
+  } catch (error) {
+    console.warn('The pending account review could not be restored', error);
+
+    clearAccountConversionReview();
+    return null;
+  }
+}
+
+function saveAccountConversionEmail(email: string): void {
+  try {
+    window.localStorage.setItem(
+      ACCOUNT_CONVERSION_EMAIL_KEY,
+      email.trim().toLowerCase()
+    );
+  } catch (error) {
+    console.warn('The account email could not be remembered', error);
+  }
+}
+
+function loadAccountConversionEmail(): string | null {
+  try {
+    return window.localStorage.getItem(ACCOUNT_CONVERSION_EMAIL_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function clearAccountConversionReview(): void {
+  try {
+    window.localStorage.removeItem(ACCOUNT_CONVERSION_REVIEW_KEY);
+
+    window.localStorage.removeItem(ACCOUNT_CONVERSION_EMAIL_KEY);
+  } catch (error) {
+    console.warn('The pending account review could not be cleared', error);
+  }
+}
+
+function replaceAppRoute(path: string): void {
+  window.history.replaceState({}, '', path);
+}
+
+function saveCompletedReview(
+  submission: IaSubmission,
+  completion: PipelineCompletion
+): void {
+  try {
+    const savedReview: SavedCompletedReview = {
+      submission,
+      completion,
+    };
+
+    window.sessionStorage.setItem(
+      COMPLETED_REVIEW_STORAGE_KEY,
+      JSON.stringify(savedReview)
+    );
+  } catch {
+    // Browser storage is optional. The current in-memory review still works.
+  }
+}
+
+function loadSavedCompletedReview(): SavedCompletedReview | null {
+  try {
+    const raw = window.sessionStorage.getItem(COMPLETED_REVIEW_STORAGE_KEY);
+
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<SavedCompletedReview>;
+
+    if (
+      !parsed.submission ||
+      !parsed.completion ||
+      typeof parsed.submission.id !== 'string' ||
+      typeof parsed.completion.submissionId !== 'string' ||
+      parsed.submission.id !== parsed.completion.submissionId
+    ) {
+      clearSavedCompletedReview();
+      return null;
+    }
+
+    return parsed as SavedCompletedReview;
+  } catch {
+    clearSavedCompletedReview();
+    return null;
+  }
+}
+
+function clearSavedCompletedReview(): void {
+  try {
+    window.sessionStorage.removeItem(COMPLETED_REVIEW_STORAGE_KEY);
+  } catch {
+    // Browser storage is optional.
+  }
+}
+
+function getStageState(
+  stage: PipelineStageKey,
+  progress: PipelineProgress | null,
+  hasError: boolean
+): 'waiting' | 'active' | 'complete' | 'error' {
+  if (progress?.completedStages.includes(stage)) {
+    return 'complete';
+  }
+
+  if (progress?.currentStage === stage) {
+    return hasError ? 'error' : 'active';
+  }
+
+  return 'waiting';
+}
+
+function formatReviewDate(dateValue: string): string {
+  const date = new Date(`${dateValue}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return dateValue;
+  }
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof FileValidationError) {
+    return error.message;
+  }
+
+  if (error instanceof PipelineError) {
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return 'Something went wrong. Please try again.';
+}
+
+export default App;

@@ -1,0 +1,23 @@
+/review
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/my-account
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/my-reports
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/my-reports/*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/admin
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/shared-review/*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/account-confirmed
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/reset-password
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet

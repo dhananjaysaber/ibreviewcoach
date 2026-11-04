@@ -1,0 +1,24 @@
+# IB Review Coach — standalone Netlify site
+# The current iareview.netlify.app site is not changed by this configuration.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Vite SPA routing for /admin, /reports, and authenticated routes.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+
+# Staging website: prevent search engines from indexing this test site.
+    X-Robots-Tag = "noindex, nofollow"

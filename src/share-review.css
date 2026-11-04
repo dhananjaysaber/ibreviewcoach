@@ -1,0 +1,760 @@
+/* ============================================================
+   Secure Annotated IA Sharing
+   New isolated styles only. Existing report / annotation styles
+   are intentionally untouched.
+   ============================================================ */
+
+.annotation-share-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.annotation-share-modal {
+  width: min(920px, 100%);
+  max-height: min(900px, calc(100dvh - 48px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #d8e1ef;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28),
+    0 6px 20px rgba(15, 23, 42, 0.12);
+}
+
+.annotation-share-header {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 26px 20px;
+  border-bottom: 1px solid #e6ebf2;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.annotation-share-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.annotation-share-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: #ffffff;
+  background: linear-gradient(145deg, #315fe8, #244bc0);
+  box-shadow: 0 10px 22px rgba(49, 95, 232, 0.2);
+}
+
+.annotation-share-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.annotation-share-heading > div > span,
+.annotation-share-section-heading > div > span,
+.annotation-share-created > div > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #315fe8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.annotation-share-heading h2,
+.annotation-share-section-heading h3,
+.annotation-share-created strong {
+  margin: 0;
+  color: #13213b;
+}
+
+.annotation-share-heading h2 {
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  line-height: 1.15;
+}
+
+.annotation-share-heading p {
+  margin: 7px 0 0;
+  max-width: 640px;
+  color: #667085;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.annotation-share-close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #dce3ec;
+  border-radius: 12px;
+  color: #475467;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.annotation-share-close:hover:not(:disabled) {
+  color: #172033;
+  border-color: #c8d2df;
+  background: #f7f9fc;
+}
+
+.annotation-share-close:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.annotation-share-close svg {
+  width: 19px;
+  height: 19px;
+}
+
+.annotation-share-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 26px 0;
+  padding: 14px 16px;
+  border: 1px solid #dce6f5;
+  border-radius: 16px;
+  color: #315fe8;
+  background: #f7faff;
+}
+
+.annotation-share-file > svg {
+  flex: 0 0 auto;
+  width: 21px;
+  height: 21px;
+}
+
+.annotation-share-file div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.annotation-share-file strong {
+  overflow: hidden;
+  color: #172033;
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.annotation-share-file span {
+  color: #667085;
+  font-size: 0.8rem;
+}
+
+.annotation-share-loading,
+.annotation-share-message,
+.annotation-share-security-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 18px 26px 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+}
+
+.annotation-share-loading {
+  color: #315fe8;
+  border: 1px solid #dce6f5;
+  background: #f7faff;
+}
+
+.annotation-share-loading div {
+  display: grid;
+  gap: 3px;
+}
+
+.annotation-share-loading strong {
+  color: #172033;
+}
+
+.annotation-share-loading span {
+  color: #667085;
+  font-size: 0.84rem;
+}
+
+.annotation-share-message.error {
+  color: #b42318;
+  border: 1px solid #f2c9c5;
+  background: #fff5f4;
+}
+
+.annotation-share-message.success {
+  color: #13795b;
+  border: 1px solid #cfe9df;
+  background: #f2fbf7;
+}
+
+.annotation-share-message svg,
+.annotation-share-security-note svg {
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+  margin-top: 1px;
+}
+
+.annotation-share-message span {
+  color: inherit;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.annotation-share-create,
+.annotation-share-created,
+.annotation-share-existing {
+  margin: 20px 26px 0;
+  padding: 20px;
+  border: 1px solid #e1e7ef;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.annotation-share-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.annotation-share-section-heading h3 {
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.annotation-share-section-heading > svg {
+  width: 21px;
+  height: 21px;
+  color: #315fe8;
+}
+
+.annotation-share-section-heading > strong {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 999px;
+  color: #315fe8;
+  background: #eef4ff;
+  font-size: 0.8rem;
+}
+
+.annotation-share-presets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.annotation-share-preset {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #d8e0eb;
+  border-radius: 12px;
+  color: #344054;
+  background: #ffffff;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.annotation-share-preset:hover:not(:disabled) {
+  border-color: #aebbd0;
+  background: #f8faff;
+}
+
+.annotation-share-preset.active {
+  color: #214bbb;
+  border-color: #8eacf8;
+  background: #eef4ff;
+  box-shadow: inset 0 0 0 1px #8eacf8;
+}
+
+.annotation-share-custom-expiry {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.annotation-share-custom-expiry > span {
+  color: #344054;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.annotation-share-custom-expiry input,
+.annotation-share-url-row input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  box-sizing: border-box;
+  border: 1px solid #cfd8e5;
+  border-radius: 12px;
+  color: #172033;
+  background: #ffffff;
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.annotation-share-custom-expiry input {
+  padding: 10px 12px;
+}
+
+.annotation-share-custom-expiry input:focus,
+.annotation-share-url-row input:focus {
+  border-color: #6d8ff2;
+  box-shadow: 0 0 0 3px rgba(49, 95, 232, 0.11);
+}
+
+.annotation-share-custom-expiry small {
+  color: #7b8798;
+  font-size: 0.75rem;
+}
+
+.annotation-share-download-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #e0e6ef;
+  border-radius: 14px;
+  background: #fafbfc;
+  cursor: pointer;
+}
+
+.annotation-share-download-option input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: #315fe8;
+}
+
+.annotation-share-download-option > span {
+  display: grid;
+  gap: 3px;
+}
+
+.annotation-share-download-option strong {
+  color: #172033;
+  font-size: 0.86rem;
+}
+
+.annotation-share-download-option small {
+  color: #667085;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.annotation-share-create-button,
+.annotation-share-url-row button,
+.annotation-share-revoke,
+.annotation-share-retry button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.annotation-share-create-button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 11px 16px;
+  border: 0;
+  color: #ffffff;
+  background: linear-gradient(145deg, #315fe8, #244bc0);
+  box-shadow: 0 10px 20px rgba(49, 95, 232, 0.18);
+}
+
+.annotation-share-create-button:disabled,
+.annotation-share-revoke:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.annotation-share-create-button svg,
+.annotation-share-url-row button svg,
+.annotation-share-revoke svg,
+.annotation-share-retry button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.annotation-share-created {
+  border-color: #c9ddff;
+  background: linear-gradient(180deg, #f7faff 0%, #ffffff 100%);
+}
+
+.annotation-share-created strong {
+  display: block;
+  font-size: 0.98rem;
+}
+
+.annotation-share-created p {
+  margin: 7px 0 0;
+  color: #667085;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.annotation-share-url-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.annotation-share-url-row input {
+  padding: 10px 12px;
+  color: #344054;
+  background: #ffffff;
+}
+
+.annotation-share-url-row button {
+  padding: 10px 14px;
+  border: 1px solid #315fe8;
+  color: #ffffff;
+  background: #315fe8;
+}
+
+.annotation-share-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border: 1px dashed #d6deea;
+  border-radius: 14px;
+  color: #667085;
+  background: #fafbfc;
+  font-size: 0.84rem;
+}
+
+.annotation-share-empty svg {
+  width: 18px;
+  height: 18px;
+  color: #8090a6;
+}
+
+.annotation-share-link-list {
+  display: grid;
+  gap: 10px;
+}
+
+.annotation-share-link-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(160px, 0.7fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid #e1e7ef;
+  border-radius: 14px;
+  background: #fbfcfe;
+}
+
+.annotation-share-link-main,
+.annotation-share-link-usage {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.annotation-share-link-main strong {
+  color: #172033;
+  font-size: 0.84rem;
+}
+
+.annotation-share-link-main small,
+.annotation-share-link-usage small {
+  color: #7b8798;
+  font-size: 0.73rem;
+  line-height: 1.35;
+}
+
+.annotation-share-link-usage > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #475467;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.annotation-share-link-usage svg {
+  width: 15px;
+  height: 15px;
+}
+
+.annotation-share-status {
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.annotation-share-status.active {
+  color: #13795b;
+  background: #e9f8f1;
+}
+
+.annotation-share-status.expired {
+  color: #8a6100;
+  background: #fff4d6;
+}
+
+.annotation-share-status.revoked {
+  color: #b42318;
+  background: #feeceb;
+}
+
+.annotation-share-revoke {
+  padding: 9px 11px;
+  border: 1px solid #e3b9b5;
+  color: #b42318;
+  background: #fff7f6;
+  font-size: 0.78rem;
+}
+
+.annotation-share-revoke:hover:not(:disabled) {
+  border-color: #d89b95;
+  background: #fff0ee;
+}
+
+.annotation-share-security-note {
+  margin-bottom: 24px;
+  color: #315fe8;
+  border: 1px solid #dce6f5;
+  background: #f7faff;
+}
+
+.annotation-share-security-note p {
+  margin: 0;
+  color: #5d6b80;
+  font-size: 0.79rem;
+  line-height: 1.45;
+}
+
+.annotation-share-retry {
+  margin: 18px 26px 24px;
+}
+
+.annotation-share-retry button {
+  padding: 10px 14px;
+  border: 1px solid #d4dde8;
+  color: #344054;
+  background: #ffffff;
+}
+
+.annotation-share-spin,
+.shared-review-spin {
+  animation: annotation-share-spin 0.9s linear infinite;
+}
+
+@keyframes annotation-share-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Public /shared-review/:token loading and error state. */
+.shared-review-gateway {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  box-sizing: border-box;
+  color: #172033;
+  background: radial-gradient(
+      circle at 20% 10%,
+      rgba(49, 95, 232, 0.11),
+      transparent 34%
+    ),
+    linear-gradient(180deg, #f7f9fd 0%, #eef3fa 100%);
+}
+
+.shared-review-gateway-card {
+  width: min(520px, 100%);
+  padding: 34px;
+  box-sizing: border-box;
+  border: 1px solid #dce4ef;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.13);
+  text-align: center;
+}
+
+.shared-review-gateway-mark {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  border-radius: 16px;
+  color: #ffffff;
+  background: linear-gradient(145deg, #315fe8, #244bc0);
+}
+
+.shared-review-gateway-mark svg {
+  width: 25px;
+  height: 25px;
+}
+
+.shared-review-gateway-brand {
+  display: block;
+  margin-bottom: 18px;
+  color: #315fe8;
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shared-review-gateway .shared-review-spin {
+  width: 25px;
+  height: 25px;
+  margin-bottom: 14px;
+  color: #315fe8;
+}
+
+.shared-review-gateway-card h1 {
+  margin: 0;
+  color: #13213b;
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  line-height: 1.12;
+}
+
+.shared-review-gateway-card p {
+  margin: 12px auto 0;
+  max-width: 420px;
+  color: #667085;
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.shared-review-gateway-help {
+  padding-top: 12px;
+  border-top: 1px solid #ebeff5;
+  font-size: 0.82rem !important;
+}
+
+@media (max-width: 760px) {
+  .annotation-share-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .annotation-share-modal {
+    width: 100%;
+    max-height: 94dvh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .annotation-share-header {
+    padding: 20px 18px 16px;
+  }
+
+  .annotation-share-heading {
+    gap: 11px;
+  }
+
+  .annotation-share-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .annotation-share-file,
+  .annotation-share-loading,
+  .annotation-share-message,
+  .annotation-share-create,
+  .annotation-share-created,
+  .annotation-share-existing,
+  .annotation-share-security-note {
+    margin-right: 18px;
+    margin-left: 18px;
+  }
+
+  .annotation-share-create,
+  .annotation-share-created,
+  .annotation-share-existing {
+    padding: 16px;
+  }
+
+  .annotation-share-presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .annotation-share-url-row {
+    grid-template-columns: 1fr;
+  }
+
+  .annotation-share-url-row button {
+    width: 100%;
+  }
+
+  .annotation-share-link-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .annotation-share-revoke {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .annotation-share-heading p {
+    font-size: 0.84rem;
+  }
+
+  .annotation-share-close {
+    width: 36px;
+    height: 36px;
+  }
+
+  .shared-review-gateway {
+    padding: 18px;
+  }
+
+  .shared-review-gateway-card {
+    padding: 26px 20px;
+    border-radius: 20px;
+  }
+}
