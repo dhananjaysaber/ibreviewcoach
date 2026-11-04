@@ -14,7 +14,7 @@ function similarity(a:WorkshopFinding,b:WorkshopFinding){
 }
 type AuditCheck={id:string;status:string;reason:string;action:string;evidence_excerpt:string|null};
 type AuditSummary={section_id:string;checks:AuditCheck[]};
-const evidenceEnabled=import.meta.env.VITE_ENABLE_WORKSHOP_AUDIT==='true';
+const evidenceEnabled=import.meta.env.VITE_ENABLE_WORKSHOP_AUDIT!=='false';
 export function DraftComparison({current,previous}:{current:DraftSnapshot;previous:DraftSnapshot|null}){
  const [audits,setAudits]=useState<{old:AuditSummary[];now:AuditSummary[]}|null>(null);
  const [auditWarning,setAuditWarning]=useState('');
