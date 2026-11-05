@@ -5,3 +5,5 @@
 .dc-verified article {padding:12px 0;border-top:1px solid #dae4f2}
 .dc-verified article p {margin:6px 0}
 .dc-verified blockquote {border-left:3px solid #3270b9;padding-left:12px;margin:8px 0}
+
+.dc-bands{margin:16px 0}.dc-bands-note{font-size:12px;line-height:1.6;opacity:.8}.dc-bands-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.dc-band{border:1px solid #dfe3ee;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.6;background:#fff}.dc-band header{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px}.dc-band-move em{font-style:normal;font-weight:600;margin-left:6px}.dc-band-up{border-color:#9fd9c3;background:#f2fbf7}.dc-band-down{border-color:#f2b8a3;background:#fff6f2}.dc-band p{margin:5px 0}@media(max-width:700px){.dc-bands-grid{grid-template-columns:1fr}}

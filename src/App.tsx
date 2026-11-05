@@ -5288,6 +5288,7 @@ function CompletionWorkspace({
           submissionId: prior.submission_id as string,
           version: prior.version_number as number,
           findings: normalizeDetailedFindings(result.data.findings),
+          criteria: normalizeCriterionCoaching(result.data.criteria),
         });
       } catch (error) {
         if (live) setComparisonMessage(error instanceof Error ? error.message : 'Comparison history unavailable.');
@@ -5786,7 +5787,7 @@ function CompletionWorkspace({
                     <>
                     {comparisonMessage && <p className="review-data-state">{comparisonMessage}</p>}
                     <DraftComparison
-                      current={{submissionId: submission?.id ?? '',version:submission?.draft_version ?? 1,findings:reviewData.findings}}
+                      current={{submissionId: submission?.id ?? '',version:submission?.draft_version ?? 1,findings:reviewData.findings,criteria:reviewData.criteria}}
                       previous={previousDraft}
                     />
                     </>
