@@ -11,7 +11,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(15, 23, 42, 0.62);
+  background: rgba(21, 14, 43, 0.62);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -21,11 +21,11 @@
   max-height: min(900px, calc(100dvh - 48px));
   overflow: auto;
   overscroll-behavior: contain;
-  border: 1px solid #d8e1ef;
+  border: 1px solid #dcd7f0;
   border-radius: 24px;
   background: #ffffff;
-  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28),
-    0 6px 20px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 28px 80px rgba(21, 14, 43, 0.28),
+    0 6px 20px rgba(21, 14, 43, 0.12);
 }
 
 .annotation-share-header {
@@ -37,7 +37,7 @@
   justify-content: space-between;
   gap: 20px;
   padding: 24px 26px 20px;
-  border-bottom: 1px solid #e6ebf2;
+  border-bottom: 1px solid #e8e6f2;
   background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -58,8 +58,8 @@
   height: 44px;
   border-radius: 14px;
   color: #ffffff;
-  background: linear-gradient(145deg, #315fe8, #244bc0);
-  box-shadow: 0 10px 22px rgba(49, 95, 232, 0.2);
+  background: linear-gradient(145deg, #4b2be8, #471cc8);
+  box-shadow: 0 10px 22px rgba(92, 44, 237, 0.2);
 }
 
 .annotation-share-icon svg {
@@ -72,7 +72,7 @@
 .annotation-share-created > div > span {
   display: block;
   margin-bottom: 5px;
-  color: #315fe8;
+  color: #4b2be8;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -83,7 +83,7 @@
 .annotation-share-section-heading h3,
 .annotation-share-created strong {
   margin: 0;
-  color: #13213b;
+  color: #1d123c;
 }
 
 .annotation-share-heading h2 {
@@ -94,7 +94,7 @@
 .annotation-share-heading p {
   margin: 7px 0 0;
   max-width: 640px;
-  color: #667085;
+  color: #6b6785;
   font-size: 0.94rem;
   line-height: 1.5;
 }
@@ -106,7 +106,7 @@
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 1px solid #dce3ec;
+  border: 1px solid #dfdcec;
   border-radius: 12px;
   color: #475467;
   background: #ffffff;
@@ -114,9 +114,9 @@
 }
 
 .annotation-share-close:hover:not(:disabled) {
-  color: #172033;
-  border-color: #c8d2df;
-  background: #f7f9fc;
+  color: #19132c;
+  border-color: #ccc7e0;
+  background: #f8f7fc;
 }
 
 .annotation-share-close:disabled {
@@ -135,10 +135,10 @@
   gap: 12px;
   margin: 20px 26px 0;
   padding: 14px 16px;
-  border: 1px solid #dce6f5;
+  border: 1px solid #e1dbf6;
   border-radius: 16px;
-  color: #315fe8;
-  background: #f7faff;
+  color: #4b2be8;
+  background: #f7f5ff;
 }
 
 .annotation-share-file > svg {
@@ -155,14 +155,14 @@
 
 .annotation-share-file strong {
   overflow: hidden;
-  color: #172033;
+  color: #19132c;
   font-size: 0.92rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .annotation-share-file span {
-  color: #667085;
+  color: #6b6785;
   font-size: 0.8rem;
 }
 
@@ -178,9 +178,9 @@
 }
 
 .annotation-share-loading {
-  color: #315fe8;
-  border: 1px solid #dce6f5;
-  background: #f7faff;
+  color: #4b2be8;
+  border: 1px solid #e1dbf6;
+  background: #f7f5ff;
 }
 
 .annotation-share-loading div {
@@ -189,11 +189,11 @@
 }
 
 .annotation-share-loading strong {
-  color: #172033;
+  color: #19132c;
 }
 
 .annotation-share-loading span {
-  color: #667085;
+  color: #6b6785;
   font-size: 0.84rem;
 }
 
@@ -228,7 +228,7 @@
 .annotation-share-existing {
   margin: 20px 26px 0;
   padding: 20px;
-  border: 1px solid #e1e7ef;
+  border: 1px solid #e4e1ef;
   border-radius: 18px;
   background: #ffffff;
 }
@@ -249,7 +249,7 @@
 .annotation-share-section-heading > svg {
   width: 21px;
   height: 21px;
-  color: #315fe8;
+  color: #4b2be8;
 }
 
 .annotation-share-section-heading > strong {
@@ -259,8 +259,8 @@
   height: 30px;
   padding: 0 9px;
   border-radius: 999px;
-  color: #315fe8;
-  background: #eef4ff;
+  color: #4b2be8;
+  background: #f1eeff;
   font-size: 0.8rem;
 }
 
@@ -273,9 +273,9 @@
 .annotation-share-preset {
   min-height: 44px;
   padding: 10px 12px;
-  border: 1px solid #d8e0eb;
+  border: 1px solid #dcd8eb;
   border-radius: 12px;
-  color: #344054;
+  color: #3c3355;
   background: #ffffff;
   font: inherit;
   font-size: 0.86rem;
@@ -284,15 +284,15 @@
 }
 
 .annotation-share-preset:hover:not(:disabled) {
-  border-color: #aebbd0;
-  background: #f8faff;
+  border-color: #b4add1;
+  background: #f7f5ff;
 }
 
 .annotation-share-preset.active {
-  color: #214bbb;
-  border-color: #8eacf8;
-  background: #eef4ff;
-  box-shadow: inset 0 0 0 1px #8eacf8;
+  color: #461dbf;
+  border-color: #a28bfb;
+  background: #f1eeff;
+  box-shadow: inset 0 0 0 1px #a28bfb;
 }
 
 .annotation-share-custom-expiry {
@@ -302,7 +302,7 @@
 }
 
 .annotation-share-custom-expiry > span {
-  color: #344054;
+  color: #3c3355;
   font-size: 0.82rem;
   font-weight: 750;
 }
@@ -313,9 +313,9 @@
   min-width: 0;
   min-height: 46px;
   box-sizing: border-box;
-  border: 1px solid #cfd8e5;
+  border: 1px solid #d3cee6;
   border-radius: 12px;
-  color: #172033;
+  color: #19132c;
   background: #ffffff;
   font: inherit;
   font-size: 16px;
@@ -328,8 +328,8 @@
 
 .annotation-share-custom-expiry input:focus,
 .annotation-share-url-row input:focus {
-  border-color: #6d8ff2;
-  box-shadow: 0 0 0 3px rgba(49, 95, 232, 0.11);
+  border-color: #866af5;
+  box-shadow: 0 0 0 3px rgba(92, 44, 237, 0.11);
 }
 
 .annotation-share-custom-expiry small {
@@ -343,9 +343,9 @@
   gap: 11px;
   margin-top: 16px;
   padding: 14px;
-  border: 1px solid #e0e6ef;
+  border: 1px solid #e3e0ef;
   border-radius: 14px;
-  background: #fafbfc;
+  background: #fafafc;
   cursor: pointer;
 }
 
@@ -354,7 +354,7 @@
   width: 18px;
   height: 18px;
   margin: 2px 0 0;
-  accent-color: #315fe8;
+  accent-color: #4b2be8;
 }
 
 .annotation-share-download-option > span {
@@ -363,12 +363,12 @@
 }
 
 .annotation-share-download-option strong {
-  color: #172033;
+  color: #19132c;
   font-size: 0.86rem;
 }
 
 .annotation-share-download-option small {
-  color: #667085;
+  color: #6b6785;
   font-size: 0.78rem;
   line-height: 1.4;
 }
@@ -394,8 +394,8 @@
   padding: 11px 16px;
   border: 0;
   color: #ffffff;
-  background: linear-gradient(145deg, #315fe8, #244bc0);
-  box-shadow: 0 10px 20px rgba(49, 95, 232, 0.18);
+  background: linear-gradient(145deg, #4b2be8, #471cc8);
+  box-shadow: 0 10px 20px rgba(92, 44, 237, 0.18);
 }
 
 .annotation-share-create-button:disabled,
@@ -413,8 +413,8 @@
 }
 
 .annotation-share-created {
-  border-color: #c9ddff;
-  background: linear-gradient(180deg, #f7faff 0%, #ffffff 100%);
+  border-color: #d4c9ff;
+  background: linear-gradient(180deg, #f7f5ff 0%, #ffffff 100%);
 }
 
 .annotation-share-created strong {
@@ -424,7 +424,7 @@
 
 .annotation-share-created p {
   margin: 7px 0 0;
-  color: #667085;
+  color: #6b6785;
   font-size: 0.8rem;
   line-height: 1.45;
 }
@@ -438,15 +438,15 @@
 
 .annotation-share-url-row input {
   padding: 10px 12px;
-  color: #344054;
+  color: #3c3355;
   background: #ffffff;
 }
 
 .annotation-share-url-row button {
   padding: 10px 14px;
-  border: 1px solid #315fe8;
+  border: 1px solid #4b2be8;
   color: #ffffff;
-  background: #315fe8;
+  background: #4b2be8;
 }
 
 .annotation-share-empty {
@@ -454,10 +454,10 @@
   align-items: center;
   gap: 10px;
   padding: 16px;
-  border: 1px dashed #d6deea;
+  border: 1px dashed #dad5eb;
   border-radius: 14px;
-  color: #667085;
-  background: #fafbfc;
+  color: #6b6785;
+  background: #fafafc;
   font-size: 0.84rem;
 }
 
@@ -478,9 +478,9 @@
   gap: 14px;
   align-items: center;
   padding: 14px;
-  border: 1px solid #e1e7ef;
+  border: 1px solid #e4e1ef;
   border-radius: 14px;
-  background: #fbfcfe;
+  background: #fcfbfe;
 }
 
 .annotation-share-link-main,
@@ -491,7 +491,7 @@
 }
 
 .annotation-share-link-main strong {
-  color: #172033;
+  color: #19132c;
   font-size: 0.84rem;
 }
 
@@ -556,9 +556,9 @@
 
 .annotation-share-security-note {
   margin-bottom: 24px;
-  color: #315fe8;
-  border: 1px solid #dce6f5;
-  background: #f7faff;
+  color: #4b2be8;
+  border: 1px solid #e1dbf6;
+  background: #f7f5ff;
 }
 
 .annotation-share-security-note p {
@@ -574,8 +574,8 @@
 
 .annotation-share-retry button {
   padding: 10px 14px;
-  border: 1px solid #d4dde8;
-  color: #344054;
+  border: 1px solid #d8d3e9;
+  color: #3c3355;
   background: #ffffff;
 }
 
@@ -597,23 +597,23 @@
   place-items: center;
   padding: 28px;
   box-sizing: border-box;
-  color: #172033;
+  color: #19132c;
   background: radial-gradient(
       circle at 20% 10%,
-      rgba(49, 95, 232, 0.11),
+      rgba(92, 44, 237, 0.11),
       transparent 34%
     ),
-    linear-gradient(180deg, #f7f9fd 0%, #eef3fa 100%);
+    linear-gradient(180deg, #f8f7fd 0%, #f0eefa 100%);
 }
 
 .shared-review-gateway-card {
   width: min(520px, 100%);
   padding: 34px;
   box-sizing: border-box;
-  border: 1px solid #dce4ef;
+  border: 1px solid #e0dcef;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.13);
+  box-shadow: 0 24px 70px rgba(21, 14, 43, 0.13);
   text-align: center;
 }
 
@@ -625,7 +625,7 @@
   margin: 0 auto 12px;
   border-radius: 16px;
   color: #ffffff;
-  background: linear-gradient(145deg, #315fe8, #244bc0);
+  background: linear-gradient(145deg, #4b2be8, #471cc8);
 }
 
 .shared-review-gateway-mark svg {
@@ -636,7 +636,7 @@
 .shared-review-gateway-brand {
   display: block;
   margin-bottom: 18px;
-  color: #315fe8;
+  color: #4b2be8;
   font-size: 0.76rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -647,12 +647,12 @@
   width: 25px;
   height: 25px;
   margin-bottom: 14px;
-  color: #315fe8;
+  color: #4b2be8;
 }
 
 .shared-review-gateway-card h1 {
   margin: 0;
-  color: #13213b;
+  color: #1d123c;
   font-size: clamp(1.45rem, 4vw, 2rem);
   line-height: 1.12;
 }
@@ -660,14 +660,14 @@
 .shared-review-gateway-card p {
   margin: 12px auto 0;
   max-width: 420px;
-  color: #667085;
+  color: #6b6785;
   font-size: 0.94rem;
   line-height: 1.55;
 }
 
 .shared-review-gateway-help {
   padding-top: 12px;
-  border-top: 1px solid #ebeff5;
+  border-top: 1px solid #edebf5;
   font-size: 0.82rem !important;
 }
 

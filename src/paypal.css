@@ -6,7 +6,7 @@
   display: grid;
   place-items: center;
   overflow-y: auto;
-  background: rgba(9, 22, 45, 0.7);
+  background: rgba(18, 8, 46, 0.7);
   backdrop-filter: blur(8px);
 }
 
@@ -14,16 +14,16 @@
   position: relative;
   width: min(590px, 100%);
   padding: clamp(24px, 5vw, 36px);
-  border: 1px solid #d4dfef;
+  border: 1px solid #d9d3f0;
   border-radius: 25px;
-  color: #17233d;
+  color: #20163e;
   background: radial-gradient(
       circle at 100% 0%,
-      rgba(74, 145, 245, 0.15),
+      rgba(106, 70, 249, 0.15),
       transparent 30%
     ),
-    linear-gradient(160deg, #ffffff 0%, #f8fbff 100%);
-  box-shadow: 0 28px 85px rgba(6, 22, 50, 0.32);
+    linear-gradient(160deg, #ffffff 0%, #f7f5ff 100%);
+  box-shadow: 0 28px 85px rgba(16, 5, 51, 0.32);
 }
 
 .paypal-checkout-close {
@@ -34,7 +34,7 @@
   height: 39px;
   display: grid;
   place-items: center;
-  border: 1px solid #d9e2ef;
+  border: 1px solid #ddd8f0;
   border-radius: 12px;
   color: #5a6980;
   background: #ffffff;
@@ -42,8 +42,8 @@
 }
 
 .paypal-checkout-close:hover:not(:disabled) {
-  color: #173d7a;
-  background: #eef4ff;
+  color: #2f157c;
+  background: #f1eeff;
 }
 
 .paypal-checkout-close:disabled {
@@ -70,8 +70,8 @@
   display: grid;
   place-items: center;
   border-radius: 15px;
-  color: #2459a8;
-  background: linear-gradient(145deg, #e8f2ff, #f4efff);
+  color: #4321ab;
+  background: linear-gradient(145deg, #ede8ff, #f4efff);
 }
 
 .paypal-checkout-icon svg {
@@ -80,7 +80,7 @@
 }
 
 .paypal-checkout-heading span {
-  color: #3970c6;
+  color: #5a35ca;
   font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 0.09em;
@@ -89,7 +89,7 @@
 
 .paypal-checkout-heading h2 {
   margin: 3px 0 0;
-  color: #15274a;
+  color: #22144b;
   font-size: clamp(1.5rem, 4vw, 2rem);
   line-height: 1.1;
   letter-spacing: -0.035em;
@@ -108,13 +108,13 @@
   display: grid;
   align-content: center;
   gap: 5px;
-  border: 1px solid #dbe4f1;
+  border: 1px solid #dfdaf2;
   border-radius: 14px;
   background: #ffffff;
 }
 
 .paypal-order-summary > div:nth-child(1) {
-  background: linear-gradient(145deg, #eef7ff, #ffffff);
+  background: linear-gradient(145deg, #f1eeff, #ffffff);
 }
 
 .paypal-order-summary > div:nth-child(2) {
@@ -132,7 +132,7 @@
 }
 
 .paypal-order-summary strong {
-  color: #183a70;
+  color: #2d1672;
   font-size: 1.03rem;
 }
 
@@ -150,8 +150,8 @@
 
 .paypal-checkout-status {
   align-items: center;
-  color: #375779;
-  background: #eef6ff;
+  color: #47357b;
+  background: #f1eeff;
 }
 
 .paypal-checkout-spinner {
@@ -217,7 +217,7 @@
 .paypal-button-container-loading {
   min-height: 58px;
   border-radius: 13px;
-  background: linear-gradient(90deg, #eef2f8 25%, #f8faff 50%, #eef2f8 75%);
+  background: linear-gradient(90deg, #f0eef8 25%, #f7f5ff 50%, #f0eef8 75%);
   background-size: 200% 100%;
   animation: paypal-skeleton 1.25s ease infinite;
 }
@@ -240,23 +240,23 @@
 }
 
 .paypal-primary-action {
-  border: 1px solid #1f4f9a;
+  border: 1px solid #3c1c9d;
   color: #ffffff;
-  background: #1f4f9a;
+  background: #3c1c9d;
 }
 
 .paypal-primary-action:hover {
-  background: #173d7a;
+  background: #2f157c;
 }
 
 .paypal-secondary-action {
-  border: 1px solid #c9d6e9;
-  color: #285595;
+  border: 1px solid #cfc8ea;
+  color: #422598;
   background: #ffffff;
 }
 
 .paypal-secondary-action:hover {
-  background: #eef4ff;
+  background: #f1eeff;
 }
 
 .paypal-wide-action {
@@ -277,8 +277,8 @@
 }
 
 .paypal-security-note {
-  border: 1px solid #dce4ef;
-  background: #f7f9fc;
+  border: 1px solid #e0dcef;
+  background: #f8f7fc;
 }
 
 .paypal-integrity-note {
@@ -295,7 +295,7 @@
 }
 
 .paypal-security-note svg {
-  color: #3a6db6;
+  color: #5737b9;
 }
 
 .paypal-integrity-note svg {

@@ -1,6 +1,8 @@
 import {useEffect,useMemo,useState} from 'react';
 import {supabase} from '../lib/supabase';
 import {SEHS_OFFICIAL_CRITERIA,SEHS_WORKSHOP_SECTIONS,type WorkshopCheck} from '../lib/workshopGuide';
+import {rubricView} from '../lib/ibRubric';
+import {PolicyFlagsStrip} from './PolicyFlagsStrip';
 import './workshop-guided-review.css';
 
 export type WorkshopFinding={id:string;criterion_code:string;section_title:string|null;issue:string;rubric_requirement:string;specific_action:string;why:string;completion_check:string;required_elements:string[];evidence_excerpt:string|null;priority:string;finding_type:string};
@@ -55,6 +57,8 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
  const [verified,setVerified]=useState<Record<string,AuditRow>>({});
  const [loading,setLoading]=useState(false);
  const [message,setMessage]=useState('');
+ const [done,setDone]=useState<Set<string>>(new Set());
+ const [progressMsg,setProgressMsg]=useState('');
  const mapped=useMemo(()=>findings.map(sectionFor),[findings]);
  const section=SEHS_WORKSHOP_SECTIONS.find(s=>s.id===sectionId)!;
  const issues=mapped.filter(x=>x.sectionId===sectionId&&x.finding.finding_type!=='strength');
@@ -64,8 +68,31 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
  const currentIndex=active?issues.findIndex(x=>x.finding.id===active.finding.id):-1;
  const currentCheck=active?.check||null;
  const currentAudit=audit?.checks?.find(x=>x.id===currentCheck?.id);
+ const view=rubricView(section.criterion,criteria.find(x=>norm(x.criterion_name)===norm(section.criterion)||norm(x.criterion)===norm(section.criterion))?.indicative_mark_range??null);
  const official=criteria.find(x=>norm(x.criterion_name)===norm(section.criterion)||norm(x.criterion)===norm(section.criterion));
  useEffect(()=>{setVerified({});setMessage('')},[submissionId]);
+ useEffect(()=>{
+  if(freePreview||!submissionId||!findings.length){setDone(new Set());return;}
+  let live=true;
+  supabase.from('ia_finding_progress').select('finding_id').in('finding_id',findings.map(f=>f.id)).then(({data,error})=>{
+   if(live&&!error&&Array.isArray(data))setDone(new Set(data.map((r:{finding_id:string})=>r.finding_id)));
+  });
+  return ()=>{live=false};
+ },[findings,freePreview,submissionId]);
+ async function toggleDone(id:string){
+  if(freePreview||!submissionId)return;
+  setProgressMsg('');
+  const wasDone=done.has(id);
+  setDone(old=>{const n=new Set(old);if(wasDone)n.delete(id);else n.add(id);return n;});
+  const {data:{user}}=await supabase.auth.getUser();
+  const res=!user?{error:Error('Sign in again to save progress.')}:wasDone
+   ?await supabase.from('ia_finding_progress').delete().eq('finding_id',id).eq('student_id',user.id)
+   :await supabase.from('ia_finding_progress').insert({finding_id:id,student_id:user.id});
+  if(res.error){
+   setDone(old=>{const n=new Set(old);if(wasDone)n.add(id);else n.delete(id);return n;});
+   setProgressMsg('Your progress could not be saved right now. Please try again.');
+  }
+ }
  useEffect(()=>{
   if(!auditEnabled||!submissionId||freePreview)return;
   let mounted=true;
@@ -91,6 +118,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
    <div><span className="wg2-eyebrow">PERSONALISED IA REVIEW · IB SEHS</span><h2>Your IA, explained clearly.</h2><p>Real feedback from your draft. One finding at a time, with the exact change to make and how to check your work.</p></div>
    {onOpenAnnotatedIa&&<button className="wg2-document" type="button" onClick={onOpenAnnotatedIa}>Open annotated document ↗</button>}
   </header>
+  {!freePreview&&submissionId&&<PolicyFlagsStrip submissionId={submissionId}/>}
   <nav className="wg2-sections" aria-label="IA report sections">{SEHS_WORKSHOP_SECTIONS.map((s,i)=>{
    const count=mapped.filter(x=>x.sectionId===s.id&&x.finding.finding_type!=='strength').length;
    return <button key={s.id} type="button" onClick={()=>chooseSection(s.id)} className={s.id===sectionId?'wg2-section-active':''}><span className="wg2-section-num">{String(i+1).padStart(2,'0')}</span><span>{s.name}</span>{count>0&&<b>{count}</b>}</button>;
@@ -104,6 +132,14 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
     <header className="wg2-focus-head"><span className="wg2-eyebrow">FEEDBACK {currentIndex+1} OF {issues.length}</span><span className={'wg2-priority wg2-priority-'+active.finding.priority}>{active.finding.priority==='high'?'Important improvement':active.finding.priority==='medium'?'Worth improving':'Review suggestion'}</span></header>
     <h4>{active.check?.title||active.finding.section_title||'Your IA feedback'}</h4>
     <div className="wg2-issue"><span className="wg2-eyebrow">WHAT YOUR REVIEW FOUND</span><p>{active.finding.issue}</p></div>
+    <div className="wg2-both" aria-label="IB rubric and template guidance">
+     <div className="wg2-both-col wg2-both-ib"><span className="wg2-eyebrow">IB RUBRIC · {view?.criterion||section.criterion}</span>
+      {view?.currentBand?<><p><b>Where your draft sits (band {view.currentBand.band}):</b> {view.currentBand.text}</p>{view.nextBand&&<p><b>To reach band {view.nextBand.band}:</b> {view.nextBand.text}</p>}</>:<p>{active.finding.rubric_requirement}</p>}
+      <small>Only the IB criteria decide your band.</small></div>
+     <div className="wg2-both-col wg2-both-tpl"><span className="wg2-eyebrow">TEMPLATE · {section.name.replace(/^\d+\s*[·.\-]\s*/,'')}</span>
+      {currentCheck?<><p><b>{currentCheck.title}:</b> {currentCheck.question}</p>{currentCheck.higherBand&&<p><b>Stronger scientific quality:</b> {currentCheck.higherBand}</p>}</>:<p>No template check maps to this finding. The IB requirement on the left still applies.</p>}
+      <small>Coaching advice from the workshop template. It never changes your band.</small></div>
+    </div>
     <div className="wg2-action"><span className="wg2-eyebrow">WHAT TO DO NEXT</span><p>{active.finding.specific_action}</p></div>
     {active.finding.required_elements?.length>0&&<div className="wg2-elements"><strong>Make sure you include</strong><ul>{active.finding.required_elements.map((el,i)=><li key={i}>{el}</li>)}</ul></div>}
     <div className="wg2-finish"><span className="wg2-eyebrow">HOW YOU'LL KNOW IT'S FIXED</span><p>{active.finding.completion_check}</p></div>
@@ -113,6 +149,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
      <button type="button" aria-expanded={showHelp} onClick={()=>setShowHelp(x=>!x)}>{showHelp?'Hide':'Show'} help with this improvement <span>{showHelp?'−':'+'}</span></button>
      {showHelp&&<div className="wg2-more-content"><p><b>Think about:</b> {currentCheck?.question||active.finding.rubric_requirement}</p>{currentCheck?.guidance&&<p><b>Approach:</b> {currentCheck.guidance}</p>}{currentCheck?.example&&<p><b>Illustrative example (not submission text):</b> {currentCheck.example}</p>}{currentCheck?.higherBand&&<p><b>Stronger scientific quality:</b> {currentCheck.higherBand}</p>}</div>}
     </div>
+    {!freePreview&&submissionId&&<div className="wg2-done"><label><input type="checkbox" checked={done.has(active.finding.id)} onChange={()=>void toggleDone(active.finding.id)}/> I've dealt with this in my draft</label><small>{issues.filter(x=>done.has(x.finding.id)).length} of {issues.length} in this section ticked. Ticking is your own note; it does not change your band.</small>{progressMsg&&<p role="alert">{progressMsg}</p>}</div>}
     <footer className="wg2-footer"><button type="button" disabled={currentIndex===0} onClick={()=>chooseFinding(issues[currentIndex-1].finding.id)}>← Previous finding</button><span>{currentIndex+1} / {issues.length}</span><button type="button" onClick={()=>{if(currentIndex<issues.length-1)chooseFinding(issues[currentIndex+1].finding.id);else{const next=SEHS_WORKSHOP_SECTIONS.findIndex(x=>x.id===sectionId)+1;if(next<SEHS_WORKSHOP_SECTIONS.length)chooseSection(SEHS_WORKSHOP_SECTIONS[next].id)}}} disabled={currentIndex===issues.length-1&&sectionId===SEHS_WORKSHOP_SECTIONS[SEHS_WORKSHOP_SECTIONS.length-1].id}>{currentIndex===issues.length-1?'Next section →':'Next finding →'}</button></footer>
    </article>}
   </div>:<div className="wg2-empty"><h4>No specific findings mapped here</h4><p>This doesn't mean the entire section is complete. You can check it against the workshop guidance or run an evidence audit of this section.</p></div>}
