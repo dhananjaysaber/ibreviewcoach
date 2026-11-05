@@ -2,6 +2,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {supabase} from '../lib/supabase';
 import {SEHS_OFFICIAL_CRITERIA,SEHS_WORKSHOP_SECTIONS,type WorkshopCheck} from '../lib/workshopGuide';
 import {rubricView} from '../lib/ibRubric';
+import {PolicyFlagsStrip} from './PolicyFlagsStrip';
 import './workshop-guided-review.css';
 
 export type WorkshopFinding={id:string;criterion_code:string;section_title:string|null;issue:string;rubric_requirement:string;specific_action:string;why:string;completion_check:string;required_elements:string[];evidence_excerpt:string|null;priority:string;finding_type:string};
@@ -93,6 +94,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
    <div><span className="wg2-eyebrow">PERSONALISED IA REVIEW · IB SEHS</span><h2>Your IA, explained clearly.</h2><p>Real feedback from your draft. One finding at a time, with the exact change to make and how to check your work.</p></div>
    {onOpenAnnotatedIa&&<button className="wg2-document" type="button" onClick={onOpenAnnotatedIa}>Open annotated document ↗</button>}
   </header>
+  {!freePreview&&submissionId&&<PolicyFlagsStrip submissionId={submissionId}/>}
   <nav className="wg2-sections" aria-label="IA report sections">{SEHS_WORKSHOP_SECTIONS.map((s,i)=>{
    const count=mapped.filter(x=>x.sectionId===s.id&&x.finding.finding_type!=='strength').length;
    return <button key={s.id} type="button" onClick={()=>chooseSection(s.id)} className={s.id===sectionId?'wg2-section-active':''}><span className="wg2-section-num">{String(i+1).padStart(2,'0')}</span><span>{s.name}</span>{count>0&&<b>{count}</b>}</button>;
