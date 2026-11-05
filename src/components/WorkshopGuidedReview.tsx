@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {supabase} from '../lib/supabase';
 import {SEHS_OFFICIAL_CRITERIA,SEHS_WORKSHOP_SECTIONS,type WorkshopCheck} from '../lib/workshopGuide';
+import {rubricView} from '../lib/ibRubric';
 import './workshop-guided-review.css';
 
 export type WorkshopFinding={id:string;criterion_code:string;section_title:string|null;issue:string;rubric_requirement:string;specific_action:string;why:string;completion_check:string;required_elements:string[];evidence_excerpt:string|null;priority:string;finding_type:string};
@@ -64,6 +65,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
  const currentIndex=active?issues.findIndex(x=>x.finding.id===active.finding.id):-1;
  const currentCheck=active?.check||null;
  const currentAudit=audit?.checks?.find(x=>x.id===currentCheck?.id);
+ const view=rubricView(section.criterion,criteria.find(x=>norm(x.criterion_name)===norm(section.criterion)||norm(x.criterion)===norm(section.criterion))?.indicative_mark_range??null);
  const official=criteria.find(x=>norm(x.criterion_name)===norm(section.criterion)||norm(x.criterion)===norm(section.criterion));
  useEffect(()=>{setVerified({});setMessage('')},[submissionId]);
  useEffect(()=>{
@@ -104,6 +106,14 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
     <header className="wg2-focus-head"><span className="wg2-eyebrow">FEEDBACK {currentIndex+1} OF {issues.length}</span><span className={'wg2-priority wg2-priority-'+active.finding.priority}>{active.finding.priority==='high'?'Important improvement':active.finding.priority==='medium'?'Worth improving':'Review suggestion'}</span></header>
     <h4>{active.check?.title||active.finding.section_title||'Your IA feedback'}</h4>
     <div className="wg2-issue"><span className="wg2-eyebrow">WHAT YOUR REVIEW FOUND</span><p>{active.finding.issue}</p></div>
+    <div className="wg2-both" aria-label="IB rubric and template guidance">
+     <div className="wg2-both-col wg2-both-ib"><span className="wg2-eyebrow">IB RUBRIC · {view?.criterion||section.criterion}</span>
+      {view?.currentBand?<><p><b>Where your draft sits (band {view.currentBand.band}):</b> {view.currentBand.text}</p>{view.nextBand&&<p><b>To reach band {view.nextBand.band}:</b> {view.nextBand.text}</p>}</>:<p>{active.finding.rubric_requirement}</p>}
+      <small>Only the IB criteria decide your band.</small></div>
+     <div className="wg2-both-col wg2-both-tpl"><span className="wg2-eyebrow">TEMPLATE · {section.name.replace(/^\d+\s*[·.\-]\s*/,'')}</span>
+      {currentCheck?<><p><b>{currentCheck.title}:</b> {currentCheck.question}</p>{currentCheck.higherBand&&<p><b>Stronger scientific quality:</b> {currentCheck.higherBand}</p>}</>:<p>No template check maps to this finding. The IB requirement on the left still applies.</p>}
+      <small>Coaching advice from the workshop template. It never changes your band.</small></div>
+    </div>
     <div className="wg2-action"><span className="wg2-eyebrow">WHAT TO DO NEXT</span><p>{active.finding.specific_action}</p></div>
     {active.finding.required_elements?.length>0&&<div className="wg2-elements"><strong>Make sure you include</strong><ul>{active.finding.required_elements.map((el,i)=><li key={i}>{el}</li>)}</ul></div>}
     <div className="wg2-finish"><span className="wg2-eyebrow">HOW YOU'LL KNOW IT'S FIXED</span><p>{active.finding.completion_check}</p></div>
