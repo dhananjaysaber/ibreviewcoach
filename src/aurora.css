@@ -142,3 +142,9 @@ button.primary, .primary-button, .wg2-audit {
   background: #fff5f5; color: #8a2424; font-size: 0.9rem; line-height: 1.5;
 }
 .annotated-open-error > svg { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 2px; }
+
+/* Compact report hero, teacher actions */
+.completion-hero-copy .completion-intro { display: none; }
+.completion-card-results .completion-hero { padding-block: 14px; }
+.completion-summary-item { min-height: 76px; padding: 12px 14px; }
+.teacher-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }

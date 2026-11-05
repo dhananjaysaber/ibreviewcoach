@@ -5606,57 +5606,7 @@ function CompletionWorkspace({
               : 'Print or save report'}
           </button>
 
-          {canOpenAnnotatedIa && (
-            <button
-              className="report-action-button report-action-primary"
-              type="button"
-              onClick={handleOpenAnnotatedIa}
-              disabled={isOpeningAnnotatedIa}
-            >
-              {isOpeningAnnotatedIa ? (
-                <LoaderCircle className="stage-spinner" aria-hidden="true" />
-              ) : (
-                <ExternalLink aria-hidden="true" />
-              )}
-
-              {isOpeningAnnotatedIa
-                ? 'Opening annotated IA…'
-                : isFreeReview
-                ? 'Open annotated IA preview'
-                : 'Open annotated IA'}
-            </button>
-          )}
-
-          {hasFullReviewAccess && submission?.id && (
-            <button
-              className="report-action-button"
-              type="button"
-              onClick={() => setAnnotationShareOpen(true)}
-            >
-              <Share2 aria-hidden="true" />
-              Share with student
-            </button>
-          )}
         </div>
-
-        {annotatedIaOpenError && (
-          <div className="annotated-open-error" role="alert">
-            <AlertCircle aria-hidden="true" />
-
-            <div>
-              <strong
-                style={{
-                  display: 'block',
-                  marginBottom: '4px',
-                }}
-              >
-                The annotated IA could not be opened
-              </strong>
-
-              <span style={{ display: 'block' }}>{annotatedIaOpenError}</span>
-            </div>
-          </div>
-        )}
 
         <div className="review-results-shell">
           <nav className="review-tabbar" aria-label="IA review sections">
@@ -5750,6 +5700,26 @@ function CompletionWorkspace({
 
                 {activeTab === 'annotated' && (
                   <>
+                  {hasFullReviewAccess && submission?.id && (
+                    <div className="teacher-actions">
+                      <button
+                        className="report-action-button"
+                        type="button"
+                        onClick={() => setAnnotationShareOpen(true)}
+                      >
+                        <Share2 aria-hidden="true" />
+                        Share with student
+                      </button>
+                      <button
+                        className="report-action-button"
+                        type="button"
+                        onClick={printDetailedReport}
+                      >
+                        <Printer aria-hidden="true" />
+                        Print or save report
+                      </button>
+                    </div>
+                  )}
                   <AnnotatedIaTab
                     canOpen={canOpenAnnotatedIa}
                     isOpening={isOpeningAnnotatedIa}
