@@ -57,6 +57,8 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
  const [verified,setVerified]=useState<Record<string,AuditRow>>({});
  const [loading,setLoading]=useState(false);
  const [message,setMessage]=useState('');
+ const [done,setDone]=useState<Set<string>>(new Set());
+ const [progressMsg,setProgressMsg]=useState('');
  const mapped=useMemo(()=>findings.map(sectionFor),[findings]);
  const section=SEHS_WORKSHOP_SECTIONS.find(s=>s.id===sectionId)!;
  const issues=mapped.filter(x=>x.sectionId===sectionId&&x.finding.finding_type!=='strength');
@@ -69,6 +71,28 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
  const view=rubricView(section.criterion,criteria.find(x=>norm(x.criterion_name)===norm(section.criterion)||norm(x.criterion)===norm(section.criterion))?.indicative_mark_range??null);
  const official=criteria.find(x=>norm(x.criterion_name)===norm(section.criterion)||norm(x.criterion)===norm(section.criterion));
  useEffect(()=>{setVerified({});setMessage('')},[submissionId]);
+ useEffect(()=>{
+  if(freePreview||!submissionId||!findings.length){setDone(new Set());return;}
+  let live=true;
+  supabase.from('ia_finding_progress').select('finding_id').in('finding_id',findings.map(f=>f.id)).then(({data,error})=>{
+   if(live&&!error&&Array.isArray(data))setDone(new Set(data.map((r:{finding_id:string})=>r.finding_id)));
+  });
+  return ()=>{live=false};
+ },[findings,freePreview,submissionId]);
+ async function toggleDone(id:string){
+  if(freePreview||!submissionId)return;
+  setProgressMsg('');
+  const wasDone=done.has(id);
+  setDone(old=>{const n=new Set(old);wasDone?n.delete(id):n.add(id);return n;});
+  const {data:{user}}=await supabase.auth.getUser();
+  const res=!user?{error:Error('Sign in again to save progress.')}:wasDone
+   ?await supabase.from('ia_finding_progress').delete().eq('finding_id',id).eq('student_id',user.id)
+   :await supabase.from('ia_finding_progress').insert({finding_id:id,student_id:user.id});
+  if(res.error){
+   setDone(old=>{const n=new Set(old);wasDone?n.add(id):n.delete(id);return n;});
+   setProgressMsg('Your progress could not be saved right now. Please try again.');
+  }
+ }
  useEffect(()=>{
   if(!auditEnabled||!submissionId||freePreview)return;
   let mounted=true;
@@ -125,6 +149,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
      <button type="button" aria-expanded={showHelp} onClick={()=>setShowHelp(x=>!x)}>{showHelp?'Hide':'Show'} help with this improvement <span>{showHelp?'−':'+'}</span></button>
      {showHelp&&<div className="wg2-more-content"><p><b>Think about:</b> {currentCheck?.question||active.finding.rubric_requirement}</p>{currentCheck?.guidance&&<p><b>Approach:</b> {currentCheck.guidance}</p>}{currentCheck?.example&&<p><b>Illustrative example (not submission text):</b> {currentCheck.example}</p>}{currentCheck?.higherBand&&<p><b>Stronger scientific quality:</b> {currentCheck.higherBand}</p>}</div>}
     </div>
+    {!freePreview&&submissionId&&<div className="wg2-done"><label><input type="checkbox" checked={done.has(active.finding.id)} onChange={()=>void toggleDone(active.finding.id)}/> I've dealt with this in my draft</label><small>{issues.filter(x=>done.has(x.finding.id)).length} of {issues.length} in this section ticked. Ticking is your own note; it does not change your band.</small>{progressMsg&&<p role="alert">{progressMsg}</p>}</div>}
     <footer className="wg2-footer"><button type="button" disabled={currentIndex===0} onClick={()=>chooseFinding(issues[currentIndex-1].finding.id)}>← Previous finding</button><span>{currentIndex+1} / {issues.length}</span><button type="button" onClick={()=>{if(currentIndex<issues.length-1)chooseFinding(issues[currentIndex+1].finding.id);else{const next=SEHS_WORKSHOP_SECTIONS.findIndex(x=>x.id===sectionId)+1;if(next<SEHS_WORKSHOP_SECTIONS.length)chooseSection(SEHS_WORKSHOP_SECTIONS[next].id)}}} disabled={currentIndex===issues.length-1&&sectionId===SEHS_WORKSHOP_SECTIONS[SEHS_WORKSHOP_SECTIONS.length-1].id}>{currentIndex===issues.length-1?'Next section →':'Next finding →'}</button></footer>
    </article>}
   </div>:<div className="wg2-empty"><h4>No specific findings mapped here</h4><p>This doesn't mean the entire section is complete. You can check it against the workshop guidance or run an evidence audit of this section.</p></div>}
