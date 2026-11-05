@@ -83,13 +83,13 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
   if(freePreview||!submissionId)return;
   setProgressMsg('');
   const wasDone=done.has(id);
-  setDone(old=>{const n=new Set(old);wasDone?n.delete(id):n.add(id);return n;});
+  setDone(old=>{const n=new Set(old);if(wasDone)n.delete(id);else n.add(id);return n;});
   const {data:{user}}=await supabase.auth.getUser();
   const res=!user?{error:Error('Sign in again to save progress.')}:wasDone
    ?await supabase.from('ia_finding_progress').delete().eq('finding_id',id).eq('student_id',user.id)
    :await supabase.from('ia_finding_progress').insert({finding_id:id,student_id:user.id});
   if(res.error){
-   setDone(old=>{const n=new Set(old);wasDone?n.add(id):n.delete(id);return n;});
+   setDone(old=>{const n=new Set(old);if(wasDone)n.add(id);else n.delete(id);return n;});
    setProgressMsg('Your progress could not be saved right now. Please try again.');
   }
  }
