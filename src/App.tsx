@@ -125,6 +125,7 @@ import './member-experience.css';
 import './premium-workspace.css';
 import './admin-control-centre.css';
 import './share-review.css';
+import { TeacherCopyPanel } from './components/TeacherCopyPanel';
 
 type AppStatus =
   | 'starting'
@@ -5793,6 +5794,7 @@ function CompletionWorkspace({
                 )}
 
                 {activeTab === 'annotated' && (
+                  <>
                   <AnnotatedIaTab
                     canOpen={canOpenAnnotatedIa}
                     isOpening={isOpeningAnnotatedIa}
@@ -5813,6 +5815,10 @@ function CompletionWorkspace({
                     paymentsEnabled={paymentsEnabled}
                     onUpgrade={onUpgrade}
                   />
+                  {!isFreeReview && submission?.id && (
+                    <TeacherCopyPanel submissionId={submission.id} />
+                  )}
+                  </>
                 )}
 
                 {activeTab === 'plan' && (
