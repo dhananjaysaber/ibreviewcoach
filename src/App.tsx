@@ -5659,95 +5659,48 @@ function CompletionWorkspace({
         )}
 
         <div className="review-results-shell">
-          <div
-            className="review-tabs"
-            role="tablist"
-            aria-label="IA review sections"
-          >
-            <button
-              className={`review-tab ${
-                activeTab === 'detailed' ? 'review-tab-active' : ''
-              }`}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'detailed'}
-              aria-controls="detailed-review-panel"
-              onClick={() => setActiveTab('detailed')}
-            >
-              <BookOpen aria-hidden="true" />
-              <span>
-                <strong>Detailed Review</strong>
-                <small>
-                  {isFreeReview
-                    ? 'First criterion preview'
-                    : 'Evidence, actions and checks'}
-                </small>
-              </span>
-            </button>
-
-            <button className={`review-tab ${activeTab === 'workshop' ? 'review-tab-active' : ''}`}
-              type="button" role="tab" aria-selected={activeTab === 'workshop'}
-              onClick={() => setActiveTab('workshop')}>
-              <ListChecks aria-hidden="true" />
-              <span><strong>Workshop Guide</strong><small>All 9 IA sections in order</small></span>
-            </button>
-            <button className={`review-tab ${activeTab === 'comparison' ? 'review-tab-active' : ''}`}
-              type="button" role="tab" aria-selected={activeTab === 'comparison'}
-              onClick={() => setActiveTab('comparison')}>
-              <Layers3 aria-hidden="true" />
-              <span><strong>Compare Drafts</strong><small>Review changes across versions</small></span>
-            </button>
-
-            <button
-              className={`review-tab ${
-                activeTab === 'annotated' ? 'review-tab-active' : ''
-              }`}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'annotated'}
-              aria-controls="annotated-review-panel"
-              onClick={() => setActiveTab('annotated')}
-            >
-              <Eye aria-hidden="true" />
-              <span>
-                <strong>Annotated IA</strong>
-                <small>
-                  {isFreeReview
-                    ? 'Overview + 20-line preview'
-                    : 'Highlights linked to comments'}
-                </small>
-              </span>
-            </button>
-
-            <button
-              className={`review-tab ${
-                activeTab === 'plan' ? 'review-tab-active' : ''
-              }`}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'plan'}
-              aria-controls="progress-plan-panel"
-              onClick={() => setActiveTab('plan')}
-            >
-              <ClipboardList aria-hidden="true" />
-              <span>
-                <strong>
-                  Progress Plan
-                  {isFreeReview && (
-                    <LockKeyhole
-                      className="review-tab-lock"
-                      aria-hidden="true"
-                    />
-                  )}
-                </strong>
-                <small>
-                  {isFreeReview
-                    ? 'Locked in free review'
-                    : 'Prioritised next steps'}
-                </small>
-              </span>
-            </button>
-          </div>
+          <nav className="review-tabbar" aria-label="IA review sections">
+            <div className="review-tabgroup" role="tablist" aria-label="For the student">
+              <span className="review-tabgroup-label">For the student</span>
+              {([
+                ['detailed', BookOpen, 'Feedback', isFreeReview ? 'First criterion preview' : 'By criterion'],
+                ['workshop', ListChecks, 'Section guide', 'All 9 IA sections'],
+                ['plan', ClipboardList, 'Progress plan', isFreeReview ? 'Locked' : 'Next steps'],
+                ['comparison', Layers3, 'Compare drafts', 'Changes and bands'],
+              ] as const).map(([id, Icon, label, hint]) => (
+                <button
+                  key={id}
+                  className={`review-tab ${activeTab === id ? 'review-tab-active' : ''}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === id}
+                  onClick={() => setActiveTab(id)}
+                >
+                  <Icon aria-hidden="true" />
+                  <span>
+                    <strong>{label}</strong>
+                    <small>{hint}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div className="review-tabgroup review-tabgroup-teacher" role="tablist" aria-label="For the teacher">
+              <span className="review-tabgroup-label">For the teacher</span>
+              <button
+                className={`review-tab ${activeTab === 'annotated' ? 'review-tab-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'annotated'}
+                onClick={() => setActiveTab('annotated')}
+              >
+                <Eye aria-hidden="true" />
+                <span>
+                  <strong>Annotated IA</strong>
+                  <small>{isFreeReview ? '20-line preview' : 'Marked copy and notes'}</small>
+                </span>
+              </button>
+            </div>
+          </nav>
 
           <div className="review-tab-content">
             {reviewLoadState === 'loading' ? (

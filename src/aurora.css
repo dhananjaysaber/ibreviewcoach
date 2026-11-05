@@ -95,3 +95,50 @@ button.primary, .primary-button, .wg2-audit {
 
 /* Comparison panel spacing */
 .dc-root { border-radius: 20px; padding: 24px; overflow: hidden; }
+
+/* ---- Report navigation: grouped tabs for student and teacher ---- */
+.review-results-shell { overflow: clip; }
+.review-tabbar {
+  position: sticky;
+  top: 96px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.review-tabgroup { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.review-tabgroup-label {
+  flex-basis: 100%;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7a6fb5;
+}
+.review-tabgroup-teacher {
+  padding-left: 22px;
+  border-left: 2px solid #e4def7;
+}
+.review-tabbar .review-tab { min-height: 52px; padding: 8px 12px; }
+.review-tabbar .review-tab > svg { width: 19px; height: 19px; }
+.review-tabbar .review-tab small { display: none; }
+@media (min-width: 1100px) { .review-tabbar .review-tab small { display: block; } }
+@media (max-width: 760px) {
+  .review-tabbar { top: 64px; flex-wrap: nowrap; overflow-x: auto; gap: 14px; scrollbar-width: none; }
+  .review-tabgroup { flex-wrap: nowrap; flex: 0 0 auto; }
+  .review-tabgroup-teacher { padding-left: 14px; }
+  .review-tabbar .review-tab { white-space: nowrap; }
+}
+
+/* Error banners that were previously unstyled */
+.annotated-open-error {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin: 14px 0; padding: 14px 16px;
+  border: 1px solid #f0c4c4; border-radius: 14px;
+  background: #fff5f5; color: #8a2424; font-size: 0.9rem; line-height: 1.5;
+}
+.annotated-open-error > svg { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 2px; }
