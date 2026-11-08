@@ -142,3 +142,23 @@ button.primary, .primary-button, .wg2-audit {
   background: #fff5f5; color: #8a2424; font-size: 0.9rem; line-height: 1.5;
 }
 .annotated-open-error > svg { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 2px; }
+
+/* Full-width report and tidy sticky tab bar */
+.app-shell-premium .completion-main { width: 100%; }
+.premium-workspace-content:has(.completion-card-results) { width: min(1680px, calc(100% - 48px)); }
+.review-tabbar {
+  top: 70px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  align-items: flex-end;
+  gap: 8px 14px;
+  background: #fff;
+  backdrop-filter: none;
+  box-shadow: 0 6px 18px rgba(60, 40, 140, 0.08);
+  scrollbar-width: none;
+}
+.review-tabbar::-webkit-scrollbar { display: none; }
+.review-tabgroup { flex-wrap: nowrap; flex: 0 0 auto; }
+.review-tabgroup-teacher { margin-left: auto; }
+.review-tabbar .review-tab { white-space: nowrap; }
+@media (max-width: 760px) { .review-tabbar { top: 64px; } .review-tabgroup-teacher { margin-left: 0; } }
