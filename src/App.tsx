@@ -71,6 +71,7 @@ import {
 
 import { supabase } from './lib/supabase';
 import { WorkshopGuidedReview } from './components/WorkshopGuidedReview';
+import { CompareIas } from './components/CompareIas';
 import { DraftComparison, type DraftSnapshot } from './components/DraftComparison';
 
 import {
@@ -162,6 +163,7 @@ type MainWorkspaceView =
   | 'pricing'
   | 'workspace'
   | 'reports'
+  | 'compare'
   | 'account'
   | 'admin';
 
@@ -305,6 +307,10 @@ function App() {
 
     if (currentPath === '/my-account') {
       return 'account';
+    }
+
+    if (currentPath === '/my-reports/compare') {
+      return 'compare';
     }
 
     if (currentPath.startsWith('/my-reports')) {
@@ -529,6 +535,12 @@ function App() {
             replaceAppRoute('/my-reports');
             setStatus('ready');
           }
+        } else if (
+          currentPath === '/my-reports/compare' &&
+          accountState === 'permanent'
+        ) {
+          setMainView('compare');
+          setStatus('ready');
         } else if (
           currentPath.startsWith('/my-reports') &&
           accountState === 'permanent'
@@ -1433,6 +1445,23 @@ function App() {
     });
   }
 
+  function openCompareIas() {
+    if (accountState !== 'permanent') {
+      openAccountPanel('sign-in');
+      return;
+    }
+
+    setAuthPanelMode('closed');
+    setAuthError('');
+    setAuthMessage('');
+    setMainView('compare');
+    setAccountSection('dashboard');
+    setIsViewingSavedReport(false);
+    window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+    replaceAppRoute('/my-reports/compare');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   async function openSavedReport(submissionId: string): Promise<void> {
     if (isCurrentReviewActive(status, errorContext, submission)) {
       throw new Error(
@@ -1826,6 +1855,8 @@ function App() {
       ? 'credits'
       : mainView === 'reports'
       ? 'reports'
+      : mainView === 'compare'
+      ? 'compare'
       : mainView === 'workspace'
       ? 'review'
       : mainView === 'pricing'
@@ -1859,6 +1890,8 @@ function App() {
     accountState === 'permanent' ? (
       mainView === 'admin' && isAdmin ? (
         <AdminControlCentre />
+      ) : mainView === 'compare' ? (
+        <CompareIas />
       ) : mainView === 'reports' ? (
         <ReportsDashboard
           onOpenReport={openSavedReport}
@@ -2029,6 +2062,7 @@ function App() {
           }}
           onOpenAdmin={openAdminControlCentre}
           onOpenReports={openReportsDashboard}
+          onOpenCompare={openCompareIas}
           onStartReview={() => void openReviewWorkspace()}
           onOpenCredits={() => void openBuyCredits()}
           onOpenBilling={openBillingDashboard}

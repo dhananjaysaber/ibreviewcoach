@@ -51,3 +51,4 @@
 .sx-more{border:1px solid var(--sx-line);border-radius:16px;padding:14px 18px;background:#fff}.sx-more summary{cursor:pointer;font-weight:700}
 .sx-rubric p{margin:8px 0 0}.sx-note{margin:0;color:var(--sx-muted);font-size:.82rem}
 @media(max-width:700px){.sx-head,.sx-block,.sx-foot{padding-left:18px;padding-right:18px}.sx-head-side{justify-items:start;text-align:left}.sx-hero{padding:20px}}
+.sx-hero-actions{display:flex;gap:10px;flex-wrap:wrap}

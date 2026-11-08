@@ -3,49 +3,18 @@ import {supabase} from '../lib/supabase';
 import {SEHS_OFFICIAL_CRITERIA,SEHS_WORKSHOP_SECTIONS,type WorkshopCheck} from '../lib/workshopGuide';
 import {rubricView} from '../lib/ibRubric';
 import {PolicyFlagsStrip} from './PolicyFlagsStrip';
+import {buildTemplateReportHtml} from '../lib/compareIas';
 import './workshop-guided-review.css';
 import './section-cards.css';
 
-export type WorkshopFinding={id:string;criterion_code:string;section_title:string|null;issue:string;rubric_requirement:string;specific_action:string;why:string;completion_check:string;required_elements:string[];evidence_excerpt:string|null;priority:string;finding_type:string};
-export type WorkshopCriterion={criterion:string;criterion_name:string;indicative_mark_range:[number,number]|null;criterion_max_marks:number|null};
+export type {WorkshopFinding,WorkshopCriterion} from '../lib/sectionMap';
+import {sectionFor,type EnrichedFinding,type WorkshopFinding,type WorkshopCriterion} from '../lib/sectionMap';
 type VerifiedResult={id:string;status:'complete'|'partial'|'missing'|'not_applicable'|'unverified';reason:string;action:string;evidence_excerpt:string|null;source_location:string|null};
 type AuditRow={checks:VerifiedResult[];source_completeness:string;created_at:string};
-type EnrichedFinding={finding:WorkshopFinding;sectionId:string;check:WorkshopCheck|null};
-const norm=(s:string)=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'');
-const words=(s:string)=>(String(s||'').toLowerCase().match(/[a-z]{4,}/g)||[]).filter(x=>!['this','that','with','from','should','which','their','there','review','could','would','have','more','what','than','into','using','your'].includes(x));
+export const norm=(s:string)=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'');
 const auditEnabled=import.meta.env.VITE_ENABLE_WORKSHOP_AUDIT!=='false';
 const friendlyStatus=(s:string)=>({complete:'Addressed',partial:'Needs refining',missing:'Missing evidence',not_applicable:'Not applicable',unverified:'Needs verification'} as Record<string,string>)[s]||'Review';
 const meaningfulExcerpt=(s:string|null)=>{const x=(s||'').replace(/\s+/g,' ').trim();return x.length>=25&&!/(\.\.\.|…)$/.test(x)?x:null;};
-function sectionFor(f:WorkshopFinding):EnrichedFinding{
- const group=norm(f.criterion_code);const target=(f.section_title||'').toLowerCase();
- const relevantSections=SEHS_WORKSHOP_SECTIONS.filter(s=>{
-  const idx=SEHS_OFFICIAL_CRITERIA.findIndex(c=>norm(c.name)===norm(s.criterion));
-  return group===norm(s.criterion)||group===String(idx+1)||group===String.fromCharCode(65+idx).toLowerCase();
- });
- const candidates=relevantSections.length?relevantSections:SEHS_WORKSHOP_SECTIONS;
- let best:{sectionId:string;check:WorkshopCheck|null;score:number}={sectionId:candidates[0]?.id||'rq',check:null,score:-1};
- const material=[f.issue,f.rubric_requirement,f.specific_action,(f.required_elements||[]).join(' '),target].join(' ').toLowerCase();
- for(const s of candidates){
-  const sectionName=s.name.toLowerCase().replace(/^\d+\s*[·.\-]\s*/, '');
-  let sectionScore=target&&(target.includes(sectionName)||sectionName.includes(target))?9:0;
-  if(s.id==='rq'&&/research question/.test(material))sectionScore+=3;
-  if(s.id==='background'&&/background|literature|introduction|scientific rationale/.test(material))sectionScore+=4;
-  if(s.id==='method'&&/protocol|testing procedure|warm.up|randomis|reproduc|participant selection/.test(material))sectionScore+=4;
-  if(s.id==='variables'&&/controlled variable|independent variable|dependent variable|confound/.test(material))sectionScore+=4;
-  if(s.id==='safety'&&/safety|consent|ethical|hazard/.test(material))sectionScore+=5;
-  if(s.id==='data'&&/graph|statistic|analysis|raw data|anova|standard deviation/.test(material))sectionScore+=4;
-  if(s.id==='conclusion'&&/conclusion|literature comparison|practical implication/.test(material))sectionScore+=4;
-  if(s.id==='evaluation'&&/limitation|validity|reliability|evaluation|improvement/.test(material))sectionScore+=4;
-  for(const c of s.checks){
-   let score=sectionScore;
-   for(const term of c.searchTerms||[])if(material.includes(term.toLowerCase()))score+=term.includes(' ')?3:1;
-   for(const w of words(c.title))if(material.includes(w))score+=1;
-   if(target&&c.title.toLowerCase().includes(target))score+=5;
-   if(score>best.score)best={sectionId:s.id,check:c,score};
-  }
- }
- return {finding:f,sectionId:best.sectionId,check:best.score>=3?best.check:null};
-}
 export function WorkshopGuidedReview({findings,criteria,freePreview=false,submissionId,onOpenAnnotatedIa}:{findings:WorkshopFinding[];criteria:WorkshopCriterion[];freePreview?:boolean;submissionId?:string;onOpenAnnotatedIa?:()=>void}){
  const [sectionId,setSectionId]=useState(SEHS_WORKSHOP_SECTIONS[0].id);
  const [verified,setVerified]=useState<Record<string,AuditRow>>({});
@@ -118,7 +87,10 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
  return <section className="wg2 sx" aria-label="IA section guide">
   <header className="sx-hero">
    <div><span className="sx-eyebrow">Section guide · IB SEHS</span><h2>Your IA, one section at a time</h2><p>Each section shows what your review found in your own words, why it matters under the IB rubric and the workshop template, what is missing, and the steps to take.</p></div>
-   {onOpenAnnotatedIa&&<button className="sx-btn sx-btn-primary" type="button" onClick={onOpenAnnotatedIa}>Open annotated document ↗</button>}
+   <div className="sx-hero-actions">
+    {!freePreview&&<button className="sx-btn" type="button" onClick={()=>{const html=buildTemplateReportHtml({label:'Your IA',filename:'Your IA',findings,criteria});const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='SEHS-template-report.html';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}}>Download template report</button>}
+    {onOpenAnnotatedIa&&<button className="sx-btn sx-btn-primary" type="button" onClick={onOpenAnnotatedIa}>Open annotated document ↗</button>}
+   </div>
   </header>
   {!freePreview&&submissionId&&<PolicyFlagsStrip submissionId={submissionId}/>}
   <nav className="sx-nav" aria-label="IA report sections">{SEHS_WORKSHOP_SECTIONS.map((s,i)=>{
