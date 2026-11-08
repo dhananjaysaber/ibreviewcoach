@@ -148,3 +148,23 @@ button.primary, .primary-button, .wg2-audit {
 .completion-card-results .completion-hero { padding-block: 14px; }
 .completion-summary-item { min-height: 76px; padding: 12px 14px; }
 .teacher-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+
+/* Full-width report and tidy sticky tab bar */
+.app-shell-premium .completion-main { width: 100%; }
+.premium-workspace-content:has(.completion-card-results) { width: min(1680px, calc(100% - 48px)); }
+.review-tabbar {
+  top: 70px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  align-items: flex-end;
+  gap: 8px 14px;
+  background: #fff;
+  backdrop-filter: none;
+  box-shadow: 0 6px 18px rgba(60, 40, 140, 0.08);
+  scrollbar-width: none;
+}
+.review-tabbar::-webkit-scrollbar { display: none; }
+.review-tabgroup { flex-wrap: nowrap; flex: 0 0 auto; }
+.review-tabgroup-teacher { margin-left: auto; }
+.review-tabbar .review-tab { white-space: nowrap; }
+@media (max-width: 760px) { .review-tabbar { top: 64px; } .review-tabgroup-teacher { margin-left: 0; } }
