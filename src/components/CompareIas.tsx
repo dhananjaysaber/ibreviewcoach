@@ -23,7 +23,7 @@ function download(name:string,html:string){
 }
 function Preview({html,title}:{html:string;title:string}){
  const [h,setH]=useState(640);
- return <iframe className="cmp-frame" title={title} srcDoc={html} sandbox="allow-same-origin" style={{height:h}} onLoad={e=>{const d=e.currentTarget.contentDocument;if(d?.body)setH(Math.min(Math.max(d.body.scrollHeight+24,360),1400))}}/>;
+ return <iframe className="cmp-frame" title={title} srcDoc={html} sandbox="allow-same-origin" scrolling="no" style={{height:h}} onLoad={e=>{const d=e.currentTarget.contentDocument;if(d?.body)setH(Math.min(Math.max(d.body.scrollHeight+32,360),8000))}}/>;
 }
 
 export function CompareIas(){
@@ -44,7 +44,7 @@ export function CompareIas(){
  },[]);
 
  function toggle(id:string){setResult(null);setError('');setPicked(p=>p.includes(id)?p.filter(x=>x!==id):p.length>=2?[p[1],id]:[...p,id])}
- const ordered=useMemo(()=>picked.map(id=>rows?.find(r=>r.submission_id===id)).filter((r):r is HistoryRow=>Boolean(r)),[picked,rows]);
+ const ordered=useMemo(()=>picked.map(id=>rows?.find(r=>r.submission_id===id)).filter((r):r is HistoryRow=>Boolean(r)).sort((x,y)=>(Date.parse(x.uploaded_at)||0)-(Date.parse(y.uploaded_at)||0)),[picked,rows]);
 
  async function run(){
   if(ordered.length!==2||busy)return;
@@ -54,7 +54,7 @@ export function CompareIas(){
     const res=await supabase.rpc('get_my_ia_review_content',{p_submission_id:r.submission_id});
     if(res.error)throw res.error;
     if(!rec(res.data)||res.data.full_access!==true)throw new Error('"'+r.original_filename+'" needs a full review to be compared.');
-    return {label:r.project_title+' · draft '+r.version_number,filename:r.original_filename,findings:toFindings(res.data.findings),criteria:toCriteria(res.data.criteria)};
+    return {label:r.original_filename+(r.uploaded_at&&!isNaN(Date.parse(r.uploaded_at))?' · uploaded '+new Date(r.uploaded_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):''),filename:r.original_filename,findings:toFindings(res.data.findings),criteria:toCriteria(res.data.criteria)};
    }));
    setResult(compareSides(sides[0],sides[1]));
   }catch(e){setError(e instanceof Error?e.message:'The comparison could not be prepared. Try again.')}
@@ -71,14 +71,14 @@ export function CompareIas(){
     <h4><i>1</i>Select two reports</h4>
     {rows===null?<p className="sx-muted">Loading your reports…</p>
      :rows.length<2?<p className="sx-muted">You need at least two completed reports to compare. Complete another review and it will appear here.</p>
-     :<ul className="cmp-list">{rows.map(r=>{const n=picked.indexOf(r.submission_id);return <li key={r.submission_id}><label className={n>=0?'cmp-on':''}><input type="checkbox" checked={n>=0} onChange={()=>toggle(r.submission_id)}/><span className="cmp-main"><strong>{r.original_filename}</strong><small>{r.project_title} · draft {r.version_number} · {when(r.report_generated_at||r.uploaded_at)}{r.word_count?' · '+r.word_count.toLocaleString()+' words':''}</small></span>{n>=0&&<b className="cmp-badge">{n===0?'First':'Second'}</b>}</label></li>})}</ul>}
+     :<ul className="cmp-list">{rows.map(r=>{const n=picked.indexOf(r.submission_id);const rank=ordered.findIndex(o=>o.submission_id===r.submission_id);return <li key={r.submission_id}><label className={n>=0?'cmp-on':''}><input type="checkbox" checked={n>=0} onChange={()=>toggle(r.submission_id)}/><span className="cmp-main"><strong>{r.original_filename}</strong><small>{r.project_title} · uploaded {when(r.uploaded_at||r.report_generated_at)}{r.word_count?' · '+r.word_count.toLocaleString()+' words':''}</small></span>{n>=0&&<b className="cmp-badge">{rank===0&&ordered.length===2?'First (earlier)':ordered.length===2?'Second (later)':'Selected'}</b>}</label></li>})}</ul>}
     <div className="cmp-actions"><button className="sx-btn sx-btn-primary" type="button" onClick={()=>void run()} disabled={ordered.length!==2||busy}>{busy?'Preparing comparison…':ordered.length===2?'Compare these two':'Select two reports'}</button><small className="sx-muted">Order matters: the first is treated as the earlier IA.</small></div>
     {error&&<p role="alert" className="sx-error">{error}</p>}
    </div>
   </article>
   {result&&<>
    <article className="sx-card"><div className="sx-block"><div className="cmp-row"><h4><i>2</i>Annotation comparison</h4><button className="sx-btn" type="button" onClick={()=>download('SEHS-annotation-comparison.html',annotationHtml)}>Download file</button></div><p className="sx-muted">Marked against the official IB SEHS rubric.</p><Preview html={annotationHtml} title="Annotation comparison"/></div></article>
-   <article className="sx-card"><div className="sx-block"><div className="cmp-row"><h4><i>3</i>Ideal IA Ideal IA template recommendations and analysis</h4><button className="sx-btn" type="button" onClick={()=>download('SEHS-template-analysis.html',templateHtml)}>Download file</button></div><p className="sx-muted">Ideal IA template view of the second IA, with movement since the first.</p><Preview html={templateHtml} title="Ideal IA Ideal IA template recommendations and analysis"/></div></article>
+   <article className="sx-card"><div className="sx-block"><div className="cmp-row"><h4><i>3</i>Ideal IA template recommendations and analysis</h4><button className="sx-btn" type="button" onClick={()=>download('SEHS-template-analysis.html',templateHtml)}>Download file</button></div><p className="sx-muted">Ideal IA template view of the second IA, with movement since the first.</p><Preview html={templateHtml} title="Ideal IA template recommendations and analysis"/></div></article>
   </>}
  </section>;
 }

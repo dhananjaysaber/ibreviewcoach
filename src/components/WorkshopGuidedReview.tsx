@@ -107,7 +107,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
  const auditChecks=audit?.checks||[];
  const addressed=auditChecks.filter(c=>c.status==='complete').length;
  const pageHit=auditChecks.map(c=>(c.source_location||'').match(/\b(?:page|p\.)\s*(\d+)/i)).find(Boolean);
- const status=audit?(addressed===section.checks.length?{t:'Addressed',k:'good'}:{t:'Needs refining',k:'warn'}):!issues.length&&strengths.length?{t:'Looking strong',k:'good'}:highCount?{t:'Needs work',k:'bad'}:issues.length?{t:'Needs refining',k:'warn'}:{t:'Not yet reviewed',k:'idle'};
+ const status=!issues.length?(strengths.length?{t:'Looking strong',k:'good'}:{t:'Not yet reviewed',k:'idle'}):audit&&addressed===section.checks.length?{t:'Addressed',k:'good'}:highCount?{t:'Needs work',k:'bad'}:{t:'Needs refining',k:'warn'};
  const templateChecks=(()=>{const seen=new Set<string>();const list:WorkshopCheck[]=[];for(const x of issues){if(x.check&&!seen.has(x.check.id)){seen.add(x.check.id);list.push(x.check)}}return (list.length?list:section.checks).slice(0,3)})();
  const quoteOf=(x:EnrichedFinding)=>{const q=meaningfulExcerpt(x.finding.evidence_excerpt)||(x.finding.evidence_excerpt||'').replace(/\s+/g,' ').trim();return q.length>340?q.slice(0,337)+'…':q};
  const short=(t:string,n=120)=>{const x=t.replace(/\s+/g,' ').trim();return x.length>n?x.slice(0,n-1).trimEnd()+'…':x};
@@ -137,7 +137,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
     <div><span className="sx-eyebrow">{section.criterion} · Section {sectionNo} of {SEHS_WORKSHOP_SECTIONS.length}{pageHit?' · Page '+pageHit[1]:''}</span><h3>{section.name.replace(/^\d+\s*[·.\-]\s*/,'')}</h3></div>
     <div className="sx-head-side"><span className={'sx-chip sx-chip-'+status.k}>{status.t}</span>
      {official?.indicative_mark_range&&<small>Indicative IB range {official.indicative_mark_range.join('–')} of {official.criterion_max_marks??6} for {section.criterion}</small>}
-     <small>{doneTotal>0?doneCount+' of '+doneTotal+' fixes ticked':'Nothing to fix here yet'}</small></div>
+     <small>{doneTotal>0?doneCount+' of '+doneTotal+' fixes ticked':'All clear: nothing flagged'}</small></div>
    </header>
 
    <section className="sx-block">
