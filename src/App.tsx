@@ -70,7 +70,6 @@ import {
 } from './lib/anonymousSession';
 
 import { supabase } from './lib/supabase';
-import { buildMarkMap } from './lib/markMap';
 import { MarkMapTab } from './components/MarkMapTab';
 import { WorkshopGuidedReview } from './components/WorkshopGuidedReview';
 import { CompareIas } from './components/CompareIas';
@@ -5163,9 +5162,6 @@ function CompletionWorkspace({
     'unassigned';
 
   const isFreeReview = accessMode === 'free_review';
-  const tight = isFreeReview || !reviewData
-    ? null
-    : buildMarkMap(reviewData.criteria, reviewData.findings);
 
   const hasFullReviewAccess =
     accessMode === 'paid_credit' || accessMode === 'complimentary';
@@ -5557,20 +5553,11 @@ function CompletionWorkspace({
             <div>
               <span>Indicative range</span>
               <strong>
-                {tight
-                  ? `${tight.boundary[0]}${tight.boundary[1] > tight.boundary[0] ? '–' + tight.boundary[1] : ''}`
-                  : completion?.overallMarkRange
+                {completion?.overallMarkRange
                   ? `${completion.overallMarkRange[0]}–${completion.overallMarkRange[1]}`
                   : 'Ready'}
                 {completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
               </strong>
-              {tight && (
-                <small
-                  title="The official IB SEHS rubric sets the outer limits. Your flagged findings and the Ideal IA template place the draft inside them. Bands are indicative and non-binding."
-                >
-                  Recommended {tight.mark} · official {tight.official[0]}–{tight.official[1]}
-                </small>
-              )}
             </div>
             <div>
               <span>{isFreeReview ? 'Preview findings' : 'Findings'}</span>
@@ -5715,6 +5702,7 @@ function CompletionWorkspace({
 
                 {activeTab === 'markmap' && (
                   <MarkMapTab
+                    submissionId={submission?.id ?? ''}
                     criteria={reviewData.criteria}
                     findings={reviewData.findings}
                     isFreePreview={isFreeReview}

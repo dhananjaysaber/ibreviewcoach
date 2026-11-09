@@ -16,3 +16,7 @@
 .mm-table td { padding: 8px; border-top: 1px solid var(--aurora-pane-border); vertical-align: top; }
 .mm-ok { color: var(--aurora-mint-fg); } .mm-warn { color: var(--aurora-coral-fg); }
 .mm-note { padding: 16px; border-radius: 14px; background: var(--aurora-field); color: #6b6590; }
+.mm-sub { display: block; font-size: .74rem; color: #8a84a8; }
+.mm-table blockquote { margin: 0 0 6px; padding: 6px 10px; border-left: 3px solid var(--aurora-violet); background: var(--aurora-field); border-radius: 8px; font-style: italic; }
+.mm-table blockquote small { display: block; font-style: normal; font-size: .72rem; color: #8a84a8; }
+.mm-template { background: #fff; border-style: dashed; }
