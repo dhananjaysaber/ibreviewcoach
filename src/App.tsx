@@ -6879,8 +6879,12 @@ function FindingCard({ finding, number }: FindingCardProps) {
   const isStrength = finding.finding_type === 'strength';
 
   return (
-    <article className={`finding-card finding-${finding.priority}`}>
-      <div className="finding-card-header">
+    <details
+      className={`finding-card finding-${finding.priority} ${
+        isStrength ? 'finding-good' : 'finding-fix'
+      }`}
+    >
+      <summary className="finding-card-header">
         <div className="finding-card-title">
           <span className="finding-number">{number}</span>
 
@@ -6893,9 +6897,10 @@ function FindingCard({ finding, number }: FindingCardProps) {
         </div>
 
         <span className={`priority-pill priority-${finding.priority}`}>
-          {capitalize(finding.priority)} priority
+          {isStrength ? 'Done well' : `${capitalize(finding.priority)} priority`}
         </span>
-      </div>
+        <span className="finding-caret" aria-hidden="true">›</span>
+      </summary>
 
       <div className="finding-location">
         <MapPin aria-hidden="true" />
@@ -6943,7 +6948,7 @@ function FindingCard({ finding, number }: FindingCardProps) {
           <p>{finding.why}</p>
         </div>
       </div>
-    </article>
+    </details>
   );
 }
 
