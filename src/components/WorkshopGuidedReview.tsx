@@ -1,3 +1,4 @@
+import {CHECK_EXPLAINERS} from '../lib/checkExplainers';
 import {useEffect,useMemo,useState} from 'react';
 import {supabase} from '../lib/supabase';
 import {SEHS_WORKSHOP_SECTIONS,type WorkshopCheck} from '../lib/workshopGuide';
@@ -145,7 +146,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
      {plansReady&&needPlan.length>0&&!freePreview&&<button className="sx-btn" type="button" onClick={()=>void makePlans(needPlan)} disabled={planBusy}>{planBusy?'Making your plan…':'Make a clear step-by-step plan'}</button>}</div>
     {planMsg&&<p role="alert" className="sx-error">{planMsg}</p>}
     {issues.length===0&&<p className="sx-muted">{auditChecks.length?'Nothing flagged here. Open the green items below to see why.':'No specific problems are mapped to this section. That does not mean it is perfect. Open the full check at the bottom to compare it with the Ideal IA template.'}</p>}
-    {issues.map(x=>{const f=x.finding;const pl=plans[f.id];const isDone=done.has(f.id);const quote=quoteOf(x);const example=pl?.example||x.check?.example||'';
+    {issues.map(x=>{const f=x.finding;const pl=plans[f.id];const isDone=done.has(f.id);const quote=quoteOf(x);const ex=x.check?CHECK_EXPLAINERS[x.check.id]:undefined;const example=pl?.example||ex?.example||x.check?.example||'';
      return <details key={f.id} className={'sx-row '+(isDone?'sx-row-done':'sx-row-todo')}>
       <summary><span className={'sx-mark '+(isDone?'sx-mark-ok':'sx-mark-todo')} aria-hidden="true">{isDone?'✓':'!'}</span>
        <span className="sx-row-title"><strong>{pl?.goal||x.check?.title||f.section_title||'Improvement'}</strong><small>{short(f.issue)}</small></span>
@@ -155,7 +156,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
        <h5>What is missing</h5><p>{f.issue}</p>
        <h5>Why it matters</h5><p>{pl?.why||f.why||f.rubric_requirement}</p>
        <h5>Your plan</h5>
-       {pl?<ol className="sx-steps">{pl.steps.map((st,i)=><li key={i}>{st}</li>)}</ol>:<p>{f.specific_action}</p>}
+       {pl?<ol className="sx-steps">{pl.steps.map((st,i)=><li key={i}>{st}</li>)}</ol>:<><p>{f.specific_action}</p>{ex&&<ol className="sx-steps">{ex.how.map((st,i)=><li key={i}>{st}</li>)}</ol>}</>}
        {example&&<div className="sx-example"><span>Example to help you understand. It is not text for your IA.</span><p>{example}</p></div>}
        <h5>You are done when</h5><p>{pl?.done_when||f.completion_check}</p>
        {f.required_elements?.length>0&&<div className="sx-chips">{f.required_elements.map((el,i)=><span key={i}>{el}</span>)}</div>}
