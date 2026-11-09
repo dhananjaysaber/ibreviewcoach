@@ -320,3 +320,4 @@ body { background: radial-gradient(1200px 500px at 85% -10%, #ece6ff 0%, transpa
 .reports-secondary-action { border-radius: 999px; border: 1px solid rgba(255,255,255,.5) !important; color: #fff; background: rgba(255,255,255,.14) !important; }
 [class*="reports-version"], [class*="reports-project"] { border-radius: 18px; }
 button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid rgba(75,43,232,.45); outline-offset: 2px; }
+.report-bar-stats small { display: block; font-size: .68rem; font-weight: 700; color: #8a84a8; margin-top: 2px; }
