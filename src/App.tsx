@@ -5322,6 +5322,7 @@ function CompletionWorkspace({
         if (live) setPreviousDraft({
           submissionId: prior.submission_id as string,
           version: prior.version_number as number,
+          filename: typeof prior.original_filename === 'string' ? prior.original_filename : undefined,
           findings: normalizeDetailedFindings(result.data.findings),
           criteria: normalizeCriterionCoaching(result.data.criteria),
         });
@@ -5678,7 +5679,7 @@ function CompletionWorkspace({
                     <>
                     {comparisonMessage && <p className="review-data-state">{comparisonMessage}</p>}
                     <DraftComparison
-                      current={{submissionId: submission?.id ?? '',version:submission?.draft_version ?? 1,findings:reviewData.findings,criteria:reviewData.criteria}}
+                      current={{submissionId: submission?.id ?? '',version:submission?.draft_version ?? 1,filename: submission?.original_filename,findings:reviewData.findings,criteria:reviewData.criteria}}
                       previous={previousDraft}
                     />
                     </>

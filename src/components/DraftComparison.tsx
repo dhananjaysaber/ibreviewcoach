@@ -4,7 +4,7 @@ import type {WorkshopFinding} from './WorkshopGuidedReview';
 import {SEHS_OFFICIAL_CRITERIA} from '../lib/workshopGuide';
 import {compareBands,type CriterionBand} from '../lib/bandCompare';
 import './draft-comparison.css';
-export type DraftSnapshot={submissionId:string;version:number;findings:WorkshopFinding[];criteria?:CriterionBand[]};
+export type DraftSnapshot={submissionId:string;version:number;filename?:string;findings:WorkshopFinding[];criteria?:CriterionBand[]};
 const criterionKey=(s:string)=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
 function tokens(x:string):Set<string>{return new Set((x.toLowerCase().match(/[a-z]{5,}/g)||[]).filter(w=>!['their','which','these','there','might','should','could','would','about','since','without','evidence','criterion','research','student','review','section','draft','needs','missing','details','include','specific'].includes(w)));}
 function similarity(a:WorkshopFinding,b:WorkshopFinding){
@@ -17,6 +17,10 @@ type AuditCheck={id:string;status:string;reason:string;action:string;evidence_ex
 type AuditSummary={section_id:string;checks:AuditCheck[]};
 const evidenceEnabled=import.meta.env.VITE_ENABLE_WORKSHOP_AUDIT!=='false';
 export function DraftComparison({current,previous}:{current:DraftSnapshot;previous:DraftSnapshot|null}){
+ const sameName=!!previous&&!!previous.filename&&previous.filename===current.filename;
+ const nameOf=(d:DraftSnapshot)=>d.filename?(sameName?d.filename+' (draft '+d.version+')':d.filename):'Draft '+d.version;
+ const prevName=previous?nameOf(previous):'';
+ const nowName=nameOf(current);
  const [audits,setAudits]=useState<{old:AuditSummary[];now:AuditSummary[]}|null>(null);
  const [auditWarning,setAuditWarning]=useState('');
  useEffect(()=>{
@@ -55,12 +59,12 @@ export function DraftComparison({current,previous}:{current:DraftSnapshot;previo
  },[current,previous]);
  const bandChanges=useMemo(()=>previous&&current.criteria&&previous.criteria?compareBands(previous.criteria,current.criteria,current.findings):[],[current,previous]);
  if(!previous)return <section className="dc-root"><h2>Compare IA drafts</h2><p>There is no earlier eligible report for this IA project. After a later submission is reviewed, you can compare its saved findings here.</p></section>;
- return <section className="dc-root"><header><span>COMPARING TWO SAVED REVIEWS</span><h2>Draft {previous.version} (earlier) vs Draft {current.version} (this one)</h2><p>Draft {previous.version} is the earlier saved review of this IA project. Draft {current.version} is the one you are viewing. A change is a signal to check, not proof of improvement.</p></header>
+ return <section className="dc-root"><header><span>COMPARING TWO SAVED REVIEWS</span><h2>{prevName} (earlier) vs {nowName} (this one)</h2><p>{prevName} is the earlier saved review of this IA project. {nowName} is the one you are viewing. A change is a signal to check, not proof of improvement.</p></header>
 {bandChanges.length>0&&<section className="dc-bands" aria-label="Revised indicative band by criterion"><h3>Indicative band by criterion</h3><p className="dc-bands-note">Bands come from each saved review's marking against the four IB criteria. They are indicative and non-binding, not an official mark. A change between drafts is a signal to check, not proof of improvement.</p>
-  <div className="dc-bands-grid">{bandChanges.map(b=><article key={b.criterion} className={'dc-band dc-band-'+b.direction}><header><strong>{b.criterion}</strong><span className="dc-band-move">Draft {previous.version}: {b.before??'n/a'} · Draft {current.version}: {b.after??'n/a'}<em>{b.direction==='up'?' Higher band':b.direction==='down'?' Lower band':b.direction==='same'?' Same band':' Not comparable'}</em></span></header>
+  <div className="dc-bands-grid">{bandChanges.map(b=><article key={b.criterion} className={'dc-band dc-band-'+b.direction}><header><strong>{b.criterion}</strong><span className="dc-band-move">Earlier: {b.before??'n/a'} · Now: {b.after??'n/a'}<em>{b.direction==='up'?' Higher band':b.direction==='down'?' Lower band':b.direction==='same'?' Same band':' Not comparable'}</em></span></header>
    {b.nextBand?<p><b>Still to meet for band {b.nextBand.band}:</b> {b.nextBand.text}</p>:b.after?<p>Top band reached for this criterion.</p>:null}
    {b.topAction&&<p><b>Suggested next action:</b> {b.topAction}</p>}</article>)}</div></section>}
-  {audits&&<section className="dc-verified"><h3>Ideal IA template check comparison · document evidence</h3><p>{checkComparisons.length} checks were audited in both drafts. A positive change is shown only where Draft {current.version} has an excerpt verified against its extracted document text; a teacher should still confirm scientific adequacy.</p>{checkComparisons.length?checkComparisons.map(x=><article key={x.id}><b>{x.id}</b> · <strong>{x.status}</strong><p>Draft {previous.version}: {x.old.status} → Draft {current.version}: {x.now.status}</p>{x.now.evidence_excerpt&&<blockquote>{x.now.evidence_excerpt}</blockquote>}<p>Next step: {x.now.action}</p></article>):<p>No matching completed section audits yet. Audit the same section in both drafts to enable an evidence-based comparison.</p>}</section>}
+  {audits&&<section className="dc-verified"><h3>Ideal IA template check comparison · document evidence</h3><p>{checkComparisons.length} checks were audited in both drafts. A positive change is shown only where the newer draft has an excerpt verified against its extracted document text; a teacher should still confirm scientific adequacy.</p>{checkComparisons.length?checkComparisons.map(x=><article key={x.id}><b>{x.id}</b> · <strong>{x.status}</strong><p>Earlier ({prevName}): {x.old.status} → Now ({nowName}): {x.now.status}</p>{x.now.evidence_excerpt&&<blockquote>{x.now.evidence_excerpt}</blockquote>}<p>Next step: {x.now.action}</p></article>):<p>No matching completed section audits yet. Audit the same section in both drafts to enable an evidence-based comparison.</p>}</section>}
  {auditWarning&&<p className="dc-warning">{auditWarning}</p>}
  <div className="dc-stats"><div><strong>{compared!.continuing}</strong><small>Similar concerns still flagged</small></div><div><strong>{compared!.notRepeated}</strong><small>Earlier concerns not repeated</small></div><div><strong>{compared!.newIssues.length}</strong><small>Newly flagged concerns</small></div></div>
  <div className="dc-warning"><b>Important verification rule:</b> an issue not repeated by the AI is <strong>not automatically resolved</strong>. To confirm a fix, check corresponding passages, tables, diagrams and evidence in both drafts. These statuses compare stored reviewer findings, not the full document contents.</div>
