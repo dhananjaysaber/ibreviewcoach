@@ -78,7 +78,7 @@ export function CompareIas(){
   </article>
   {result&&<>
    <article className="sx-card"><div className="sx-block"><div className="cmp-row"><h4><i>2</i>Annotation comparison</h4><button className="sx-btn" type="button" onClick={()=>download('SEHS-annotation-comparison.html',annotationHtml)}>Download file</button></div><p className="sx-muted">Marked against the official IB SEHS rubric.</p><Preview html={annotationHtml} title="Annotation comparison"/></div></article>
-   <article className="sx-card"><div className="sx-block"><div className="cmp-row"><h4><i>3</i>Template recommendations and analysis</h4><button className="sx-btn" type="button" onClick={()=>download('SEHS-template-analysis.html',templateHtml)}>Download file</button></div><p className="sx-muted">Workshop-template view of the second IA, with movement since the first.</p><Preview html={templateHtml} title="Template recommendations and analysis"/></div></article>
+   <article className="sx-card"><div className="sx-block"><div className="cmp-row"><h4><i>3</i>Ideal IA Ideal IA template recommendations and analysis</h4><button className="sx-btn" type="button" onClick={()=>download('SEHS-template-analysis.html',templateHtml)}>Download file</button></div><p className="sx-muted">Ideal IA template view of the second IA, with movement since the first.</p><Preview html={templateHtml} title="Ideal IA Ideal IA template recommendations and analysis"/></div></article>
   </>}
  </section>;
 }

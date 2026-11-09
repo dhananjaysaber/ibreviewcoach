@@ -72,7 +72,7 @@ export function buildAnnotationComparisonHtml(c:Comparison){
 }
 
 export function buildTemplateAnalysisHtml(c:Comparison){
- let h=head(c,'Template recommendations and analysis','Workshop-template view of the second IA, with movement from the first.');
+ let h=head(c,'Ideal IA Ideal IA template recommendations and analysis','Ideal IA template view of the second IA, with movement from the first.');
  h+='<h2>Section overview</h2><div class="card"><table><tr><th>Section</th><th>First IA issues</th><th>Second IA issues</th><th>Movement</th></tr>'+c.sections.map(s=>{const d=s.b.length-s.a.length;return '<tr><td>'+esc(s.name)+'</td><td>'+s.a.length+'</td><td>'+s.b.length+'</td><td class="'+(d<0?'up':d>0?'down':'muted')+'">'+(d<0?'Fewer issues':d>0?'More issues':'No change')+'</td></tr>'}).join('')+'</table></div>';
  h+='<h2>Recommendations for the second IA</h2>';
  for(const s of c.sections){
@@ -82,16 +82,16 @@ export function buildTemplateAnalysisHtml(c:Comparison){
   for(const r of s.b){const isNew=s.added.includes(r);h+='<div class="card"><span class="tag '+(isNew?'t-new':'t-keep')+'">'+(isNew?'New in second IA':'Carried over')+'</span><b>'+esc(r.title)+'</b>'+(r.quote?'<blockquote>'+esc(r.quote)+'</blockquote>':'')+'<p>'+esc(r.issue)+'</p><p><b>What to do:</b> '+esc(r.action)+'</p><p class="muted"><b>You will know it is fixed when:</b> '+esc(r.completion)+'</p></div>'}
  }
  if(c.totals.resolved)h+='<h2>Improvements since the first IA</h2><div class="card">'+c.sections.flatMap(s=>s.resolved.map(r=>'<p><span class="tag t-ok">Resolved</span>'+esc(s.name)+': '+esc(r.title)+'</p>')).join('')+'</div>';
- return page('Template recommendations and analysis',h+foot);
+ return page('Ideal IA Ideal IA template recommendations and analysis',h+foot);
 }
 
 export function buildTemplateReportHtml(side:CompareSide){
  const c=compareSides(side,{label:'',filename:'',findings:[],criteria:[]});
- let h='<h1>Template report</h1><p class="muted">Built on the workshop template. '+esc(side.filename)+'</p>';
+ let h='<h1>Ideal IA template report</h1><p class="muted">Built on the Ideal IA template. '+esc(side.filename)+'</p>';
  for(const s of c.sections){
   if(!s.a.length)continue;
   h+='<h2>'+esc(s.name)+'</h2>';
   for(const r of s.a)h+='<div class="card"><b>'+esc(r.title)+'</b>'+(r.quote?'<blockquote>'+esc(r.quote)+'</blockquote>':'')+'<p>'+esc(r.issue)+'</p><p><b>What to do:</b> '+esc(r.action)+'</p><p class="muted"><b>You will know it is fixed when:</b> '+esc(r.completion)+'</p></div>';
  }
- return page('Template report',h+foot);
+ return page('Ideal IA template report',h+foot);
 }

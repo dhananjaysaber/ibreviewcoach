@@ -168,3 +168,13 @@ button.primary, .primary-button, .wg2-audit {
 .review-tabgroup-teacher { margin-left: auto; }
 .review-tabbar .review-tab { white-space: nowrap; }
 @media (max-width: 760px) { .review-tabbar { top: 64px; } .review-tabgroup-teacher { margin-left: 0; } }
+
+/* Compact report bar */
+.report-bar{display:flex;align-items:center;gap:18px 28px;flex-wrap:wrap;padding:16px 22px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(180deg,#faf8ff,#fff);margin-bottom:14px}
+.report-bar-title{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 260px}
+.report-bar-title svg{width:26px;height:26px;color:#2f9a5f;flex:0 0 auto}
+.report-bar-title strong{display:block;font-size:1.05rem;overflow-wrap:anywhere}.report-bar-title span{font-size:.82rem;color:#6a6590}
+.report-bar-stats{display:flex;gap:26px;flex-wrap:wrap}
+.report-bar-stats span{display:block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#7a6fb5;font-weight:800}
+.report-bar-stats strong{font-size:1.05rem}
+.completion-card-results{padding-block:20px}

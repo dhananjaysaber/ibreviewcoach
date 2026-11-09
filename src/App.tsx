@@ -5533,44 +5533,23 @@ function CompletionWorkspace({
       )}
 
       <section className="completion-card completion-card-results">
-        <div className="completion-hero">
-          <div className="completion-mark">
-            <CheckCircle2 aria-hidden="true" />
-          </div>
-
-          <div className="completion-hero-copy">
-            <span className="completion-eyebrow">Review complete</span>
-
-            <h1>Your IA guidance is ready</h1>
-
-            <p className="completion-intro">
-              {isFreeReview
-                ? 'Your free preview shows the first detailed-review criterion and the opening section of the annotated IA.'
-                : 'Review the exact evidence identified in your draft, the specific action required for each criterion, your annotated IA and your prioritised progress plan.'}
-            </p>
-          </div>
-        </div>
-
-        {(selectedFile?.filename || submission?.original_filename) && (
-          <div className="completion-file">
+        <div className="report-bar">
+          <div className="report-bar-title">
             <FileCheck2 aria-hidden="true" />
-
             <div>
               <strong>
-                {selectedFile?.filename ?? submission?.original_filename}
+                {selectedFile?.filename ??
+                  submission?.original_filename ??
+                  'Your IA review'}
               </strong>
-              <span>Secure detailed review completed</span>
+              <span>
+                {isFreeReview ? 'Free preview' : 'Review complete'}
+              </span>
             </div>
           </div>
-        )}
-
-        <div className="completion-summary-grid">
-          <div className="completion-summary-item">
-            <SearchCheck aria-hidden="true" />
-
+          <div className="report-bar-stats">
             <div>
               <span>Indicative range</span>
-
               <strong>
                 {completion?.overallMarkRange
                   ? `${completion.overallMarkRange[0]}–${completion.overallMarkRange[1]}`
@@ -5578,34 +5557,12 @@ function CompletionWorkspace({
                 {completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
               </strong>
             </div>
-          </div>
-
-          <div className="completion-summary-item">
-            <ListChecks aria-hidden="true" />
-
             <div>
-              <span>Rubric criteria</span>
-              <strong>{isFreeReview ? '1 previewed' : '4 reviewed'}</strong>
-            </div>
-          </div>
-
-          <div className="completion-summary-item">
-            <Target aria-hidden="true" />
-
-            <div>
-              <span>
-                {isFreeReview ? 'Preview findings' : 'Detailed findings'}
-              </span>
+              <span>{isFreeReview ? 'Preview findings' : 'Findings'}</span>
               <strong>{reviewData?.findings.length ?? 'Saved'}</strong>
             </div>
-          </div>
-
-          <div className="completion-summary-item">
-            <Clock3 aria-hidden="true" />
-
             <div>
-              <span>Progress plan</span>
-
+              <span>Next check-in</span>
               <strong>
                 {isFreeReview
                   ? 'Locked'
@@ -5617,9 +5574,6 @@ function CompletionWorkspace({
               </strong>
             </div>
           </div>
-        </div>
-
-        <div className="completion-toolbar">
           <button
             className={`report-action-button ${
               isFreeReview ? 'report-action-locked' : ''
@@ -5637,9 +5591,8 @@ function CompletionWorkspace({
               ? paymentsEnabled
                 ? 'Unlock print and save'
                 : 'Print available with full review'
-              : 'Print or save report'}
+              : 'Print or save'}
           </button>
-
         </div>
 
         <div className="review-results-shell">
@@ -6642,6 +6595,10 @@ function ReviewResultAccessBanner({
   }
 
   if (fullAccess) {
+    return null;
+  }
+
+  if (fullAccess === undefined) {
     return (
       <section className="review-access-result review-access-result-full">
         <span className="review-access-result-icon">
