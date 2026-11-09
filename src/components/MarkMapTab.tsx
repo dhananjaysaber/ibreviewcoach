@@ -15,6 +15,7 @@ const where = (page: number | null, section: string | null) => [section, page ? 
 export function MarkMapTab({ submissionId, criteria, findings, isFreePreview }: { submissionId: string; criteria: WorkshopCriterion[]; findings: WorkshopFinding[]; isFreePreview: boolean }) {
   const [map, setMap] = useState<MarkMapResult | null>(null);
   const [ready, setReady] = useState(false);
+  const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   useEffect(() => {
@@ -22,6 +23,7 @@ export function MarkMapTab({ submissionId, criteria, findings, isFreePreview }: 
     let live = true;
     supabase.functions.invoke('mark-map', { body: { submission_id: submissionId, action: 'get' } }).then(({ data, error: e }) => {
       if (!live) return;
+      setChecked(true);
       if (e || data?.error) { setReady(false); return; }
       setReady(true);
       if (data?.map?.criteria) setMap(data.map as MarkMapResult);
@@ -43,6 +45,7 @@ export function MarkMapTab({ submissionId, criteria, findings, isFreePreview }: 
   }
 
   if (isFreePreview) return <section className="mm-root"><p className="mm-note">The mark map needs the full review.</p></section>;
+  if (!map && !checked) return <section className="mm-root"><p className="mm-note">Loading your saved marks…</p></section>;
   if (!map) return (
     <section className="mm-root">
       <header className="mm-hero"><div><span>Teacher recommended mark</span><strong>Evidence-based</strong></div>
