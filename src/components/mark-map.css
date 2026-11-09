@@ -1,0 +1,18 @@
+.mm-root { display: grid; gap: 16px; font-family: 'Manrope', Inter, system-ui, sans-serif; }
+.mm-hero { display: flex; gap: 24px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 22px 24px; border-radius: 22px; color: #fff; background: linear-gradient(120deg, #2a1b7a, #4b2be8 50%, #c23ae0); box-shadow: var(--aurora-shadow); }
+.mm-hero span { display: block; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
+.mm-hero strong { font-family: 'Sora', sans-serif; font-size: 2.2rem; }
+.mm-hero em { display: block; font-style: normal; font-size: .85rem; opacity: .9; }
+.mm-hero p { margin: 0; max-width: 52ch; font-size: .88rem; line-height: 1.5; opacity: .92; }
+.mm-card { background: #fff; border: 1px solid var(--aurora-pane-border); border-radius: 20px; padding: 18px 20px; box-shadow: var(--aurora-shadow); display: grid; gap: 12px; }
+.mm-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mm-head h3 { margin: 0; font-family: 'Sora', sans-serif; font-size: 1.1rem; color: var(--aurora-ink); }
+.mm-mark { text-align: right; } .mm-mark strong { font-family: 'Sora', sans-serif; font-size: 1.3rem; color: var(--aurora-violet); } .mm-mark small { display: block; font-size: .74rem; color: #6b6590; }
+.mm-band, .mm-next { padding: 12px 14px; border-radius: 14px; background: var(--aurora-field); border: 1px solid var(--aurora-pane-border); }
+.mm-band span, .mm-next span { font-size: .68rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--aurora-violet); }
+.mm-band p, .mm-next p { margin: 4px 0 0; font-size: .88rem; line-height: 1.5; color: #2f2a52; } .mm-next ul { margin: 6px 0 0; padding-left: 18px; font-size: .88rem; }
+.mm-table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.mm-table th { text-align: left; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: #8a84a8; padding: 6px 8px; }
+.mm-table td { padding: 8px; border-top: 1px solid var(--aurora-pane-border); vertical-align: top; }
+.mm-ok { color: var(--aurora-mint-fg); } .mm-warn { color: var(--aurora-coral-fg); }
+.mm-note { padding: 16px; border-radius: 14px; background: var(--aurora-field); color: #6b6590; }

@@ -70,8 +70,8 @@ import {
 } from './lib/anonymousSession';
 
 import { supabase } from './lib/supabase';
-import { tightenRange, type TightRange } from './lib/rangeBoundary';
-import { SEHS_WORKSHOP_SECTIONS } from './lib/workshopGuide';
+import { buildMarkMap } from './lib/markMap';
+import { MarkMapTab } from './components/MarkMapTab';
 import { WorkshopGuidedReview } from './components/WorkshopGuidedReview';
 import { CompareIas } from './components/CompareIas';
 import { DraftComparison, type DraftSnapshot } from './components/DraftComparison';
@@ -4996,7 +4996,7 @@ function ProcessingWorkspace({
   );
 }
 
-type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan';
+type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan' | 'markmap';
 
 type ReviewLoadState = 'loading' | 'ready' | 'error';
 
@@ -5163,9 +5163,9 @@ function CompletionWorkspace({
     'unassigned';
 
   const isFreeReview = accessMode === 'free_review';
-  const tight = isFreeReview
+  const tight = isFreeReview || !reviewData
     ? null
-    : tightenFromReview(reviewData?.criteria, reviewData?.findings);
+    : buildMarkMap(reviewData.criteria, reviewData.findings);
 
   const hasFullReviewAccess =
     accessMode === 'paid_credit' || accessMode === 'complimentary';
@@ -5558,7 +5558,7 @@ function CompletionWorkspace({
               <span>Indicative range</span>
               <strong>
                 {tight
-                  ? `${tight.range[0]}–${tight.range[1]}`
+                  ? `${tight.boundary[0]}${tight.boundary[1] > tight.boundary[0] ? '–' + tight.boundary[1] : ''}`
                   : completion?.overallMarkRange
                   ? `${completion.overallMarkRange[0]}–${completion.overallMarkRange[1]}`
                   : 'Ready'}
@@ -5568,7 +5568,7 @@ function CompletionWorkspace({
                 <small
                   title="The official IB SEHS rubric sets the outer limits. Your flagged findings and the Ideal IA template place the draft inside them. Bands are indicative and non-binding."
                 >
-                  Official rubric range {tight.official[0]}–{tight.official[1]}
+                  Recommended {tight.mark} · official {tight.official[0]}–{tight.official[1]}
                 </small>
               )}
             </div>
@@ -5639,6 +5639,19 @@ function CompletionWorkspace({
             <div className="review-tabgroup review-tabgroup-teacher" role="tablist" aria-label="For the teacher">
               <span className="review-tabgroup-label">For the teacher</span>
               <button
+                className={`review-tab ${activeTab === 'markmap' ? 'review-tab-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'markmap'}
+                onClick={() => setActiveTab('markmap')}
+              >
+                <SearchCheck aria-hidden="true" />
+                <span>
+                  <strong>Mark map</strong>
+                  <small>Recommended mark</small>
+                </span>
+              </button>
+              <button
                 className={`review-tab ${activeTab === 'annotated' ? 'review-tab-active' : ''}`}
                 type="button"
                 role="tab"
@@ -5698,6 +5711,14 @@ function CompletionWorkspace({
                     />
                     </>
                   )
+                )}
+
+                {activeTab === 'markmap' && (
+                  <MarkMapTab
+                    criteria={reviewData.criteria}
+                    findings={reviewData.findings}
+                    isFreePreview={isFreeReview}
+                  />
                 )}
 
                 {activeTab === 'annotated' && (
@@ -8275,32 +8296,6 @@ function normalizeReportHistoryRow(value: unknown): ReportHistoryRow | null {
     annotated_docx_ready: value.annotated_docx_ready === true,
     is_latest_version: value.is_latest_version === true,
   };
-}
-
-function tightenFromReview(
-  criteria: CriterionCoaching[] | undefined,
-  findings: DetailedFinding[] | undefined
-): TightRange | null {
-  if (!criteria?.length) return null;
-  const norm = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, '');
-  const inputs = criteria.flatMap((c) =>
-    c.indicative_mark_range
-      ? [
-          {
-            name: c.criterion_name,
-            range: c.indicative_mark_range,
-            max: c.criterion_max_marks,
-            findings: (findings ?? []).filter(
-              (f) => norm(f.criterion_code) === norm(c.criterion)
-            ),
-            checks: SEHS_WORKSHOP_SECTIONS.filter(
-              (x) => norm(x.criterion) === norm(c.criterion_name)
-            ).reduce((n, x) => n + x.checks.length, 0),
-          },
-        ]
-      : []
-  );
-  return tightenRange(inputs);
 }
 
 function deriveReportMarkSummary(criterionScores: unknown): {
