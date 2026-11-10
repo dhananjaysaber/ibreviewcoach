@@ -32,12 +32,20 @@ export function MarkMapTab({ submissionId, isFreePreview, mode, onScore }: { onS
   const [step, setStep] = useState<'' | 'marking' | 'plan'>('');
   const [error, setError] = useState('');
 
-  const call = useCallback(async (action: 'get' | 'generate' | 'plan') => {
+  const call = useCallback(async (action: 'get' | 'generate' | 'plan' | 'trim') => {
     const { data, error: e } = await supabase.functions.invoke('mark-map', { body: { submission_id: submissionId, action } });
     if (e) throw e;
     if (data?.error) throw new Error(String(data.error));
     return data as { map: MarkMapResult | null };
   }, [submissionId]);
+
+  const [trimBusy, setTrimBusy] = useState(false);
+  const makeTrim = useCallback(async () => {
+    setTrimBusy(true); setError('');
+    try { const d = await call('trim'); if (d.map) setMap(d.map); }
+    catch (e) { setError(e instanceof Error ? e.message : 'The list of what to cut could not be prepared. Try again.'); }
+    finally { setTrimBusy(false); }
+  }, [call]);
 
   const makePlan = useCallback(async () => {
     setStep('plan'); setError('');
@@ -81,7 +89,7 @@ export function MarkMapTab({ submissionId, isFreePreview, mode, onScore }: { onS
 
   const notices = (
     <>
-      <WordGuide map={map} mode={mode} />
+      <WordGuide map={map} mode={mode} onTrim={() => void makeTrim()} trimBusy={trimBusy} planBusy={step === 'plan'} />
       {!map.source_complete && <p className="mm-note">The IA was long, so only part of it could be read. Treat the marks as provisional.</p>}
       {map.appendix_check.length > 0 && (
         <details className="mm-note"><summary>Appendices: {map.appendix_check.filter((a) => a.relevant).length} relevant, {map.appendix_check.filter((a) => !a.relevant).length} not relevant (appendices are not marked)</summary>
@@ -166,7 +174,7 @@ export function MarkMapTab({ submissionId, isFreePreview, mode, onScore }: { onS
 
 const REASON: Record<string, string> = { irrelevant: 'Not relevant', repeated: 'Repeated', redundant: 'Redundant', low_value: 'Earns no marks', too_detailed: 'Too detailed' };
 
-function WordGuide({ map, mode }: { map: MarkMapResult; mode: 'student' | 'teacher' }) {
+function WordGuide({ map, mode, onTrim, trimBusy, planBusy }: { map: MarkMapResult; mode: 'student' | 'teacher'; onTrim: () => void; trimBusy: boolean; planBusy: boolean }) {
   const wc = map.word_count;
   if (!wc) return null;
   const trim = map.trim;
@@ -184,7 +192,9 @@ function WordGuide({ map, mode }: { map: MarkMapResult; mode: 'student' | 'teach
           <tbody>{wc.sections.filter((x) => x.words > 0).map((x, i) => (
             <tr key={i}><td><b>{x.heading}</b></td><td>{x.words}</td>
               <td>{x.budget ? <span className={x.words > x.budget.max ? 'mm-warn' : 'mm-ok'}>{budgetText(x.budget)}{x.words > x.budget.max ? ' · ' + (x.words - x.budget.max) + ' over' : ''}</span> : <span className="mm-sub">no set budget</span>}</td></tr>))}</tbody></table></div>
-        {wc.over_by > 0 && !trim && <p className="mm-sub">Your list of what to remove appears once the fix plan is ready.</p>}
+        {wc.over_by > 0 && !trim && (planBusy || !map.plan
+          ? <p className="mm-sub">Your list of what to remove appears once the fix plan is ready.</p>
+          : <p className="mm-sub">The fix plan is ready but the list of what to cut is not. <button className="sx-btn mm-retry" type="button" onClick={onTrim} disabled={trimBusy}>{trimBusy ? 'Finding what to cut…' : 'Find what to cut'}</button></p>)}
         {trim && (
           <div className="mm-trim">
             <h4>What to remove or shorten, in this order</h4>

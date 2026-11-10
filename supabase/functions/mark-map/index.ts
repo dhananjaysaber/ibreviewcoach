@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return reply(400, { error: 'Invalid JSON' }); }
   const { submission_id } = body;
-  const action = body.action === 'generate' ? 'generate' : body.action === 'plan' ? 'plan' : 'get';
+  const action = body.action === 'generate' ? 'generate' : body.action === 'plan' ? 'plan' : body.action === 'trim' ? 'trim' : 'get';
   if (!isUuid(submission_id)) return reply(400, { error: 'submission_id required' });
 
   const db = createClient(url, service, { auth: { persistSession: false } });
@@ -63,7 +63,8 @@ Deno.serve(async (req) => {
   if (stErr) return reply(500, { error: 'The mark map schema has not been installed on this environment' });
   if (action === 'get') return reply(200, { map: stored?.result ?? null, created_at: stored?.created_at ?? null });
   if (action === 'generate' && stored?.result) return reply(200, { map: stored.result, created_at: stored.created_at });
-  if (action === 'plan' && !stored?.result) return reply(409, { error: 'Mark the IA first.' });
+  if ((action === 'plan' || action === 'trim') && !stored?.result) return reply(409, { error: 'Mark the IA first.' });
+  if (action === 'trim' && (stored!.result as { trim?: unknown }).trim) return reply(200, { map: stored!.result, created_at: stored!.created_at });
   if (action === 'plan' && (stored!.result as { plan?: unknown }).plan) return reply(200, { map: stored!.result, created_at: stored!.created_at });
 
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
@@ -107,11 +108,24 @@ Deno.serve(async (req) => {
     };
     const trimCall = async () => {
       if (!split.overLimit) return null;
-      try {
-        const raw = await callClaude(apiKey, TRIM_SYSTEM, buildPlanPrompt(map as never, doc, guide), 5000);
-        return raw ? assembleTrim(raw, split.body, map as never, split.overBy) : null;
-      } catch (_e) { return null; }
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const raw = await callClaude(apiKey, TRIM_SYSTEM, buildPlanPrompt(map as never, doc, guide), 7000);
+          const got = raw ? assembleTrim(raw, split.body, map as never, split.overBy) : null;
+          if (got) return got;
+          console.error('trim attempt produced no usable list', attempt, raw ? Object.keys(raw) : 'null');
+        } catch (e) { console.error('trim attempt failed', attempt, e instanceof Error ? e.message : e); }
+      }
+      return null;
     };
+    if (action === 'trim') {
+      const got = await trimCall();
+      if (!got) return reply(502, { error: 'The list of what to cut could not be completed. Please try again.' });
+      const withTrim = { ...map, trim: got };
+      const { error: tErr } = await db.from('ia_mark_maps').upsert({ submission_id, student_id: user.id, map_version: VERSION, result: withTrim, model_id: MODEL }, { onConflict: 'submission_id,map_version' });
+      if (tErr) return reply(500, { error: 'Could not save the list' });
+      return reply(200, { map: withTrim, created_at: new Date().toISOString() });
+    }
     const [parts, trim] = await Promise.all([Promise.all(codes.map(planCall)), trimCall()]);
     const plan = parts.every(Boolean) ? parts : null;
     if (!plan) return reply(502, { error: 'The fix plan could not be completed. Please try again.' });
