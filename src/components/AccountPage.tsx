@@ -888,7 +888,7 @@ function RecentReportsList({
   useEffect(() => {
     if (!idsKey) return;
     let live = true;
-    void supabase.from('ia_mark_maps').select('submission_id,mark:result->>mark,maximum:result->>maximum').in('submission_id', idsKey.split(',')).then(({ data }) => {
+    void supabase.from('ia_mark_maps').select('submission_id,mark:result->>mark,maximum:result->>maximum').eq('map_version', 'mark-map-v2').in('submission_id', idsKey.split(',')).then(({ data }) => {
       if (!live || !Array.isArray(data)) return;
       const next: Record<string, string> = {};
       for (const r of data as { submission_id: string; mark: string | null; maximum: string | null }[]) {
