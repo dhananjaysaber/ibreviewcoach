@@ -231,3 +231,23 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 /* Legacy rule padded every section by (100vw - container)/2 on top of the width set above, so cards shrank as the screen grew. */
 .landing-main .landing-section, .landing-main .landing-limits-section { padding-left: 0 !important; padding-right: 0 !important; margin-left: auto !important; margin-right: auto !important; }
 .landing-main .landing-criteria-section, .landing-main .landing-final-cta { padding-left: clamp(24px, 4vw, 56px) !important; padding-right: clamp(24px, 4vw, 56px) !important; box-sizing: border-box; }
+
+/* ---- Section guide: left rail of 9 sections + detail (matches the Student report board) ---- */
+@media (min-width: 981px) {
+  .wg2.sx { display: grid !important; grid-template-columns: 290px minmax(0, 1fr); gap: 20px 28px; align-items: start; }
+  .wg2.sx > * { grid-column: 1 / -1; }
+  .wg2.sx > .sx-nav, .wg2.sx > .sx-card { grid-column: auto; }
+  .wg2.sx > .sx-nav {
+    grid-column: 1; flex-direction: column; gap: 4px; overflow: visible; position: sticky; top: 88px;
+    background: #fff; border: 1px solid var(--p-hair); border-radius: 18px; padding: 10px; box-shadow: var(--p-shadow);
+  }
+  .wg2.sx > .sx-nav button { width: 100%; border: 0 !important; border-radius: 12px; background: transparent; padding: 11px 12px; white-space: normal; text-align: left; box-shadow: none; }
+  .wg2.sx > .sx-nav button:hover { background: #F1EEF8; }
+  .wg2.sx > .sx-nav button b { margin-left: auto; }
+  .wg2.sx > .sx-nav .sx-nav-active { background: linear-gradient(135deg, #5B5FEF, #8B5CF6) !important; }
+  .wg2.sx > .sx-card { grid-column: 2; }
+}
+.wg2.sx .sx-hero { background: radial-gradient(60% 120% at 100% 0%, rgba(139,92,246,.4), transparent 60%), var(--p-night) !important; box-shadow: var(--p-shadow-lg); border-radius: 22px; }
+.wg2.sx .sx-hero h2 { font-family: var(--p-serif); font-weight: 500; }
+.wg2.sx .sx-hero .sx-btn { background: rgba(255,255,255,.1) !important; border: 1px solid rgba(255,255,255,.22) !important; color: #fff !important; }
+.wg2.sx .sx-hero .sx-btn-primary { background: var(--p-gold-grad) !important; color: var(--p-night) !important; border: 0 !important; }
