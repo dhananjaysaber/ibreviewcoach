@@ -251,3 +251,23 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .wg2.sx .sx-hero h2 { font-family: var(--p-serif); font-weight: 500; }
 .wg2.sx .sx-hero .sx-btn { background: rgba(255,255,255,.1) !important; border: 1px solid rgba(255,255,255,.22) !important; color: #fff !important; }
 .wg2.sx .sx-hero .sx-btn-primary { background: var(--p-gold-grad) !important; color: var(--p-night) !important; border: 0 !important; }
+
+/* ---- Report banner + underline tabs (Student / Teacher report boards) ---- */
+.completion-card-results { background: transparent !important; box-shadow: none !important; border: 0 !important; padding: 0 !important; }
+.completion-card-results .report-bar {
+  background: radial-gradient(60% 140% at 100% 0%, rgba(139,92,246,.45), transparent 60%), var(--p-night) !important;
+  border: 0 !important; border-radius: 22px 22px 0 0 !important; margin: 0 !important; padding: 22px 28px !important; color: #fff;
+}
+.completion-card-results .report-bar-title strong { font-family: var(--p-serif); font-size: 1.5rem; font-weight: 500; color: #fff !important; }
+.completion-card-results .report-bar-title span, .completion-card-results .report-bar-title svg { color: rgba(246,243,236,.7) !important; }
+.completion-card-results .report-bar-stats > div span { color: var(--p-gold) !important; }
+.completion-card-results .report-bar-stats > div strong { color: #fff !important; }
+.completion-card-results .report-bar .premium-action, .completion-card-results .report-bar button { background: rgba(255,255,255,.1) !important; border: 1px solid rgba(255,255,255,.25) !important; color: #fff !important; box-shadow: none !important; }
+.review-results-shell { background: transparent !important; }
+.review-space { background: var(--p-night-2) !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 !important; padding: 12px 28px !important; border-top: 1px solid rgba(255,255,255,.08); }
+.review-space-teacher { background: #0F1F3D !important; }
+.review-tabbar { background: #fff !important; border: 1px solid var(--p-hair) !important; border-top: 0 !important; border-radius: 0 0 22px 22px !important; box-shadow: none !important; margin: 0 0 22px !important; padding: 0 24px !important; gap: 4px 28px !important; }
+.review-tab { border: 0 !important; border-radius: 0 !important; background: transparent !important; border-bottom: 3px solid transparent !important; padding: 14px 4px !important; box-shadow: none !important; }
+.review-tab-active { border-bottom-color: #8B5CF6 !important; background: transparent !important; }
+.review-tab-active strong { color: var(--p-night) !important; }
+.completion-card-results, .review-results-shell { gap: 0 !important; } .completion-card-results .report-bar { margin-bottom: 0 !important; }
