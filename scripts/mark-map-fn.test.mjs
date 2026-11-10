@@ -23,6 +23,7 @@ test('valid marking assembles with verified quotes and totals', () => {
 test('invented quotes are dropped', () => {
   const m = assembleMarking(mk('3-4', 'this sentence is not in the IA'), blocks);
   assert.equal(m.criteria[0].strands[0].evidence.length, 0); assert.equal(m.dropped_quotes, 11);
+  assert.equal(m.criteria[0].strands[0].level, '0'); assert.equal(m.criteria[0].mark, 0); assert.equal(m.ungrounded_strands, 11);
 });
 test('mark is clamped into the strand range (best fit cannot leave it)', () => {
   const raw = mk('1-2'); raw.criteria[0].mark = 6;
@@ -95,4 +96,32 @@ test('plan needs every strand with steps, example and prompts', () => {
   assert.equal(assemblePlan(plan).length, 4);
   plan.criteria[2].strands[0].steps = ['only one'];
   assert.equal(assemblePlan(plan), null);
+});
+
+test('a strand with evidence keeps its level while an unevidenced strand in the same criterion gets 0', () => {
+  const raw = mk('3-4');
+  raw.criteria[0].strands[1].evidence = [{ quote: 'not in the report at all', block_index: 0 }];
+  raw.criteria[0].mark = 3;
+  const m = assembleMarking(raw, blocks);
+  const [a1, a2] = m.criteria[0].strands;
+  assert.equal(a1.level, '3-4'); assert.equal(a2.level, '0'); assert.equal(a2.no_evidence, true);
+  assert.match(a2.reason, /no credit/i);
+  assert.equal(m.ungrounded_strands, 1);
+  assert.ok(m.criteria[0].mark <= 4);
+});
+test('a strand claimed at 5-6 with no evidence at all cannot lift the criterion mark', () => {
+  const raw = mk('0'); raw.criteria[2].mark = 5;
+  raw.criteria[2].strands[0].level = '5-6'; raw.criteria[2].strands[0].evidence = [];
+  const m = assembleMarking(raw, blocks);
+  assert.equal(m.criteria[2].mark, 0);
+});
+test('long paragraphs tagged as headings are body text, not section rows', () => {
+  const long = Array(40).fill('word').join(' ');
+  const b = [
+    { block_index: 0, block_type: 'heading', page_number: 1, section_title: 'Hypothesis', text: 'Hypothesis' },
+    { block_index: 1, block_type: 'heading', page_number: 1, section_title: 'Hypothesis', text: long },
+  ];
+  const s = splitDocument(b);
+  assert.equal(s.sections.length, 1);
+  assert.equal(s.sections[0].heading, 'Hypothesis'); assert.equal(s.sections[0].words, 41);
 });

@@ -82,10 +82,15 @@ Deno.serve(async (req) => {
 
   try {
     if (action === 'generate') {
-      let marking = null;
-      for (let attempt = 0; attempt < 2 && !marking; attempt++) {
+      let marking: ReturnType<typeof assembleMarking> = null;
+      // A second pass only if some strand lost credit for lacking a verifiable quotation; keep the better of the two.
+      const t0 = Date.now();
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (attempt > 0 && Date.now() - t0 > 55_000) break; // a second full pass would risk the 150 s function limit
         const raw = await callClaude(apiKey, MARK_SYSTEM, buildMarkPrompt(doc, appendixDigest(split.appendix), split), 9000);
-        marking = raw ? assembleMarking(raw, split.body) : null;
+        const got = raw ? assembleMarking(raw, split.body) : null;
+        if (got && (!marking || got.ungrounded_strands < marking.ungrounded_strands)) marking = got;
+        if (marking && marking.ungrounded_strands === 0) break;
       }
       if (!marking) return reply(502, { error: 'The marking could not be completed. Please try again.' });
       const map = {

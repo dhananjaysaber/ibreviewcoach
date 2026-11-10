@@ -10,7 +10,7 @@ export function PolicyFlagsStrip({ submissionId }: { submissionId: string }) {
     let live = true;
     supabase.functions
       .invoke('policy-flags', { body: { submission_id: submissionId } })
-      .then(({ data }) => { if (live && Array.isArray(data?.flags)) setFlags(data.flags as Flag[]); })
+      .then(({ data }) => { if (live && Array.isArray(data?.flags)) setFlags((data.flags as Flag[]).filter((f) => f.id !== 'word_count')); })
       .catch(() => undefined);
     return () => { live = false; };
   }, [submissionId]);

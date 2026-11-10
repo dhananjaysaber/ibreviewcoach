@@ -30,3 +30,30 @@ test('omits quote block when evidence is unverified', () => {
   assert.equal((html.match(/<blockquote>/g) || []).length, 1);
 });
 test('escapeHtml', () => assert.equal(escapeHtml(`<a href="x">&'`), '&lt;a href=&quot;x&quot;&gt;&amp;&#39;'));
+
+import { buildMarkCopyHtml } from '../src/lib/teacherCopy.ts';
+const mm = {
+  mark: 7, maximum: 24,
+  data_sufficiency: 'n=20 limits power.',
+  appendix_check: [{ label: 'Raw data', relevant: true, reason: 'Supports B1.' }],
+  word_count: { counted: 3500, limit: 3200, over_by: 300, cut_at: { heading: 'Evaluation', page: 6 } },
+  criteria: [{ code: 'A', criterion: 'Research design', max: 6, mark: 4, why_mark: 'A1 and A2 are met at 3-4 but A3 omits trial counts.', confidence: 'high',
+    strands: [
+      { id: 'A1', name: 'Research Question Context', level: '5-6', reason: 'The introduction places the question in a specific <context>.', missing: '', evidence: [{ quote: 'grip strength & smash speed', page: 2, section: 'Introduction' }] },
+      { id: 'A3', name: 'Reproducibility of methodology', level: '0', no_evidence: true, reason: 'No verified quotation supports this strand, so no credit is given.', missing: 'Trial counts and distances.', evidence: [] },
+    ] }],
+};
+test('mark copy: strand table shows level, exact descriptor, evidence and justification, escaped', () => {
+  const html = buildMarkCopyHtml({ map: mm, generatedOn: '10/11/2026' });
+  assert.ok(html.includes('Recommended mark: 7 / 24'));
+  assert.ok(html.includes('The research question is described within a specific and appropriate context.'));
+  assert.ok(html.includes('The report does not reach the standard described by the descriptors below.'));
+  assert.ok(html.includes('grip strength &amp; smash speed'));
+  assert.ok(html.includes('&lt;context&gt;'));
+  assert.ok(!html.includes('<context>'));
+  assert.ok(html.includes('No quotation in the report meets this strand.'));
+  assert.ok(html.includes('Not yet at 1-2'));
+  assert.ok(html.includes('300 over'));
+  assert.ok(html.includes('A strand receives no credit where no quotation'));
+  assert.equal((html.match(/<tr>/g) || []).length, 3); // header + two strands
+});

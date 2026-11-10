@@ -5714,9 +5714,9 @@ function CompletionWorkspace({
                 {isFreeReview
                   ? 'Locked'
                   : reviewData?.progressPlan.nextCheckinDate
-                  ? formatReviewDate(reviewData.progressPlan.nextCheckinDate)
+                  ? checkinLabel(reviewData.progressPlan.nextCheckinDate)
                   : completion?.nextCheckinDate
-                  ? formatReviewDate(completion.nextCheckinDate)
+                  ? checkinLabel(completion.nextCheckinDate)
                   : 'Prepared'}
               </strong>
             </div>
@@ -5824,6 +5824,7 @@ function CompletionWorkspace({
               <>
                 {activeTab === 'detailed' && (
                   <DetailedReviewTab
+                    submissionId={submission?.id ?? ''}
                     data={reviewData}
                     isFreePreview={isFreeReview}
                     paymentsEnabled={paymentsEnabled}
@@ -6928,6 +6929,7 @@ function ReviewDataError({ message, onRetry }: ReviewDataErrorProps) {
 }
 
 type DetailedReviewTabProps = {
+  submissionId: string;
   data: DetailedReviewData;
   isFreePreview: boolean;
   paymentsEnabled: boolean;
@@ -6935,6 +6937,7 @@ type DetailedReviewTabProps = {
 };
 
 function DetailedReviewTab({
+  submissionId,
   data,
   isFreePreview,
   paymentsEnabled,
@@ -6944,6 +6947,7 @@ function DetailedReviewTab({
     () => buildCriterionSections(data.criteria, data.findings),
     [data.criteria, data.findings]
   );
+  const criterionMarks = useCriterionMarks(submissionId);
 
   return (
     <section
@@ -6985,6 +6989,7 @@ function DetailedReviewTab({
             key={section.code}
             section={section}
             number={index + 1}
+            marked={criterionMarks[FEEDBACK_CODE[section.code] ?? '']}
           />
         ))}
       </div>
@@ -7011,11 +7016,13 @@ type CriterionSection = {
 type CriterionReviewSectionProps = {
   section: CriterionSection;
   number: number;
+  marked?: CriterionMarkView;
 };
 
 function CriterionReviewSection({
   section,
   number,
+  marked,
 }: CriterionReviewSectionProps) {
   const scoreRange = section.coaching?.indicative_mark_range;
   const maximumMark = section.coaching?.criterion_max_marks;
@@ -7038,23 +7045,24 @@ function CriterionReviewSection({
         </div>
 
         <div className="criterion-score-group">
-          <span>Indicative range</span>
+          <span>{marked ? 'Marked' : 'Indicative range'}</span>
           <strong>
-            {scoreRange ? `${scoreRange[0]}–${scoreRange[1]}` : 'Review ready'}
-            {maximumMark ? ` / ${maximumMark}` : ''}
+            {marked
+              ? `${marked.mark} / ${marked.max}`
+              : `${scoreRange ? `${scoreRange[0]}–${scoreRange[1]}` : 'Review ready'}${maximumMark ? ` / ${maximumMark}` : ''}`}
           </strong>
-          {section.coaching?.confidence && (
-            <small>{capitalize(section.coaching.confidence)} confidence</small>
+          {(marked?.confidence || section.coaching?.confidence) && (
+            <small>{capitalize(marked?.confidence || section.coaching?.confidence || '')} confidence</small>
           )}
         </div>
       </header>
 
-      {section.coaching?.why_this_range && (
+      {(marked?.why || section.coaching?.why_this_range) && (
         <div className="criterion-range-rationale">
           <SearchCheck aria-hidden="true" />
           <div>
-            <strong>Why this range</strong>
-            <p>{section.coaching.why_this_range}</p>
+            <strong>{marked ? 'Why this mark' : 'Why this range'}</strong>
+            <p>{marked?.why || section.coaching?.why_this_range}</p>
           </div>
         </div>
       )}
@@ -7578,7 +7586,7 @@ function ProgressPlanTab({
           <div className="plan-checkin-card">
             <Clock3 aria-hidden="true" />
             <span>Suggested check-in</span>
-            <strong>{formatReviewDate(plan.nextCheckinDate)}</strong>
+            <strong>{checkinLabel(plan.nextCheckinDate)}</strong>
           </div>
         )}
       </div>
@@ -8511,6 +8519,31 @@ function useMarkMapTotals(ids: string[]): Record<string, { mark: number; maximum
     return () => { live = false; };
   }, [key]);
   return totals;
+}
+
+type CriterionMarkView = { mark: number; max: number; why: string; confidence: string };
+const FEEDBACK_CODE: Record<string, string> = { ResearchDesign: 'A', DataAnalysis: 'B', Conclusion: 'C', Evaluation: 'D' };
+function useCriterionMarks(submissionId: string): Record<string, CriterionMarkView> {
+  const [marks, setMarks] = useState<Record<string, CriterionMarkView>>({});
+  useEffect(() => {
+    setMarks({});
+    if (!submissionId) return;
+    let live = true;
+    void supabase.from('ia_mark_maps').select('criteria:result->criteria').eq('submission_id', submissionId).eq('map_version', 'mark-map-v2').maybeSingle().then(({ data }) => {
+      const list = (data as { criteria?: { code: string; mark: number; max: number; why_mark: string; confidence: string }[] } | null)?.criteria;
+      if (!live || !Array.isArray(list)) return;
+      const next: Record<string, CriterionMarkView> = {};
+      for (const c of list) next[c.code] = { mark: c.mark, max: c.max, why: c.why_mark, confidence: c.confidence };
+      setMarks(next);
+    });
+    return () => { live = false; };
+  }, [submissionId]);
+  return marks;
+}
+
+function checkinLabel(date: string): string {
+  const t = new Date(date).getTime();
+  return Number.isFinite(t) && t < Date.now() - 86_400_000 ? 'After your next draft' : formatReviewDate(date);
 }
 
 function deriveReportMarkSummary(criterionScores: unknown): {

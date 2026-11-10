@@ -61,7 +61,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
   if(!submissionId||planBusy||!ids.length)return;
   setPlanBusy(true);setPlanMsg('');
   try{
-   const batches:string[][]=[];for(let i=0;i<ids.length&&i<36;i+=12)batches.push(ids.slice(i,i+12));
+   const batches:string[][]=[];for(let i=0;i<ids.length&&i<60;i+=5)batches.push(ids.slice(i,i+5));
    const results=await Promise.allSettled(batches.map(async b=>{
     const {data,error}=await supabase.functions.invoke('action-plan',{body:{submission_id:submissionId,action:'generate',finding_ids:b}});
     if(error)throw error;if(data?.error)throw Error(String(data.error));

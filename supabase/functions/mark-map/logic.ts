@@ -33,7 +33,7 @@ export function splitDocument(blocks: Block[]) {
   let cur: SectionWords = { heading: 'Start of report', words: 0, table_words: 0, budget: null };
   const push = () => { if (cur.words || cur.table_words) sections.push(cur); };
   for (const b of blocks) {
-    const isHeading = b.block_type === 'heading';
+    const isHeading = b.block_type === 'heading' && b.text.length <= 120 && words(b.text) <= 14;
     const head = isHeading ? b.text : (b.section_title ?? '') || (b.text.length < 80 ? b.text : '');
     if (APPENDIX.test(head)) inAppendix = true;
     if (inAppendix) { appendix.push(b); continue; }
@@ -83,10 +83,11 @@ Rules from the IB marking guidance you must follow:
 - Use ONLY evidence in the report text supplied. Appendices are not read and not marked. Raw data tables and graphs in the report body ARE evidence (they do not count towards the word limit). Do not reward length, effort or formatting. Do not default to a mid mark.
 - Do NOT propagate uncertainties: if an earlier error (a wrong value, a wrong method) is carried into later work consistently, penalise it once where it was made, not again later.
 - Do not require uncertainty decimals to match; judge whether uncertainty is considered appropriately for the data.
+- EVIDENCE RULE: a strand may be given a level above 0 ONLY if you can quote verbatim text from the report that meets the wording of that level's descriptor. No quotation means level 0 for that strand. Statements of intent, text that only names a topic, text in appendices and text you would have to infer do not count. A criterion with no evidenced strand scores 0.
 - Data must be sufficient to support a conclusion; if the data set is too thin for the processing and the conclusion, that limits Data analysis and Conclusion.
-Method: for each strand give the level, one or two VERBATIM quotes from the IA (each at most 35 words) with the block_index they came from, and a short reason. If nothing supports a level, quote nothing and say what you searched for. For the level above the one awarded, say in "missing" exactly what the descriptor needs that is not yet shown (plain advice; never write wording for the student to paste). Never invent evidence.
+Method: for each strand give the level, one or two VERBATIM quotes from the IA (each at most 35 words) with the block_index they came from, and a reason. The reason is an analytical moderator justification of 2 to 3 sentences in the third person ("The candidate...", never "you"): (1) name the specific words of the awarded level's descriptor that the quoted evidence meets and where it appears, (2) say precisely which words of the next level's descriptor are not met and what is absent or inaccurate. Cite section names and numbers or terms from the report, so a moderator can check each claim. If nothing supports a level, quote nothing and say what you searched for. For the level above the one awarded, say in "missing" exactly what the descriptor needs that is not yet shown (plain advice; never write wording for the student to paste). Never invent evidence.
 Also judge each appendix item supplied: is it relevant to the investigation (raw data, protocol, consent form, calculations) or irrelevant padding? Return JSON ONLY:
-{"criteria":[{"code":"A","mark":0,"why_mark":"2-4 plain sentences naming what fixed the mark","strands":[{"id":"A1","level":"0|1-2|3-4|5-6","reason":"...","evidence":[{"quote":"...","block_index":0}],"missing":"..."}],"confidence":"high|medium|low"}],"appendix_check":[{"label":"...","relevant":true,"reason":"..."}],"data_sufficiency":"one sentence"}`;
+{"criteria":[{"code":"A","mark":0,"why_mark":"3-5 analytical third-person sentences: which strands fixed the mark, the best-fit reasoning across them, and the single decisive gap to the next mark","strands":[{"id":"A1","level":"0|1-2|3-4|5-6","reason":"...","evidence":[{"quote":"...","block_index":0}],"missing":"..."}],"confidence":"high|medium|low"}],"appendix_check":[{"label":"...","relevant":true,"reason":"..."}],"data_sufficiency":"one sentence"}`;
 
 export function buildMarkPrompt(doc: string, appendix: string, meta: { overLimit: boolean; totalCounted: number }): string {
   return `Strand sheet:\n${strandSheet()}\n\n` +
@@ -100,13 +101,13 @@ const clean = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').tr
 const int = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : null);
 const levelRange = (l: string) => (l === '0' ? [0, 0] : l.split('-').map(Number));
 
-export type StrandMark = { id: string; name: string; criterion: string; level: string; reason: string; missing: string; evidence: { quote: string; block_index: number; page: number | null; section: string | null }[] };
+export type StrandMark = { id: string; name: string; criterion: string; level: string; reason: string; missing: string; evidence: { quote: string; block_index: number; page: number | null; section: string | null }[]; no_evidence?: boolean };
 export type CriterionMark = { code: string; criterion: string; max: number; mark: number; why_mark: string; strands: StrandMark[]; confidence: string };
-export type Marking = { criteria: CriterionMark[]; appendix_check: { label: string; relevant: boolean; reason: string }[]; data_sufficiency: string; dropped_quotes: number };
+export type Marking = { criteria: CriterionMark[]; appendix_check: { label: string; relevant: boolean; reason: string }[]; data_sufficiency: string; dropped_quotes: number; ungrounded_strands: number };
 
 export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): Marking | null {
   const byIndex = new Map(blocks.map((b) => [b.block_index, b]));
-  let dropped = 0;
+  let dropped = 0, ungrounded = 0;
   const rawCriteria = Array.isArray(raw.criteria) ? raw.criteria as Record<string, unknown>[] : [];
   const criteria: CriterionMark[] = [];
   for (const c of CRITERIA) {
@@ -124,6 +125,12 @@ export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): 
         if (!quote || !blk || quote.split(' ').length > 45 || !squash(blk.text).includes(squash(quote).replace(/[….]+$/, ''))) { if (quote) dropped++; return []; }
         return [{ quote, block_index: blk.block_index, page: blk.page_number, section: blk.section_title }];
       });
+      // No verified evidence in the report text, no credit: a level above 0 must be backed by at least one verbatim quote.
+      if (level !== '0' && evidence.length === 0) {
+        ungrounded++;
+        strands.push({ id: s.id, name: s.name, criterion: c.code, level: '0', reason: 'No verified quotation from the report supports this strand, so no credit is given. ' + clean(rs.reason), missing: clean(rs.missing), evidence, no_evidence: true });
+        continue;
+      }
       strands.push({ id: s.id, name: s.name, criterion: c.code, level, reason: clean(rs.reason), missing: clean(rs.missing), evidence });
     }
     let mark = int(rc.mark);
@@ -140,7 +147,7 @@ export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): 
     const label = clean(o.label);
     return label ? [{ label, relevant: o.relevant === true, reason: clean(o.reason) }] : [];
   });
-  return { criteria, appendix_check, data_sufficiency: clean(raw.data_sufficiency), dropped_quotes: dropped };
+  return { criteria, appendix_check, data_sufficiency: clean(raw.data_sufficiency), dropped_quotes: dropped, ungrounded_strands: ungrounded };
 }
 
 export function totals(list: CriterionMark[]) {

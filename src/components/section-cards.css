@@ -78,3 +78,6 @@
 .sx-tick input{width:20px;height:20px;accent-color:#2f9a5f}
 .sx-ref{border:1px dashed var(--sx-line);border-radius:14px;padding:12px 16px}.sx-ref summary{cursor:pointer;font-weight:700;color:var(--sx-brand)}.sx-ref[open] summary{margin-bottom:12px}
 .sx-nav b.sx-nav-ok{background:#d6f3e1;color:#17683a}
+
+.sx-row-body blockquote span{display:block;font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#2347F5;margin-bottom:4px}
+.sx-row-body blockquote{margin:0 0 12px}
