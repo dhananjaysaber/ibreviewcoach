@@ -5,6 +5,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   ClipboardList,
+  Layers3,
   CreditCard,
   GraduationCap,
   LayoutDashboard,
@@ -28,6 +29,7 @@ import {
 export type PremiumWorkspaceView =
   | 'dashboard'
   | 'reports'
+  | 'compare'
   | 'review'
   | 'credits'
   | 'billing'
@@ -51,6 +53,7 @@ type PremiumWorkspaceShellProps = {
   children?: ReactNode;
   onOpenDashboard: () => void;
   onOpenReports: () => void;
+  onOpenCompare: () => void;
   onStartReview: () => void;
   onOpenCredits: () => void;
   onOpenBilling: () => void;
@@ -77,6 +80,7 @@ export function PremiumWorkspaceShell({
   children,
   onOpenDashboard,
   onOpenReports,
+  onOpenCompare,
   onStartReview,
   onOpenCredits,
   onOpenBilling,
@@ -120,6 +124,13 @@ export function PremiumWorkspaceShell({
               icon: <ClipboardList aria-hidden="true" />,
               action: onOpenReports,
             },
+            {
+              key: 'compare',
+              label: 'Compare IAs',
+              description: 'Pick two and compare',
+              icon: <Layers3 aria-hidden="true" />,
+              action: onOpenCompare,
+            },
           ]
         : [
             {
@@ -142,6 +153,13 @@ export function PremiumWorkspaceShell({
               description: 'Saved reviews and versions',
               icon: <ClipboardList aria-hidden="true" />,
               action: onOpenReports,
+            },
+            {
+              key: 'compare',
+              label: 'Compare IAs',
+              description: 'Pick two and compare',
+              icon: <Layers3 aria-hidden="true" />,
+              action: onOpenCompare,
             },
             ...(paymentsEnabled
               ? [
@@ -170,6 +188,7 @@ export function PremiumWorkspaceShell({
       onOpenCredits,
       onOpenDashboard,
       onOpenReports,
+      onOpenCompare,
       onStartReview,
     ]
   );
@@ -577,6 +596,13 @@ export function PremiumWorkspaceShell({
         />
 
         <MobileNavButton
+          active={activeView === 'compare'}
+          label="Compare"
+          icon={<Layers3 aria-hidden="true" />}
+          onClick={onOpenCompare}
+        />
+
+        <MobileNavButton
           active={
             isAdmin
               ? activeView === 'admin'
@@ -642,6 +668,12 @@ function getPageHeading(view: PremiumWorkspaceView): {
       return {
         eyebrow: 'Report library',
         title: 'My IA Reports',
+      };
+
+    case 'compare':
+      return {
+        eyebrow: 'Compare',
+        title: 'Compare two IAs',
       };
 
     case 'review':

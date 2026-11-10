@@ -70,7 +70,9 @@ import {
 } from './lib/anonymousSession';
 
 import { supabase } from './lib/supabase';
+import { MarkMapTab } from './components/MarkMapTab';
 import { WorkshopGuidedReview } from './components/WorkshopGuidedReview';
+import { CompareIas } from './components/CompareIas';
 import { DraftComparison, type DraftSnapshot } from './components/DraftComparison';
 
 import {
@@ -162,6 +164,7 @@ type MainWorkspaceView =
   | 'pricing'
   | 'workspace'
   | 'reports'
+  | 'compare'
   | 'account'
   | 'admin';
 
@@ -305,6 +308,10 @@ function App() {
 
     if (currentPath === '/my-account') {
       return 'account';
+    }
+
+    if (currentPath === '/my-reports/compare') {
+      return 'compare';
     }
 
     if (currentPath.startsWith('/my-reports')) {
@@ -529,6 +536,12 @@ function App() {
             replaceAppRoute('/my-reports');
             setStatus('ready');
           }
+        } else if (
+          currentPath === '/my-reports/compare' &&
+          accountState === 'permanent'
+        ) {
+          setMainView('compare');
+          setStatus('ready');
         } else if (
           currentPath.startsWith('/my-reports') &&
           accountState === 'permanent'
@@ -1433,6 +1446,23 @@ function App() {
     });
   }
 
+  function openCompareIas() {
+    if (accountState !== 'permanent') {
+      openAccountPanel('sign-in');
+      return;
+    }
+
+    setAuthPanelMode('closed');
+    setAuthError('');
+    setAuthMessage('');
+    setMainView('compare');
+    setAccountSection('dashboard');
+    setIsViewingSavedReport(false);
+    window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+    replaceAppRoute('/my-reports/compare');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   async function openSavedReport(submissionId: string): Promise<void> {
     if (isCurrentReviewActive(status, errorContext, submission)) {
       throw new Error(
@@ -1826,6 +1856,8 @@ function App() {
       ? 'credits'
       : mainView === 'reports'
       ? 'reports'
+      : mainView === 'compare'
+      ? 'compare'
       : mainView === 'workspace'
       ? 'review'
       : mainView === 'pricing'
@@ -1859,6 +1891,8 @@ function App() {
     accountState === 'permanent' ? (
       mainView === 'admin' && isAdmin ? (
         <AdminControlCentre />
+      ) : mainView === 'compare' ? (
+        <CompareIas />
       ) : mainView === 'reports' ? (
         <ReportsDashboard
           onOpenReport={openSavedReport}
@@ -2029,6 +2063,7 @@ function App() {
           }}
           onOpenAdmin={openAdminControlCentre}
           onOpenReports={openReportsDashboard}
+          onOpenCompare={openCompareIas}
           onStartReview={() => void openReviewWorkspace()}
           onOpenCredits={() => void openBuyCredits()}
           onOpenBilling={openBillingDashboard}
@@ -4960,7 +4995,7 @@ function ProcessingWorkspace({
   );
 }
 
-type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan';
+type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan' | 'markmap' | 'marks';
 
 type ReviewLoadState = 'loading' | 'ready' | 'error';
 
@@ -5102,7 +5137,29 @@ function CompletionWorkspace({
   showBackToReports,
   onBackToReports,
 }: CompletionWorkspaceProps) {
-  const [activeTab, setActiveTab] = useState<ReviewTab>('detailed');
+  const [reviewSpace, setReviewSpace] = useState<'student' | 'teacher'>(() =>
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('space') === 'teacher'
+      ? 'teacher'
+      : 'student'
+  );
+  const [activeTab, setActiveTab] = useState<ReviewTab>(() =>
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('space') === 'teacher'
+      ? 'markmap'
+      : 'marks'
+  );
+  function switchReviewSpace(space: 'student' | 'teacher') {
+    setReviewSpace(space);
+    setActiveTab(space === 'teacher' ? 'markmap' : 'marks');
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('space', space);
+      window.history.replaceState(window.history.state, '', url);
+    } catch {
+      /* the page still works without the address bar update */
+    }
+  }
   const [reviewLoadState, setReviewLoadState] =
     useState<ReviewLoadState>('loading');
   const [reviewError, setReviewError] = useState('');
@@ -5288,6 +5345,7 @@ function CompletionWorkspace({
         if (live) setPreviousDraft({
           submissionId: prior.submission_id as string,
           version: prior.version_number as number,
+          filename: typeof prior.original_filename === 'string' ? prior.original_filename : undefined,
           findings: normalizeDetailedFindings(result.data.findings),
           criteria: normalizeCriterionCoaching(result.data.criteria),
         });
@@ -5454,7 +5512,7 @@ function CompletionWorkspace({
       return;
     }
 
-    setActiveTab('detailed');
+    switchReviewSpace('student');
 
     window.setTimeout(() => {
       window.print();
@@ -5499,44 +5557,23 @@ function CompletionWorkspace({
       )}
 
       <section className="completion-card completion-card-results">
-        <div className="completion-hero">
-          <div className="completion-mark">
-            <CheckCircle2 aria-hidden="true" />
-          </div>
-
-          <div className="completion-hero-copy">
-            <span className="completion-eyebrow">Review complete</span>
-
-            <h1>Your IA guidance is ready</h1>
-
-            <p className="completion-intro">
-              {isFreeReview
-                ? 'Your free preview shows the first detailed-review criterion and the opening section of the annotated IA.'
-                : 'Review the exact evidence identified in your draft, the specific action required for each criterion, your annotated IA and your prioritised progress plan.'}
-            </p>
-          </div>
-        </div>
-
-        {(selectedFile?.filename || submission?.original_filename) && (
-          <div className="completion-file">
+        <div className="report-bar">
+          <div className="report-bar-title">
             <FileCheck2 aria-hidden="true" />
-
             <div>
               <strong>
-                {selectedFile?.filename ?? submission?.original_filename}
+                {selectedFile?.filename ??
+                  submission?.original_filename ??
+                  'Your IA review'}
               </strong>
-              <span>Secure detailed review completed</span>
+              <span>
+                {isFreeReview ? 'Free preview' : 'Review complete'}
+              </span>
             </div>
           </div>
-        )}
-
-        <div className="completion-summary-grid">
-          <div className="completion-summary-item">
-            <SearchCheck aria-hidden="true" />
-
+          <div className="report-bar-stats">
             <div>
               <span>Indicative range</span>
-
               <strong>
                 {completion?.overallMarkRange
                   ? `${completion.overallMarkRange[0]}–${completion.overallMarkRange[1]}`
@@ -5544,34 +5581,12 @@ function CompletionWorkspace({
                 {completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
               </strong>
             </div>
-          </div>
-
-          <div className="completion-summary-item">
-            <ListChecks aria-hidden="true" />
-
             <div>
-              <span>Rubric criteria</span>
-              <strong>{isFreeReview ? '1 previewed' : '4 reviewed'}</strong>
-            </div>
-          </div>
-
-          <div className="completion-summary-item">
-            <Target aria-hidden="true" />
-
-            <div>
-              <span>
-                {isFreeReview ? 'Preview findings' : 'Detailed findings'}
-              </span>
+              <span>{isFreeReview ? 'Preview findings' : 'Findings'}</span>
               <strong>{reviewData?.findings.length ?? 'Saved'}</strong>
             </div>
-          </div>
-
-          <div className="completion-summary-item">
-            <Clock3 aria-hidden="true" />
-
             <div>
-              <span>Progress plan</span>
-
+              <span>Next check-in</span>
               <strong>
                 {isFreeReview
                   ? 'Locked'
@@ -5583,9 +5598,6 @@ function CompletionWorkspace({
               </strong>
             </div>
           </div>
-        </div>
-
-        <div className="completion-toolbar">
           <button
             className={`report-action-button ${
               isFreeReview ? 'report-action-locked' : ''
@@ -5603,66 +5615,27 @@ function CompletionWorkspace({
               ? paymentsEnabled
                 ? 'Unlock print and save'
                 : 'Print available with full review'
-              : 'Print or save report'}
+              : 'Print or save'}
           </button>
-
-          {canOpenAnnotatedIa && (
-            <button
-              className="report-action-button report-action-primary"
-              type="button"
-              onClick={handleOpenAnnotatedIa}
-              disabled={isOpeningAnnotatedIa}
-            >
-              {isOpeningAnnotatedIa ? (
-                <LoaderCircle className="stage-spinner" aria-hidden="true" />
-              ) : (
-                <ExternalLink aria-hidden="true" />
-              )}
-
-              {isOpeningAnnotatedIa
-                ? 'Opening annotated IA…'
-                : isFreeReview
-                ? 'Open annotated IA preview'
-                : 'Open annotated IA'}
-            </button>
-          )}
-
-          {hasFullReviewAccess && submission?.id && (
-            <button
-              className="report-action-button"
-              type="button"
-              onClick={() => setAnnotationShareOpen(true)}
-            >
-              <Share2 aria-hidden="true" />
-              Share with student
-            </button>
-          )}
         </div>
 
-        {annotatedIaOpenError && (
-          <div className="annotated-open-error" role="alert">
-            <AlertCircle aria-hidden="true" />
-
-            <div>
-              <strong
-                style={{
-                  display: 'block',
-                  marginBottom: '4px',
-                }}
-              >
-                The annotated IA could not be opened
-              </strong>
-
-              <span style={{ display: 'block' }}>{annotatedIaOpenError}</span>
-            </div>
-          </div>
-        )}
-
         <div className="review-results-shell">
+          <div className={`review-space review-space-${reviewSpace}`}>
+            <div className="review-space-switch" role="tablist" aria-label="Choose a report">
+              <button type="button" role="tab" aria-selected={reviewSpace === 'student'} className={reviewSpace === 'student' ? 'on' : ''} onClick={() => switchReviewSpace('student')}>Student report</button>
+              <button type="button" role="tab" aria-selected={reviewSpace === 'teacher'} className={reviewSpace === 'teacher' ? 'on' : ''} onClick={() => switchReviewSpace('teacher')}>Teacher report</button>
+            </div>
+            <p>
+              {reviewSpace === 'student'
+                ? 'For the student: what to fix, how to fix it and how to improve between drafts.'
+                : 'For the teacher: evidence-based marking against the IB rubric and the annotated copy.'}
+            </p>
+          </div>
           <nav className="review-tabbar" aria-label="IA review sections">
-            <div className="review-tabgroup" role="tablist" aria-label="For the student">
-              <span className="review-tabgroup-label">For the student</span>
+            <div className="review-tabgroup" role="tablist" aria-label="Student report tabs">
+              <span className="review-tabgroup-label">{reviewSpace === 'teacher' ? 'Student report' : 'For the student'}</span>
               {([
+                ['marks', SearchCheck, 'Marks & fix plan', isFreeReview ? 'Locked' : 'Mark + steps'],
                 ['detailed', BookOpen, 'Feedback', isFreeReview ? 'First criterion preview' : 'By criterion'],
                 ['workshop', ListChecks, 'Section guide', 'All 9 IA sections'],
                 ['plan', ClipboardList, 'Progress plan', isFreeReview ? 'Locked' : 'Next steps'],
@@ -5684,8 +5657,22 @@ function CompletionWorkspace({
                 </button>
               ))}
             </div>
+            {reviewSpace === 'teacher' && (
             <div className="review-tabgroup review-tabgroup-teacher" role="tablist" aria-label="For the teacher">
               <span className="review-tabgroup-label">For the teacher</span>
+              <button
+                className={`review-tab ${activeTab === 'markmap' ? 'review-tab-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'markmap'}
+                onClick={() => setActiveTab('markmap')}
+              >
+                <SearchCheck aria-hidden="true" />
+                <span>
+                  <strong>Mark map</strong>
+                  <small>Recommended mark</small>
+                </span>
+              </button>
               <button
                 className={`review-tab ${activeTab === 'annotated' ? 'review-tab-active' : ''}`}
                 type="button"
@@ -5700,6 +5687,7 @@ function CompletionWorkspace({
                 </span>
               </button>
             </div>
+            )}
           </nav>
 
           <div className="review-tab-content">
@@ -5741,15 +5729,52 @@ function CompletionWorkspace({
                     <>
                     {comparisonMessage && <p className="review-data-state">{comparisonMessage}</p>}
                     <DraftComparison
-                      current={{submissionId: submission?.id ?? '',version:submission?.draft_version ?? 1,findings:reviewData.findings,criteria:reviewData.criteria}}
+                      current={{submissionId: submission?.id ?? '',version:submission?.draft_version ?? 1,filename: submission?.original_filename,findings:reviewData.findings,criteria:reviewData.criteria}}
                       previous={previousDraft}
                     />
                     </>
                   )
                 )}
 
-                {activeTab === 'annotated' && (
+                {reviewSpace === 'teacher' && activeTab === 'markmap' && (
+                  <MarkMapTab
+                    mode="teacher"
+                    submissionId={submission?.id ?? ''}
+                    findings={reviewData.findings}
+                    isFreePreview={isFreeReview}
+                  />
+                )}
+                {activeTab === 'marks' && (
+                  <MarkMapTab
+                    mode="student"
+                    submissionId={submission?.id ?? ''}
+                    findings={reviewData.findings}
+                    isFreePreview={isFreeReview}
+                  />
+                )}
+
+                {reviewSpace === 'teacher' && activeTab === 'annotated' && (
                   <>
+                  {hasFullReviewAccess && submission?.id && (
+                    <div className="teacher-actions">
+                      <button
+                        className="report-action-button"
+                        type="button"
+                        onClick={() => setAnnotationShareOpen(true)}
+                      >
+                        <Share2 aria-hidden="true" />
+                        Share with student
+                      </button>
+                      <button
+                        className="report-action-button"
+                        type="button"
+                        onClick={printDetailedReport}
+                      >
+                        <Printer aria-hidden="true" />
+                        Print or save report
+                      </button>
+                    </div>
+                  )}
                   <AnnotatedIaTab
                     canOpen={canOpenAnnotatedIa}
                     isOpening={isOpeningAnnotatedIa}
@@ -6638,6 +6663,10 @@ function ReviewResultAccessBanner({
   }
 
   if (fullAccess) {
+    return null;
+  }
+
+  if (fullAccess === undefined) {
     return (
       <section className="review-access-result review-access-result-full">
         <span className="review-access-result-icon">
@@ -6917,8 +6946,12 @@ function FindingCard({ finding, number }: FindingCardProps) {
   const isStrength = finding.finding_type === 'strength';
 
   return (
-    <article className={`finding-card finding-${finding.priority}`}>
-      <div className="finding-card-header">
+    <details
+      className={`finding-card finding-${finding.priority} ${
+        isStrength ? 'finding-good' : 'finding-fix'
+      }`}
+    >
+      <summary className="finding-card-header">
         <div className="finding-card-title">
           <span className="finding-number">{number}</span>
 
@@ -6931,9 +6964,10 @@ function FindingCard({ finding, number }: FindingCardProps) {
         </div>
 
         <span className={`priority-pill priority-${finding.priority}`}>
-          {capitalize(finding.priority)} priority
+          {isStrength ? 'Done well' : `${capitalize(finding.priority)} priority`}
         </span>
-      </div>
+        <span className="finding-caret" aria-hidden="true">›</span>
+      </summary>
 
       <div className="finding-location">
         <MapPin aria-hidden="true" />
@@ -6981,7 +7015,7 @@ function FindingCard({ finding, number }: FindingCardProps) {
           <p>{finding.why}</p>
         </div>
       </div>
-    </article>
+    </details>
   );
 }
 
