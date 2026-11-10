@@ -64,14 +64,14 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
    const batches:string[][]=[];for(let i=0;i<ids.length&&i<60;i+=5)batches.push(ids.slice(i,i+5));
    const results=await Promise.allSettled(batches.map(async b=>{
     const {data,error}=await supabase.functions.invoke('action-plan',{body:{submission_id:submissionId,action:'generate',finding_ids:b}});
-    if(error)throw error;if(data?.error)throw Error(String(data.error));
+    if(error){let msg='';try{const j=await (error as {context?:Response}).context?.json?.();msg=String(j?.error||'')}catch{/* no body */}throw Error(msg||error.message)}if(data?.error)throw Error(String(data.error));
     const m:Record<string,PlanView>={};
     for(const [k,v] of Object.entries((data?.plans||{}) as Record<string,PlanView>))if(v&&Array.isArray(v.steps))m[k]=v;
     setPlans(old=>({...old,...m}));
    }));
    const bad=results.find(r=>r.status==='rejected') as PromiseRejectedResult|undefined;
    if(bad)throw bad.reason;
-  }catch(e){setPlanMsg(e instanceof Error?e.message:'The plan could not be made right now. Try again.')}finally{setPlanBusy(false)}
+  }catch(e){const m=e instanceof Error?e.message:'';setPlanMsg(/AI provider|non-2xx/i.test(m)?'The coach could not build this plan right now. Your feedback is safe. Please try again in a little while.':m||'The plan could not be made right now. Try again.')}finally{setPlanBusy(false)}
  }
  async function toggleDone(id:string){
   if(freePreview||!submissionId)return;
