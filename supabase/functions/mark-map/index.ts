@@ -31,8 +31,13 @@ async function callClaude(apiKey: string, system: string, user: string, maxToken
   const data = await res.json();
   const text: string = (data?.content ?? []).map((c: { text?: string }) => c.text ?? '').join('');
   const a = text.indexOf('{'), b = text.lastIndexOf('}');
-  if (a < 0 || b <= a) return null;
-  try { return JSON.parse(text.slice(a, b + 1)); } catch { return null; }
+  if (a < 0 || b <= a) { console.error('no JSON in model output', data?.stop_reason, text.slice(0, 200)); return null; }
+  try { return JSON.parse(text.slice(a, b + 1)); } catch (e) {
+    if (data?.stop_reason === 'max_tokens') {
+      // Salvage a truncated list: keep every complete array item and close the JSON.
+      const cut = text.lastIndexOf('},');
+      if (cut > a) { try { return JSON.parse(text.slice(a, cut + 1) + ']}'); } catch { /* fall through */ } }
+    } console.error('JSON parse failed', data?.stop_reason, data?.usage?.output_tokens, e instanceof Error ? e.message : e, text.slice(Math.max(0, text.length - 160))); return null; }
 }
 
 Deno.serve(async (req) => {
@@ -110,7 +115,7 @@ Deno.serve(async (req) => {
       if (!split.overLimit) return null;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const raw = await callClaude(apiKey, TRIM_SYSTEM, buildPlanPrompt(map as never, doc, guide), 7000);
+          const raw = await callClaude(apiKey, TRIM_SYSTEM, buildPlanPrompt(map as never, doc, guide), 5000);
           const got = raw ? assembleTrim(raw, split.body, map as never, split.overBy) : null;
           if (got) return got;
           console.error('trim attempt produced no usable list', attempt, raw ? Object.keys(raw) : 'null');
