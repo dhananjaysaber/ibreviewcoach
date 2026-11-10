@@ -10,8 +10,16 @@ type StrandMark = { id: string; name: string; level: string; reason: string; mis
 type CriterionMark = { code: string; criterion: string; max: number; mark: number; why_mark: string; strands: StrandMark[]; confidence: string };
 type StrandPlan = { id: string; plain_ask: string; where_you_are: string; steps: string[]; example: string; extend_prompts: string[]; done_when: string };
 type CriterionPlan = { code: string; summary: string; quick_wins: string[]; strands: StrandPlan[] };
+type Budget = { label: string; min?: number; max: number } | null;
+type SectionWords = { heading: string; words: number; table_words: number; budget: Budget };
+type TrimItem = {
+  block_index: number; section: string | null; page: number | null; preview: string; words: number; action: 'remove' | 'shorten'; reason: string; why: string;
+  serves: string[]; repeated_at: { block_index: number; section: string | null } | null; keep_point: string; words_saved: number; running_total: number;
+};
+type Trim = { over_by: number; items: TrimItem[]; enough: boolean; total_saved: number };
+type WordCount = { counted: number; limit: number; over_by: number; cut_at: { heading: string; page: number | null } | null; sections: SectionWords[] };
 type MarkMapResult = {
-  mark: number; maximum: number; source_complete: boolean; over_word_limit: boolean; words_marked: number; total_body_words: number;
+  mark: number; maximum: number; source_complete: boolean; over_word_limit: boolean; word_count: WordCount; trim: Trim | null;
   criteria: CriterionMark[]; appendix_check: { label: string; relevant: boolean; reason: string }[]; data_sufficiency: string; plan: CriterionPlan[] | null;
 };
 
@@ -72,7 +80,7 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
 
   const notices = (
     <>
-      {map.over_word_limit && <p className="mm-note mm-alert">Your report is about {map.total_body_words} words. The limit is 3,200, and examiners stop reading there, so only the first {map.words_marked} words were marked. Shorten it.</p>}
+      <WordGuide map={map} mode={mode} />
       {!map.source_complete && <p className="mm-note">The IA was long, so only part of it could be read. Treat the marks as provisional.</p>}
       {map.appendix_check.length > 0 && (
         <details className="mm-note"><summary>Appendices: {map.appendix_check.filter((a) => a.relevant).length} relevant, {map.appendix_check.filter((a) => !a.relevant).length} not relevant (appendices are not marked)</summary>
@@ -160,5 +168,49 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
         );
       })}
     </section>
+  );
+}
+
+const REASON: Record<string, string> = { irrelevant: 'Not relevant', repeated: 'Repeated', redundant: 'Redundant', low_value: 'Earns no marks', too_detailed: 'Too detailed' };
+
+function WordGuide({ map, mode }: { map: MarkMapResult; mode: 'student' | 'teacher' }) {
+  const wc = map.word_count;
+  if (!wc) return null;
+  const trim = map.trim;
+  const pct = Math.min(100, Math.round((wc.counted / wc.limit) * 100));
+  const budgetText = (b: Budget) => (b ? (b.min ? b.min + '–' : 'max ') + b.max : '');
+  return (
+    <details className={'mm-words' + (wc.over_by > 0 ? ' mm-words-over' : '')} open={wc.over_by > 0}>
+      <summary><b>Word count: {wc.counted.toLocaleString()} of {wc.limit.toLocaleString()}</b>
+        <span>{wc.over_by > 0 ? wc.over_by.toLocaleString() + ' words over' : 'within the limit'}</span></summary>
+      <div className="mm-words-body">
+        <div className="mm-bar" aria-hidden="true"><i style={{ width: pct + '%' }} /></div>
+        <p className="mm-sub">Counted the way the IB workshop guidance describes: data tables, graphs, references and appendices are not counted. This is an estimate from your uploaded text.</p>
+        {wc.cut_at && <p className="mm-alert mm-note">An examiner stops reading at {wc.limit.toLocaleString()} words, which falls in <b>{wc.cut_at.heading}</b>{wc.cut_at.page ? ' (page ' + wc.cut_at.page + ')' : ''}. Anything after that point will not be read, so it cannot earn marks. The whole report was marked here so you can see everything, but it needs cutting to fit.</p>}
+        <div className="mm-tablewrap"><table className="mm-table"><thead><tr><th>Section</th><th>Words</th><th>IB template guide</th></tr></thead>
+          <tbody>{wc.sections.filter((x) => x.words > 0).map((x, i) => (
+            <tr key={i}><td><b>{x.heading}</b></td><td>{x.words}</td>
+              <td>{x.budget ? <span className={x.words > x.budget.max ? 'mm-warn' : 'mm-ok'}>{budgetText(x.budget)}{x.words > x.budget.max ? ' · ' + (x.words - x.budget.max) + ' over' : ''}</span> : <span className="mm-sub">no set budget</span>}</td></tr>))}</tbody></table></div>
+        {wc.over_by > 0 && !trim && <p className="mm-sub">Your list of what to remove appears once the fix plan is ready.</p>}
+        {trim && (
+          <div className="mm-trim">
+            <h4>What to remove or shorten, in this order</h4>
+            <p className="mm-sub">Each suggestion is chosen because the text is not relevant, is repeated, is redundant or earns no marks. It is never chosen just to reach a number. Text that is the only evidence for a mark is protected.</p>
+            <ol>{trim.items.map((t) => (
+              <li key={t.block_index} className={'mm-trim-item mm-trim-' + t.action}>
+                <div className="mm-trim-head"><span className={'mm-chip ' + (t.action === 'remove' ? 'mm-chip-low' : 'mm-chip-mid')}>{t.action === 'remove' ? 'Remove' : 'Shorten'}</span>
+                  <span className="mm-chip mm-chip-reason">{REASON[t.reason] ?? t.reason}</span>
+                  <small>{[t.section, t.page ? 'page ' + t.page : ''].filter(Boolean).join(' · ')} · saves about {t.words_saved} words</small></div>
+                <blockquote>{t.preview}</blockquote>
+                <p>{t.why}</p>
+                {t.repeated_at && <p className="mm-sub">Already said in: {t.repeated_at.section ?? 'another part of your report'}.</p>}
+                {t.action === 'shorten' && t.keep_point && <p className="mm-sub">Keep only: {t.keep_point}.</p>}
+                {t.serves.length > 0 && <p className="mm-sub">Helps with strand {t.serves.join(', ')}, so keep what supports it.</p>}
+              </li>))}</ol>
+            <p className="mm-done">Doing all of these saves about <b>{trim.total_saved.toLocaleString()}</b> words. {trim.enough ? 'That is enough to get inside the limit.' : 'You need about ' + trim.over_by.toLocaleString() + ', so you will need to tighten a little more yourself, starting with the longest sections.'}</p>
+          </div>)}
+        {mode === 'teacher' && <p className="mm-sub">Template word budgets (IB moderator workshop template): Background 750, Alternate hypothesis 120 max, Practical implications 200–250. Other sections have no set budget.</p>}
+      </div>
+    </details>
   );
 }

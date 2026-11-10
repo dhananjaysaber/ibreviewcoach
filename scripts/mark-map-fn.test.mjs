@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assembleMarking, assemblePlan, splitDocument, totals, WORD_LIMIT } from '../supabase/functions/mark-map/logic.ts';
+import { assembleMarking, assemblePlan, assembleTrim, splitDocument, totals, WORD_LIMIT } from '../supabase/functions/mark-map/logic.ts';
 import { STRANDS } from '../supabase/functions/mark-map/rubric.ts';
 
 const blocks = [{ block_index: 0, page_number: 1, section_title: 'Method', text: 'Participants completed three trials on a 20 m track with a stopwatch.' }];
@@ -34,16 +34,60 @@ test('missing strand or criterion rejects the marking', () => {
   const raw2 = mk(); raw2.criteria.pop();
   assert.equal(assembleMarking(raw2, blocks), null);
 });
-test('appendices are excluded and the word limit stops reading', () => {
+test('whole IA is kept; tables, references and appendices do not count; cut point and template budgets found', () => {
   const w = (n) => Array(n).fill('word').join(' ');
   const b = [
-    { block_index: 0, page_number: 1, section_title: 'Introduction', text: w(2000) },
-    { block_index: 1, page_number: 3, section_title: 'Method', text: w(1500) },
-    { block_index: 2, page_number: 9, section_title: 'Appendix A', text: w(500) },
+    { block_index: 0, block_type: 'heading', page_number: 1, section_title: 'Introduction', text: 'Introduction' },
+    { block_index: 1, block_type: 'paragraph', page_number: 1, section_title: 'Introduction', text: w(2000) },
+    { block_index: 2, block_type: 'heading', page_number: 3, section_title: 'Procedure', text: 'Procedure' },
+    { block_index: 3, block_type: 'table_text', page_number: 3, section_title: 'Procedure', text: w(900) },
+    { block_index: 4, block_type: 'paragraph', page_number: 4, section_title: 'Procedure', text: w(1500) },
+    { block_index: 5, block_type: 'heading', page_number: 8, section_title: 'References', text: 'References' },
+    { block_index: 6, block_type: 'paragraph', page_number: 8, section_title: 'References', text: w(300) },
+    { block_index: 7, block_type: 'heading', page_number: 9, section_title: 'Appendix A', text: 'Appendix A' },
+    { block_index: 8, block_type: 'paragraph', page_number: 9, section_title: 'Appendix A', text: w(500) },
   ];
   const s = splitDocument(b);
-  assert.equal(s.body.length, 1); assert.equal(s.appendix.length, 1); assert.equal(s.overLimit, true);
-  assert.ok(s.wordsMarked <= WORD_LIMIT);
+  assert.equal(s.appendix.length, 2);
+  assert.equal(s.body.length, 7);
+  assert.equal(s.totalCounted, 1 + 2000 + 1 + 1500);
+  assert.equal(s.overLimit, true); assert.equal(s.overBy, s.totalCounted - WORD_LIMIT);
+  assert.equal(s.cutAt.heading, 'Procedure'); assert.equal(s.cutAt.block_index, 4);
+  const intro = s.sections.find((x) => x.heading === 'Introduction');
+  assert.equal(intro.budget.max, 750);
+  assert.equal(s.sections.find((x) => x.heading === 'Procedure').table_words, 900);
+  assert.equal(s.sections.find((x) => x.heading === 'References'), undefined);
+});
+test('trim picks real paragraphs by reason, protects marked evidence, and computes savings in code', () => {
+  const w = (n) => Array(n).fill('word').join(' ');
+  const body = [
+    { block_index: 0, block_type: 'heading', page_number: 1, section_title: 'Introduction', text: 'Introduction' },
+    { block_index: 1, block_type: 'paragraph', page_number: 1, section_title: 'Introduction', text: w(60) },
+    { block_index: 2, block_type: 'paragraph', page_number: 1, section_title: 'Introduction', text: w(40) },
+    { block_index: 3, block_type: 'paragraph', page_number: 2, section_title: 'Method', text: w(30) },
+    { block_index: 4, block_type: 'table_text', page_number: 2, section_title: 'Method', text: w(30) },
+    { block_index: 5, block_type: 'paragraph', page_number: 3, section_title: 'Method', text: w(5) },
+  ];
+  const m = assembleMarking(mk('3-4', 'word word'), body.map((b) => ({ ...b, text: 'word word ' + b.text })).slice(0, 0).concat([{ block_index: 0, page_number: 1, section_title: 'x', text: 'word word' }]));
+  // protect block 2 by hand: it is the only evidence for a 3-4 strand
+  m.criteria[0].strands[0].evidence = [{ quote: 'q', block_index: 2, page: 1, section: 'Introduction' }];
+  const raw = { trim: [
+    { block_index: 2, action: 'remove', reason: 'redundant', why: 'Defines the variables.', serves: ['A1'] },
+    { block_index: 1, action: 'remove', reason: 'repeated', why: 'Says the same as the method.', repeated_at: 3, serves: [] },
+    { block_index: 3, action: 'remove', reason: 'repeated', why: 'x', repeated_at: 99, serves: [] },
+    { block_index: 4, action: 'remove', reason: 'irrelevant', why: 'table', serves: [] },
+    { block_index: 5, action: 'remove', reason: 'irrelevant', why: 'tiny', serves: [] },
+    { block_index: 0, action: 'remove', reason: 'irrelevant', why: 'heading', serves: [] },
+    { block_index: 7, action: 'remove', reason: 'irrelevant', why: 'fake block', serves: [] },
+  ] };
+  const t = assembleTrim(raw, body, m, 80);
+  assert.deepEqual(t.items.map((i) => i.block_index), [1, 3, 2]);
+  const p2 = t.items.find((i) => i.block_index === 2);
+  assert.equal(p2.action, 'shorten'); assert.ok(p2.words_saved < 40);
+  assert.equal(t.items.find((i) => i.block_index === 3).reason, 'low_value');
+  assert.equal(t.items[0].repeated_at.block_index, 3);
+  assert.equal(t.items[0].words_saved, 60); assert.equal(t.items[0].running_total, 60);
+  assert.equal(assembleTrim({}, body, m, 80), null);
 });
 test('plan needs every strand with steps, example and prompts', () => {
   const plan = { criteria: ['A', 'B', 'C', 'D'].map((code) => ({ code, summary: 's', quick_wins: ['q'],

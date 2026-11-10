@@ -6,7 +6,7 @@
  * The Ideal IA template is never an input to a mark. Requires the signed-in owner with full review access.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { MARK_SYSTEM, PLAN_SYSTEM, appendixDigest, assembleMarking, assemblePlan, buildDocument, buildMarkPrompt, buildPlanPrompt, splitDocument, totals, type Block } from './logic.ts';
+import { MARK_SYSTEM, PLAN_SYSTEM, WORD_LIMIT, appendixDigest, assembleMarking, assemblePlan, assembleTrim, buildDocument, buildMarkPrompt, buildPlanPrompt, splitDocument, totals, wordGuide, type Block } from './logic.ts';
 
 const VERSION = 'mark-map-v2';
 const MODEL = 'claude-sonnet-4-6';
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey) return reply(503, { error: 'AI provider key is not configured server-side' });
   if (submission.content_purged_at) return reply(409, { error: 'The IA text has expired, so it cannot be marked again.' });
-  const { data: rows, error: bErr } = await db.from('ia_document_blocks').select('block_index,page_number,section_title,text').eq('submission_id', submission_id).order('block_index').limit(5000);
+  const { data: rows, error: bErr } = await db.from('ia_document_blocks').select('block_index,block_type,page_number,section_title,text').eq('submission_id', submission_id).order('block_index').limit(5000);
   if (bErr || !rows?.length) return reply(409, { error: 'The IA text is not available for this report.' });
   const split = splitDocument(rows as Block[]);
   const { text: doc, complete } = buildDocument(split.body, MAX_DOC_CHARS);
@@ -83,7 +83,8 @@ Deno.serve(async (req) => {
       }
       if (!marking) return reply(502, { error: 'The marking could not be completed. Please try again.' });
       const map = {
-        version: VERSION, model: MODEL, source_complete: complete, words_marked: split.wordsMarked, total_body_words: split.totalBodyWords,
+        version: VERSION, model: MODEL, source_complete: complete,
+        word_count: { counted: split.totalCounted, limit: WORD_LIMIT, over_by: split.overBy, cut_at: split.cutAt, sections: split.sections },
         over_word_limit: split.overLimit, ...totals(marking.criteria), ...marking, plan: null,
       };
       const { error: saveErr } = await db.from('ia_mark_maps').upsert({ submission_id, student_id: user.id, map_version: VERSION, result: map, model_id: MODEL }, { onConflict: 'submission_id,map_version' });
@@ -91,13 +92,15 @@ Deno.serve(async (req) => {
       return reply(200, { map, created_at: new Date().toISOString() });
     }
     const map = stored!.result as Record<string, unknown> & { criteria: never };
-    let plan = null;
+    let plan = null, trim = null;
+    const guide = split.overLimit ? wordGuide(split.sections, split.totalCounted) : '';
     for (let attempt = 0; attempt < 2 && !plan; attempt++) {
-      const raw = await callClaude(apiKey, PLAN_SYSTEM, buildPlanPrompt(map as never, doc), 14000);
+      const raw = await callClaude(apiKey, PLAN_SYSTEM, buildPlanPrompt(map as never, doc, guide), 16000);
       plan = raw ? assemblePlan(raw) : null;
+      trim = plan && raw && split.overLimit ? assembleTrim(raw, split.body, map as never, split.overBy) : null;
     }
     if (!plan) return reply(502, { error: 'The fix plan could not be completed. Please try again.' });
-    const next = { ...map, plan };
+    const next = { ...map, plan, trim };
     const { error: saveErr } = await db.from('ia_mark_maps').upsert({ submission_id, student_id: user.id, map_version: VERSION, result: next, model_id: MODEL }, { onConflict: 'submission_id,map_version' });
     if (saveErr) return reply(500, { error: 'Could not save the fix plan' });
     return reply(200, { map: next, created_at: new Date().toISOString() });
