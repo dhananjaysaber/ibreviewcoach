@@ -161,25 +161,45 @@ For EVERY strand return:
 - done_when: one line they can use to check the strand is finished.
 Rules: do not tell students to match decimals or to carry uncertainties forward; mark positively; the report body counts, not appendices; stay within the 3,200-word limit by saying what to shorten when relevant.
 Also per criterion: summary (2 sentences on why they got this mark and the single biggest thing to fix) and quick_wins (up to 3 small fixes).
-If a word-count guide is supplied, also return "trim": a ranked list of up to 25 SPECIFIC paragraphs or lines (by block_index from the IA text) that the student can remove or shorten, best to cut first, until the words saved add up to at least the words over the limit. Choose by LOGIC, never just to hit a number. Each item: {"block_index":0,"action":"remove|shorten","reason":"irrelevant|repeated|redundant|low_value|too_detailed","why":"one plain sentence saying exactly why this text can go, naming what makes it weak","serves":["A1"],"repeated_at":null,"shorten_to_words":0,"keep_point":"if shortening, the one point worth keeping, in a few words"}.
+Return JSON ONLY for the ONE criterion you are asked about: {"code":"A","summary":"...","quick_wins":["..."],"strands":[{"id":"A1","plain_ask":"...","where_you_are":"...","steps":["..."],"example":"...","extend_prompts":["..."],"done_when":"..."}]}`;
+
+export const TRIM_SYSTEM = `You are an IB SEHS moderator helping a student bring an IA under the word limit. You are given the marking of the IA, the IA text and a word-count guide.
+Return a ranked list of up to 25 SPECIFIC paragraphs or lines (by block_index from the IA text) that the student can remove or shorten, best to cut first, until the words saved add up to at least the words over the limit. Choose by LOGIC, never just to hit a number. Each item: {"block_index":0,"action":"remove|shorten","reason":"irrelevant|repeated|redundant|low_value|too_detailed","why":"one plain sentence saying exactly why this text can go, naming what makes it weak","serves":["A1"],"repeated_at":null,"shorten_to_words":0,"keep_point":"if shortening, the one point worth keeping, in a few words"}.
 Reasons: irrelevant = does not help answer the research question or any strand; repeated = says again what another place already says (give that other place's block_index in repeated_at); redundant = a table, graph or figure already shows it, or it only defines or explains common knowledge such as the variables; low_value = generic text that earns no marks; too_detailed = true and useful but longer than needed, so shorten it.
 "serves" lists the strand ids (A1 to D2) the text helps earn marks for, or [] if none. Cut text that serves no strand first, then repeated, then redundant. Never choose the research question, text that is the only evidence for a strand at level 3-4 or 5-6, the link between the data and the conclusion, or limitations and improvements that explain impact; shorten those at most. Do not rewrite their text.
-Return JSON ONLY: {"criteria":[{"code":"A","summary":"...","quick_wins":["..."],"strands":[{"id":"A1","plain_ask":"...","where_you_are":"...","steps":["..."],"example":"...","extend_prompts":["..."],"done_when":"..."}]}],"trim":[...]}`;
+Return JSON ONLY: {"trim":[...]}`;
 
 export function wordGuide(sections: SectionWords[], totalCounted: number): string {
   return `\n\nWord-count guide: the limit is ${WORD_LIMIT}; the report has ${totalCounted} counted words, so about ${totalCounted - WORD_LIMIT} must go. Tables, graphs, references and appendices do not count. Sections:\n` +
     sections.map((x) => `- "${x.heading}": ${x.words} words` + (x.budget ? ` (IB workshop template budget: ${x.budget.min ? x.budget.min + '-' : 'max '}${x.budget.max} for ${x.budget.label})` : '')).join('\n');
 }
 
-export function buildPlanPrompt(m: Marking, doc: string, guide = ''): string {
-  const lines = m.criteria.map((c) => `Criterion ${c.code} ${c.criterion}: ${c.mark}/${c.max}. ${c.why_mark}\n` + c.strands.map((s) =>
+export function buildPlanPrompt(m: Marking, doc: string, guide = '', only?: string): string {
+  const lines = m.criteria.filter((c) => !only || c.code === only).map((c) => `Criterion ${c.code} ${c.criterion}: ${c.mark}/${c.max}. ${c.why_mark}\n` + c.strands.map((s) =>
     `  ${s.id} ${s.name}: level ${s.level}. ${s.reason} Missing for next level: ${s.missing}`).join('\n')).join('\n');
-  return `Marking result:\n${lines}\n\nIA text:\n${doc}${guide}`;
+  return `${only ? `Write the plan for criterion ${only} only.\n\n` : ''}Marking result:\n${lines}\n\nIA text:\n${doc}${guide}`;
 }
 
 export type StrandPlan = { id: string; plain_ask: string; where_you_are: string; steps: string[]; example: string; extend_prompts: string[]; done_when: string };
 export type CriterionPlan = { code: string; summary: string; quick_wins: string[]; strands: StrandPlan[] };
 const list = (v: unknown, max: number) => (Array.isArray(v) ? v.map(clean).filter(Boolean).slice(0, max) : []);
+
+export function assembleCriterionPlan(x: Record<string, unknown> | null, code: string): CriterionPlan | null {
+  if (!x) return null;
+  const rs = Array.isArray(x.strands) ? x.strands as Record<string, unknown>[] : [];
+  const strands: StrandPlan[] = [];
+  for (const s of STRANDS.filter((t: Strand) => t.criterion === code)) {
+    const y = rs.find((z) => clean(z?.id).toUpperCase() === s.id);
+    if (!y) return null;
+    const steps = list(y.steps, 7), prompts = list(y.extend_prompts, 4);
+    const plain_ask = clean(y.plain_ask), where_you_are = clean(y.where_you_are), example = clean(y.example), done_when = clean(y.done_when);
+    if (!plain_ask || steps.length < 2 || !example || !prompts.length || !where_you_are) return null;
+    strands.push({ id: s.id, plain_ask, where_you_are, steps, example, extend_prompts: prompts, done_when });
+  }
+  const summary = clean(x.summary);
+  if (!summary) return null;
+  return { code, summary, quick_wins: list(x.quick_wins, 3), strands };
+}
 
 export function assemblePlan(raw: Record<string, unknown>): CriterionPlan[] | null {
   const rc = Array.isArray(raw.criteria) ? raw.criteria as Record<string, unknown>[] : [];
