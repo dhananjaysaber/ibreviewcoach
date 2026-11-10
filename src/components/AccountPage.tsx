@@ -883,6 +883,21 @@ function RecentReportsList({
   onStartReview: () => void;
   compact?: boolean;
 }) {
+  const [mapTotals, setMapTotals] = useState<Record<string, string>>({});
+  const idsKey = reports.map((r) => r.submission_id).join(',');
+  useEffect(() => {
+    if (!idsKey) return;
+    let live = true;
+    void supabase.from('ia_mark_maps').select('submission_id,mark:result->>mark,maximum:result->>maximum').in('submission_id', idsKey.split(',')).then(({ data }) => {
+      if (!live || !Array.isArray(data)) return;
+      const next: Record<string, string> = {};
+      for (const r of data as { submission_id: string; mark: string | null; maximum: string | null }[]) {
+        if (Number.isFinite(Number(r.mark)) && Number(r.maximum) > 0) next[r.submission_id] = `${r.mark} / ${r.maximum}`;
+      }
+      setMapTotals(next);
+    });
+    return () => { live = false; };
+  }, [idsKey]);
   if (reportsLoading) {
     return (
       <div className="student-dashboard-loading">
@@ -1007,10 +1022,10 @@ function RecentReportsList({
 
             <span className="student-dashboard-report-score">
               <small>
-                Indicative range
+                {mapTotals[report.submission_id] ? 'Marked' : 'Indicative range'}
               </small>
               <strong>
-                {markSummary ??
+                {mapTotals[report.submission_id] ?? markSummary ??
                   'Open report'}
               </strong>
             </span>

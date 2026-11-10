@@ -271,3 +271,16 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .review-tab-active { border-bottom-color: #8B5CF6 !important; background: transparent !important; }
 .review-tab-active strong { color: var(--p-night) !important; }
 .completion-card-results, .review-results-shell { gap: 0 !important; } .completion-card-results .report-bar { margin-bottom: 0 !important; }
+
+/* ---- Upload page + access modal in the midnight theme ---- */
+.review-upload-hero-v7 { background: radial-gradient(60% 120% at 100% 0%, rgba(139,92,246,.45), transparent 60%), radial-gradient(50% 80% at 0% 100%, rgba(91,95,239,.3), transparent 60%), var(--p-night) !important; border: 0 !important; box-shadow: var(--p-shadow-lg) !important; }
+.review-upload-hero-v7::before, .review-upload-hero-v7::after { display: none !important; }
+.review-upload-hero-v7 h1 { font-family: var(--p-serif) !important; font-weight: 500 !important; }
+.review-upload-page-v7 [class*="upload-card"], .review-upload-page-v7 [class*="upload-step"] { border-top-color: #8B5CF6 !important; }
+.review-upload-page-v7 [class*="step-number"], .review-upload-page-v7 [class*="step-badge"] { background: linear-gradient(135deg, #5B5FEF, #8B5CF6) !important; }
+.review-access-modal [class*="header"], .review-access-modal-header { background: radial-gradient(60% 140% at 100% 0%, rgba(139,92,246,.45), transparent 60%), var(--p-night) !important; }
+.app-shell-premium .review-upload-page-v7 > .review-upload-hero-v7 { background: radial-gradient(60% 120% at 100% 0%, rgba(139,92,246,.45), transparent 60%), radial-gradient(50% 80% at 0% 100%, rgba(91,95,239,.3), transparent 60%), var(--p-night) !important; border: 0 !important; }
+.app-shell-premium .review-upload-page-v7 > .review-upload-hero-v7::before, .app-shell-premium .review-upload-page-v7 > .review-upload-hero-v7::after { display: none !important; }
+.sx.cmp .sx-hero { background: radial-gradient(60% 120% at 100% 0%, rgba(139,92,246,.4), transparent 60%), var(--p-night) !important; box-shadow: var(--p-shadow-lg); }
+.sx.cmp .sx-hero h2 { font-family: var(--p-serif); font-weight: 500; }
+.sx.cmp .sx-btn-primary, .sx.cmp button.sx-btn:not(.sx-btn-ghost) { background: linear-gradient(135deg, #5B5FEF, #8B5CF6) !important; border: 0 !important; color: #fff !important; }

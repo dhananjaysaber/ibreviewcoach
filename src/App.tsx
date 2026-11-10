@@ -1884,7 +1884,7 @@ function App() {
       : mainView === 'compare'
       ? 'compare'
       : mainView === 'workspace'
-      ? 'review'
+      ? isViewingSavedReport ? 'reports' : 'review'
       : mainView === 'pricing'
       ? 'credits'
       : accountSection === 'billing'
