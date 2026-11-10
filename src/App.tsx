@@ -7080,9 +7080,20 @@ type FindingCardProps = {
 function FindingCard({ finding, number }: FindingCardProps) {
   const location = formatFindingLocation(finding);
   const isStrength = finding.finding_type === 'strength';
+  const [detail, setDetail] = useState<{ action: string; must: string[] } | null>(null);
+  const loadedDetail = useRef(false);
+  function loadDetail() {
+    if (isStrength || loadedDetail.current) return;
+    loadedDetail.current = true;
+    void supabase.from('ia_action_plans').select('plan').eq('finding_id', finding.id).limit(1).then(({ data }) => {
+      const pl = (Array.isArray(data) ? data[0]?.plan : null) as { detailed_action?: string; must_show?: string[] } | null;
+      if (pl?.detailed_action) setDetail({ action: pl.detailed_action, must: Array.isArray(pl.must_show) ? pl.must_show : [] });
+    });
+  }
 
   return (
     <details
+      onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) loadDetail(); }}
       className={`finding-card finding-${finding.priority} ${
         isStrength ? 'finding-good' : 'finding-fix'
       }`}
@@ -7130,11 +7141,11 @@ function FindingCard({ finding, number }: FindingCardProps) {
           <span>
             {isStrength ? 'How to retain this strength' : 'Specific action'}
           </span>
-          <p>{finding.specific_action}</p>
+          <p>{detail?.action ?? finding.specific_action}</p>
 
-          {finding.required_elements.length > 0 && (
+          {(detail?.must?.length ? detail.must : finding.required_elements).length > 0 && (
             <ul>
-              {finding.required_elements.map((element) => (
+              {(detail?.must?.length ? detail.must : finding.required_elements).map((element) => (
                 <li key={element}>{element}</li>
               ))}
             </ul>

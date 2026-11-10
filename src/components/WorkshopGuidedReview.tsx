@@ -1,5 +1,5 @@
 import {CHECK_EXPLAINERS} from '../lib/checkExplainers';
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {supabase} from '../lib/supabase';
 import {SEHS_WORKSHOP_SECTIONS,type WorkshopCheck} from '../lib/workshopGuide';
 import {rubricView} from '../lib/ibRubric';
@@ -13,7 +13,7 @@ import {sectionFor,type EnrichedFinding,type WorkshopFinding,type WorkshopCriter
 type VerifiedResult={id:string;status:'complete'|'partial'|'missing'|'not_applicable'|'unverified';reason:string;action:string;evidence_excerpt:string|null;source_location:string|null};
 type AuditRow={checks:VerifiedResult[];source_completeness:string;created_at:string};
 export const norm=(s:string)=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'');
-type PlanView={goal:string;why:string;steps:string[];example:string;done_when:string};
+type PlanView={goal:string;why:string;steps:string[];example:string;done_when:string;detailed_action?:string;must_show?:string[]};
 const auditEnabled=import.meta.env.VITE_ENABLE_WORKSHOP_AUDIT!=='false';
 const friendlyStatus=(s:string)=>({complete:'Addressed',partial:'Needs refining',missing:'Missing evidence',not_applicable:'Not applicable',unverified:'Needs verification'} as Record<string,string>)[s]||'Review';
 const meaningfulExcerpt=(s:string|null)=>{const x=(s||'').replace(/\s+/g,' ').trim();return x.length>=25&&!/(\.\.\.|…)$/.test(x)?x:null;};
@@ -55,15 +55,22 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
   });
   return ()=>{live=false};
  },[findings,freePreview,submissionId]);
+ const autoRan=useRef('');
+ useEffect(()=>{if(freePreview||!plansReady||!submissionId||autoRan.current===submissionId||!needPlan.length)return;autoRan.current=submissionId;void makePlans(needPlan)});
  async function makePlans(ids:string[]){
   if(!submissionId||planBusy||!ids.length)return;
   setPlanBusy(true);setPlanMsg('');
   try{
-   const {data,error}=await supabase.functions.invoke('action-plan',{body:{submission_id:submissionId,action:'generate',finding_ids:ids.slice(0,30)}});
-   if(error)throw error;if(data?.error)throw Error(String(data.error));
-   const m:Record<string,PlanView>={};
-   for(const [k,v] of Object.entries((data?.plans||{}) as Record<string,PlanView>))if(v&&Array.isArray(v.steps))m[k]=v;
-   setPlans(old=>({...old,...m}));
+   const batches:string[][]=[];for(let i=0;i<ids.length&&i<36;i+=12)batches.push(ids.slice(i,i+12));
+   const results=await Promise.allSettled(batches.map(async b=>{
+    const {data,error}=await supabase.functions.invoke('action-plan',{body:{submission_id:submissionId,action:'generate',finding_ids:b}});
+    if(error)throw error;if(data?.error)throw Error(String(data.error));
+    const m:Record<string,PlanView>={};
+    for(const [k,v] of Object.entries((data?.plans||{}) as Record<string,PlanView>))if(v&&Array.isArray(v.steps))m[k]=v;
+    setPlans(old=>({...old,...m}));
+   }));
+   const bad=results.find(r=>r.status==='rejected') as PromiseRejectedResult|undefined;
+   if(bad)throw bad.reason;
   }catch(e){setPlanMsg(e instanceof Error?e.message:'The plan could not be made right now. Try again.')}finally{setPlanBusy(false)}
  }
  async function toggleDone(id:string){
@@ -115,7 +122,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
   ...strengths.map(x=>({key:x.finding.id,title:short(x.finding.section_title||x.check?.title||'Doing well',70),text:x.finding.issue,quote:quoteOf(x)})),
   ...auditChecks.filter(c=>c.status==='complete').map(c=>{const meta=section.checks.find(m=>m.id===c.id);return {key:'a-'+c.id,title:meta?.title||'Addressed',text:c.reason,quote:meaningfulExcerpt(c.evidence_excerpt)||''}}),
  ];
- const needPlan=issues.filter(x=>!plans[x.finding.id]).map(x=>x.finding.id);
+ const needPlan=issues.filter(x=>!plans[x.finding.id]?.detailed_action).map(x=>x.finding.id);
  const doneTotal=issues.length;
  return <section className="wg2 sx" aria-label="IA section guide">
   <header className="sx-hero">
@@ -153,11 +160,12 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
        {quote?<blockquote><span>From your draft</span>{quote}</blockquote>:null}
        <h5>What is missing</h5><p>{f.issue}</p>
        <h5>Why it matters</h5><p>{pl?.why||f.why||f.rubric_requirement}</p>
+       {pl?.detailed_action?<><h5>Specific action</h5><p>{pl.detailed_action}</p>{pl.must_show&&pl.must_show.length>0&&<ul className="sx-must">{pl.must_show.map((m,i)=><li key={i}>{m}</li>)}</ul>}</>:null}
        <h5>Your plan</h5>
        {pl?<ol className="sx-steps">{pl.steps.map((st,i)=><li key={i}>{st}</li>)}</ol>:<><p>{f.specific_action}</p>{ex&&<ol className="sx-steps">{ex.how.map((st,i)=><li key={i}>{st}</li>)}</ol>}</>}
        {example&&<div className="sx-example"><span>Example to help you understand. It is not text for your IA.</span><p>{example}</p></div>}
        <h5>You are done when</h5><p>{pl?.done_when||f.completion_check}</p>
-       {f.required_elements?.length>0&&<div className="sx-chips">{f.required_elements.map((el,i)=><span key={i}>{el}</span>)}</div>}
+       {!pl?.must_show?.length&&f.required_elements?.length>0&&<div className="sx-chips">{f.required_elements.map((el,i)=><span key={i}>{el}</span>)}</div>}
        {!freePreview&&submissionId&&<label className="sx-tick"><input type="checkbox" checked={isDone} onChange={()=>void toggleDone(f.id)}/> I have fixed this in my draft</label>}
       </div>
      </details>})}
