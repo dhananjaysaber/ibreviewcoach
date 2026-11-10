@@ -199,3 +199,35 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
   .auth-aside { display: none; }
   .auth-panel:not(.auth-panel-account) > :not(.auth-aside):not(.auth-close-button) { grid-column: 1; }
 }
+
+/* ---- Top navigation shell (matches the Dashboard / My reports boards) ---- */
+.tn-bar { display: none; }
+@media (min-width: 961px) {
+  .premium-workspace { display: block !important; min-height: 100vh; }
+  .premium-sidebar, .premium-sidebar-backdrop, .premium-topbar { display: none !important; }
+  .premium-workspace-stage { margin-left: 0 !important; width: 100% !important; max-width: none !important; padding-left: 0 !important; }
+  .tn-bar {
+    position: sticky; top: 0; z-index: 60; display: flex; align-items: center; gap: 28px;
+    height: 64px; padding: 0 clamp(20px, 3vw, 40px);
+    background: var(--p-night); color: #F6F3EC; border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .tn-brand { display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; color: #fff; cursor: pointer; padding: 0; }
+  .tn-brand span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--p-gold-grad); color: var(--p-night); }
+  .tn-brand svg { width: 18px; height: 18px; }
+  .tn-brand strong { font-family: var(--p-serif); font-size: 17px; font-weight: 600; }
+  .tn-nav { display: flex; gap: 4px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .tn-link { background: none; border: 0; color: rgba(246,243,236,.68); font: 500 13.5px var(--p-sans, Inter), sans-serif; padding: 8px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+  .tn-link:hover { color: #fff; background: rgba(255,255,255,.07); }
+  .tn-link-active { color: #fff; background: linear-gradient(135deg, rgba(91,95,239,.55), rgba(139,92,246,.45)); }
+  .tn-right { display: flex; align-items: center; gap: 12px; }
+  .tn-status { border: 1px solid rgba(231,193,110,.5); background: rgba(231,193,110,.12); color: #E7C16E; font: 600 12px Inter, sans-serif; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+  .tn-status-error { color: #ffb4b4; border-color: rgba(255,120,120,.5); background: rgba(255,120,120,.1); }
+  .tn-signout { background: none; border: 1px solid rgba(255,255,255,.22); color: #F6F3EC; font: 500 12.5px Inter, sans-serif; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+  .tn-signout:hover { background: rgba(255,255,255,.08); }
+  .premium-workspace-content { margin-left: auto !important; margin-right: auto !important; }
+  .review-tabbar { top: 64px !important; }
+}
+
+/* Legacy rule padded every section by (100vw - container)/2 on top of the width set above, so cards shrank as the screen grew. */
+.landing-main .landing-section, .landing-main .landing-limits-section { padding-left: 0 !important; padding-right: 0 !important; margin-left: auto !important; margin-right: auto !important; }
+.landing-main .landing-criteria-section, .landing-main .landing-final-cta { padding-left: clamp(24px, 4vw, 56px) !important; padding-right: clamp(24px, 4vw, 56px) !important; box-sizing: border-box; }

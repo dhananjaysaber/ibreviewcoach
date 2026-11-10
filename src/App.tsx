@@ -4339,6 +4339,7 @@ function ReportsDashboard({
     };
   }, [refreshKey]);
 
+  const markMapTotals = useMarkMapTotals(reports.map((r) => r.submission_id));
   const filteredReports = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
@@ -4594,9 +4595,11 @@ function ReportsDashboard({
                 </div>
 
                 <div className="premium-report-mark">
-                  <small>Indicative range</small>
+                  <small>{markMapTotals[report.submission_id] ? 'Marked' : 'Indicative range'}</small>
                   <strong>
-                    {markSummary
+                    {markMapTotals[report.submission_id]
+                      ? `${markMapTotals[report.submission_id].mark} / ${markMapTotals[report.submission_id].maximum}`
+                      : markSummary
                       ? `${markSummary.range[0]}–${markSummary.range[1]} / ${markSummary.maximum}`
                       : 'Open report'}
                   </strong>
@@ -8487,6 +8490,27 @@ function normalizeReportHistoryRow(value: unknown): ReportHistoryRow | null {
     annotated_docx_ready: value.annotated_docx_ready === true,
     is_latest_version: value.is_latest_version === true,
   };
+}
+
+/** Marks from the strand mark map, the single source of truth, keyed by submission id. */
+function useMarkMapTotals(ids: string[]): Record<string, { mark: number; maximum: number }> {
+  const [totals, setTotals] = useState<Record<string, { mark: number; maximum: number }>>({});
+  const key = ids.join(',');
+  useEffect(() => {
+    if (!key) return;
+    let live = true;
+    void supabase.from('ia_mark_maps').select('submission_id,mark:result->>mark,maximum:result->>maximum').in('submission_id', key.split(',')).then(({ data }) => {
+      if (!live || !Array.isArray(data)) return;
+      const next: Record<string, { mark: number; maximum: number }> = {};
+      for (const r of data as { submission_id: string; mark: string | null; maximum: string | null }[]) {
+        const mark = Number(r.mark), maximum = Number(r.maximum);
+        if (Number.isFinite(mark) && Number.isFinite(maximum) && maximum > 0) next[r.submission_id] = { mark, maximum };
+      }
+      setTotals(next);
+    });
+    return () => { live = false; };
+  }, [key]);
+  return totals;
 }
 
 function deriveReportMarkSummary(criterionScores: unknown): {
