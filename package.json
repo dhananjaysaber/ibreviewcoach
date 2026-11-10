@@ -14,12 +14,15 @@
     "check:release": "node scripts/release-check.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@supabase/supabase-js": "^2.110.8",
     "lucide-react": "^1.26.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "mammoth": "^1.11.0",
     "pdfjs-dist": "^5.4.0",
-    "mammoth": "^1.11.0"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

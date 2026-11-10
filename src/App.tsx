@@ -129,6 +129,7 @@ import './admin-control-centre.css';
 import './share-review.css';
 import './aurora.css';
 import './scholar.css';
+import './premium.css';
 import { TeacherCopyPanel } from './components/TeacherCopyPanel';
 
 type AppStatus =
