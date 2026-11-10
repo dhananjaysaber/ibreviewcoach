@@ -5137,7 +5137,29 @@ function CompletionWorkspace({
   showBackToReports,
   onBackToReports,
 }: CompletionWorkspaceProps) {
-  const [activeTab, setActiveTab] = useState<ReviewTab>('detailed');
+  const [reviewSpace, setReviewSpace] = useState<'student' | 'teacher'>(() =>
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('space') === 'teacher'
+      ? 'teacher'
+      : 'student'
+  );
+  const [activeTab, setActiveTab] = useState<ReviewTab>(() =>
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('space') === 'teacher'
+      ? 'markmap'
+      : 'detailed'
+  );
+  function switchReviewSpace(space: 'student' | 'teacher') {
+    setReviewSpace(space);
+    setActiveTab(space === 'teacher' ? 'markmap' : 'detailed');
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('space', space);
+      window.history.replaceState(window.history.state, '', url);
+    } catch {
+      /* the page still works without the address bar update */
+    }
+  }
   const [reviewLoadState, setReviewLoadState] =
     useState<ReviewLoadState>('loading');
   const [reviewError, setReviewError] = useState('');
@@ -5490,7 +5512,7 @@ function CompletionWorkspace({
       return;
     }
 
-    setActiveTab('detailed');
+    switchReviewSpace('student');
 
     window.setTimeout(() => {
       window.print();
@@ -5598,7 +5620,19 @@ function CompletionWorkspace({
         </div>
 
         <div className="review-results-shell">
+          <div className={`review-space review-space-${reviewSpace}`}>
+            <div className="review-space-switch" role="tablist" aria-label="Choose a report">
+              <button type="button" role="tab" aria-selected={reviewSpace === 'student'} className={reviewSpace === 'student' ? 'on' : ''} onClick={() => switchReviewSpace('student')}>Student report</button>
+              <button type="button" role="tab" aria-selected={reviewSpace === 'teacher'} className={reviewSpace === 'teacher' ? 'on' : ''} onClick={() => switchReviewSpace('teacher')}>Teacher report</button>
+            </div>
+            <p>
+              {reviewSpace === 'student'
+                ? 'For the student: what to fix, how to fix it and how to improve between drafts.'
+                : 'For the teacher: evidence-based marking against the IB rubric and the annotated copy.'}
+            </p>
+          </div>
           <nav className="review-tabbar" aria-label="IA review sections">
+            {reviewSpace === 'student' && (
             <div className="review-tabgroup" role="tablist" aria-label="For the student">
               <span className="review-tabgroup-label">For the student</span>
               {([
@@ -5623,6 +5657,8 @@ function CompletionWorkspace({
                 </button>
               ))}
             </div>
+            )}
+            {reviewSpace === 'teacher' && (
             <div className="review-tabgroup review-tabgroup-teacher" role="tablist" aria-label="For the teacher">
               <span className="review-tabgroup-label">For the teacher</span>
               <button
@@ -5652,6 +5688,7 @@ function CompletionWorkspace({
                 </span>
               </button>
             </div>
+            )}
           </nav>
 
           <div className="review-tab-content">
@@ -5664,7 +5701,7 @@ function CompletionWorkspace({
               />
             ) : reviewData ? (
               <>
-                {activeTab === 'detailed' && (
+                {reviewSpace === 'student' && activeTab === 'detailed' && (
                   <DetailedReviewTab
                     data={reviewData}
                     isFreePreview={isFreeReview}
@@ -5673,7 +5710,7 @@ function CompletionWorkspace({
                   />
                 )}
 
-                {activeTab === 'workshop' && (
+                {reviewSpace === 'student' && activeTab === 'workshop' && (
                   <WorkshopGuidedReview
                     findings={reviewData.findings}
                     criteria={reviewData.criteria}
@@ -5683,7 +5720,7 @@ function CompletionWorkspace({
                   />
                 )}
 
-                {activeTab === 'comparison' && (
+                {reviewSpace === 'student' && activeTab === 'comparison' && (
                   isFreeReview ? <LockedReviewSection
                     title="Compare saved IA reviews"
                     description="Draft comparison is available with full review access."
@@ -5700,7 +5737,7 @@ function CompletionWorkspace({
                   )
                 )}
 
-                {activeTab === 'markmap' && (
+                {reviewSpace === 'teacher' && activeTab === 'markmap' && (
                   <MarkMapTab
                     submissionId={submission?.id ?? ''}
                     criteria={reviewData.criteria}
@@ -5709,7 +5746,7 @@ function CompletionWorkspace({
                   />
                 )}
 
-                {activeTab === 'annotated' && (
+                {reviewSpace === 'teacher' && activeTab === 'annotated' && (
                   <>
                   {hasFullReviewAccess && submission?.id && (
                     <div className="teacher-actions">
@@ -5757,7 +5794,7 @@ function CompletionWorkspace({
                   </>
                 )}
 
-                {activeTab === 'plan' && (
+                {reviewSpace === 'student' && activeTab === 'plan' && (
                   <ProgressPlanTab
                     plan={reviewData.progressPlan}
                     isLocked={isFreeReview || reviewData.progressPlanLocked}

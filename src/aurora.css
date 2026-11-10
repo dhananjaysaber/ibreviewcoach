@@ -321,3 +321,13 @@ body { background: radial-gradient(1200px 500px at 85% -10%, #ece6ff 0%, transpa
 [class*="reports-version"], [class*="reports-project"] { border-radius: 18px; }
 button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid rgba(75,43,232,.45); outline-offset: 2px; }
 .report-bar-stats small { display: block; font-size: .68rem; font-weight: 700; color: #8a84a8; margin-top: 2px; }
+
+/* ---- Separate Student and Teacher report pages ---- */
+.review-space { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 16px 20px; margin-bottom: 12px; border-radius: 20px; color: #fff; background: linear-gradient(120deg, #2a1b7a, #4b2be8 55%, #c23ae0); box-shadow: var(--aurora-shadow); }
+.review-space-teacher { background: linear-gradient(120deg, #0d3b4f, #0f7a8a 55%, #1aa87f); }
+.review-space p { margin: 0; flex: 1 1 280px; font-size: .88rem; line-height: 1.45; opacity: .93; }
+.review-space-switch { display: inline-flex; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); }
+.review-space-switch button { border: 0; background: transparent; color: #fff; font: inherit; font-weight: 800; font-size: .86rem; padding: 8px 18px; border-radius: 999px; cursor: pointer; }
+.review-space-switch button.on { background: #fff; color: var(--aurora-ink); }
+.review-space-teacher .review-space-switch button.on { color: #0d3b4f; }
+.review-tabgroup-teacher { margin-left: 0 !important; padding-left: 0 !important; border-left: 0 !important; }
