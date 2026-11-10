@@ -208,3 +208,91 @@ a { color: var(--s-cobalt); }
 .mm-hero h3 {
   color: #fff;
 }
+
+/* ===== Home page layout: one consistent container, no overlapping grids ===== */
+.landing-main .landing-section {
+  width: min(1180px, calc(100% - 48px)) !important;
+  max-width: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-top: clamp(56px, 6vw, 88px) !important;
+  padding-bottom: clamp(56px, 6vw, 88px) !important;
+}
+.landing-main .landing-section-heading { max-width: 760px !important; margin-bottom: 32px !important; }
+
+/* Features: even 3-column grid, no spanning cards */
+.landing-main .landing-feature-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)) !important;
+  gap: 18px !important;
+}
+.landing-main .landing-feature-grid > * { grid-column: auto !important; grid-row: auto !important; min-height: 0 !important; }
+
+/* Criteria: ink panel sits INSIDE the container with even padding */
+.landing-main .landing-criteria-section {
+  width: min(1180px, calc(100% - 48px)) !important;
+  padding: clamp(32px, 4vw, 56px) !important;
+  margin-top: 24px !important;
+  margin-bottom: 24px !important;
+}
+.landing-main .landing-criteria-section .landing-section-heading { max-width: 760px !important; }
+.landing-main .landing-criteria-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 16px !important;
+}
+.landing-main .landing-criteria-grid article { min-height: 0 !important; padding: 22px !important; }
+
+/* How it works: steps in a tidy row */
+.landing-main .landing-step-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+  gap: 18px !important;
+}
+
+/* Limits: two columns that stack cleanly, tiles never overlap */
+.landing-main .landing-limits-card {
+  width: 100% !important;
+  max-width: none !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 32px 40px !important;
+  align-items: center !important;
+  padding: clamp(24px, 3.5vw, 44px) !important;
+  background: #fff !important;
+}
+.landing-main .landing-limits-card > .landing-limit-note { grid-column: 1 / -1 !important; }
+.landing-main .landing-limits-card h2 { max-width: none !important; font-size: clamp(1.7rem, 2.6vw, 2.35rem) !important; }
+.landing-main .landing-limit-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+.landing-main .landing-limit-grid > * {
+  position: static !important;
+  transform: none !important;
+  grid-area: auto !important;
+  min-height: 108px !important;
+  height: auto !important;
+  padding: 18px 20px !important;
+  display: grid !important;
+  align-content: center !important;
+  gap: 6px !important;
+  background: #F2F4F7 !important;
+  background-image: none !important;
+  border: 1px solid var(--s-line, #E1E5EC) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+.landing-main .landing-limit-grid > * strong { color: var(--s-ink) !important; font-size: 1.5rem !important; }
+.landing-main .landing-limit-grid > * span { color: var(--s-muted) !important; font-size: 0.8rem !important; }
+
+/* Integrity + FAQ */
+.landing-main .landing-integrity-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important; gap: 18px !important; }
+
+@media (max-width: 900px) {
+  .landing-main .landing-limits-card { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 560px) {
+  .landing-main .landing-limit-grid { grid-template-columns: 1fr !important; }
+}
