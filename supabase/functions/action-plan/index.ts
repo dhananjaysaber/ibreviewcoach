@@ -25,10 +25,10 @@ async function askModel(apiKey: string, findings: FindingInput[]): Promise<Model
     headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
       model: MODEL, max_tokens: 8000, temperature: 0.2, system: PLAN_SYSTEM,
-      messages: [{ role: 'user', content: buildUserPrompt(findings) }],
+      messages: [{ role: 'user', content: buildUserPrompt(findings).replace(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '') }],
     }),
   });
-  if (!res.ok) throw new Error(`AI provider returned ${res.status}`);
+  if (!res.ok) { const eb = (await res.text()).slice(0, 300); console.error('provider error', res.status, eb); throw new Error(`AI provider returned ${res.status}`); }
   const data = await res.json();
   const text: string = (data?.content ?? []).map((c: { text?: string }) => c.text ?? '').join('');
   const start = text.indexOf('{');
