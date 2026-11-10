@@ -128,6 +128,7 @@ import './premium-workspace.css';
 import './admin-control-centre.css';
 import './share-review.css';
 import './aurora.css';
+import './scholar.css';
 import { TeacherCopyPanel } from './components/TeacherCopyPanel';
 
 type AppStatus =
@@ -2931,13 +2932,18 @@ function LandingPage({
         <div className="landing-hero-inner">
           <div className="landing-hero-copy">
             <span className="landing-kicker">
-              IB SEHS internal assessment feedback
+              IB SEHS · Internal assessment · 24 marks
             </span>
 
-            <h1>Improve your IB SEHS IA with feedback that makes the next step clear.</h1>
+            <h1>
+              Know <mark>exactly what to fix</mark> in your IA before it is
+              marked.
+            </h1>
 
             <p className="landing-hero-lead">
-              Upload your draft and receive evidence-linked criterion feedback, clear improvement actions, an interactive annotated IA and a prioritised revision plan — while keeping the writing your own.
+              Upload your draft. Get a clear, step-by-step plan for every weak
+              spot, marked against the official IB criteria. We coach. We never
+              write your IA.
             </p>
 
             <div className="landing-hero-actions">
@@ -2950,7 +2956,7 @@ function LandingPage({
                 {primaryActionLabel}
               </button>
 
-              {paymentsEnabled && (
+              {paymentsEnabled ? (
                 <button
                   className="landing-secondary-button"
                   type="button"
@@ -2959,64 +2965,59 @@ function LandingPage({
                   See pricing
                   <ChevronRight aria-hidden="true" />
                 </button>
+              ) : (
+                <a className="landing-secondary-button" href="#how-it-works">
+                  How it works
+                  <ChevronRight aria-hidden="true" />
+                </a>
               )}
             </div>
 
             <div className="landing-trust-row">
               <span>
                 <ShieldCheck aria-hidden="true" />
-                Private document handling
+                Your file stays private
               </span>
 
               <span>
                 <BookOpen aria-hidden="true" />
-                Coaching, not IA writing
+                Plain words for every student
               </span>
 
               <span>
                 <CheckCircle2 aria-hidden="true" />
-                One free limited preview per verified account
+                Annotated copy for teachers
               </span>
             </div>
           </div>
 
-          <div className="landing-review-preview">
+          <div className="landing-review-preview" aria-label="Sample annotated report">
             <div className="landing-preview-header">
-              <span>Detailed Review</span>
-              <strong>SEHS IA • 24 marks</strong>
+              <span>Sample · Methodology · Page 3</span>
+              <strong>Annotated</strong>
             </div>
 
-            <div className="landing-preview-score">
-              <span>Indicative range</span>
-              <strong>12–16 / 24</strong>
-            </div>
+            <p className="landing-preview-text">
+              Participants completed three trials on a 20 m track. Times were
+              recorded with a stopwatch.{' '}
+              <mark>
+                The same tester started and stopped the timer for every trial
+              </mark>{' '}
+              and results were written in a table.
+            </p>
 
-            <div className="landing-preview-tabs">
-              <span className="active">Detailed Review</span>
-              <span>Annotated IA</span>
-              <span>Progress Plan</span>
-            </div>
-
-            <article className="landing-preview-finding">
-              <span className="landing-preview-priority">High priority</span>
-              <strong>Research Design</strong>
+            <div className="landing-preview-finding">
+              <span className="landing-preview-pin">1</span>
               <p>
-                The control variable is identified, but the method does not
-                explain how it remained consistent across every trial.
+                <strong>Stated, not yet described.</strong> Say what decides a
+                fair start and stop, so another student could repeat it.
               </p>
+            </div>
 
-              <div>
-                <span>Specific action</span>
-                <p>
-                  State the controlled value, how it was maintained and how
-                  consistency was checked.
-                </p>
-              </div>
-            </article>
-
-            <div className="landing-preview-footer">
-              <Target aria-hidden="true" />
-              <span>Prioritised next steps prepared</span>
+            <div className="landing-preview-chips">
+              <span className="chip-good">Research question ✓</span>
+              <span className="chip-fix">Method 1 fix</span>
+              <span className="chip-good">Variables ✓</span>
             </div>
           </div>
         </div>
@@ -3041,6 +3042,79 @@ function LandingPage({
         <div>
           <strong>Private</strong>
           <span>Account-owned report history</span>
+        </div>
+      </section>
+
+      <section className="landing-section landing-audience" id="student-teacher">
+        <div className="landing-audience-grid">
+          <article className="landing-audience-card landing-audience-student">
+            <span className="landing-section-label">For the student</span>
+            <h2>A plan you can follow, one step at a time.</h2>
+            <ul>
+              <li>What is missing, in plain words</li>
+              <li>Why it earns marks</li>
+              <li>A worked example from a different topic</li>
+              <li>Questions to help you extend your own ideas</li>
+            </ul>
+            <button type="button" onClick={onStartFreeReview}>
+              {primaryActionLabel}
+            </button>
+          </article>
+
+          <article className="landing-audience-card landing-audience-teacher">
+            <span className="landing-section-label">For the teacher</span>
+            <h2>Marking evidence, strand by strand.</h2>
+            <ul>
+              <li>Levels for every IB strand, with quoted evidence</li>
+              <li>One whole mark per criterion</li>
+              <li>Annotated IA and Word copy</li>
+              <li>Full control: every student tab too</li>
+            </ul>
+            <button
+              type="button"
+              onClick={accountState === 'permanent' ? onOpenReports : onSignIn}
+            >
+              Open the teacher report
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <section className="landing-section landing-ladder">
+        <div className="landing-section-heading">
+          <span className="landing-section-label">What a fix looks like</span>
+          <h2>Climb one step on the IB ladder.</h2>
+        </div>
+
+        <div className="landing-ladder-card">
+          <div>
+            <div className="landing-ladder-steps" aria-hidden="true">
+              <span>Stated</span>
+              <span className="on">Described</span>
+              <span>Explained</span>
+            </div>
+            <p>
+              You are here: your method <b>states</b> what you did. The next
+              level <b>describes</b> it so someone else could repeat it.
+            </p>
+          </div>
+
+          <div>
+            <h3>Do this first</h3>
+            <ol>
+              <li>Find your method paragraph.</li>
+              <li>Ask: could a classmate repeat it?</li>
+              <li>Add what is still unclear.</li>
+            </ol>
+          </div>
+
+          <aside className="landing-ladder-example">
+            <span>Example · not text for your IA</span>
+            <p>
+              A swim coach says &ldquo;kick sets were timed&rdquo;. A clearer
+              version says who timed, from which signal, to what accuracy.
+            </p>
+          </aside>
         </div>
       </section>
 
@@ -3144,7 +3218,7 @@ function LandingPage({
         </div>
       </section>
 
-      <section className="landing-section landing-how-section">
+      <section className="landing-section landing-how-section" id="how-it-works">
         <div className="landing-section-heading">
           <span>How it works</span>
           <h2>A clear path from draft to revision.</h2>

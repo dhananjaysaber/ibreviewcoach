@@ -7,9 +7,9 @@
     position: sticky;
     top: 72px;
     z-index: 850;
-    border-bottom: 1px solid #dbd6ef;
-    background: rgba(249, 247, 255, 0.97);
-    box-shadow: 0 10px 28px rgba(32, 16, 80, 0.1);
+    border-bottom: 1px solid #E8EDFF;
+    background: rgba(242, 244, 247, 0.97);
+    box-shadow: 0 10px 28px rgba(14, 23, 38, 0.1);
     backdrop-filter: blur(12px);
   }
   
@@ -31,7 +31,7 @@
     place-items: center;
     border-radius: 12px;
     color: #ffffff;
-    background: linear-gradient(145deg, #32197c, #4d2eab);
+    background: linear-gradient(145deg, #1B2A44, #1A36C4);
   }
   
   .global-review-status-complete .global-review-status-icon {
@@ -71,7 +71,7 @@
   }
   
   .global-review-status-title-row > strong {
-    color: #221352;
+    color: #0E1726;
     font-size: 0.85rem;
   }
   
@@ -79,7 +79,7 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    color: #4d2eab;
+    color: #1A36C4;
     font-size: 0.68rem;
     font-weight: 850;
   }
@@ -114,10 +114,10 @@
     align-items: center;
     justify-content: center;
     gap: 7px;
-    border: 1px solid #4d2eab;
+    border: 1px solid #1A36C4;
     border-radius: 11px;
     color: #ffffff;
-    background: #4d2eab;
+    background: #1A36C4;
     cursor: pointer;
     font: inherit;
     font-size: 0.7rem;
@@ -125,8 +125,8 @@
   }
   
   .global-review-status-inner > button:hover {
-    border-color: #32197c;
-    background: #32197c;
+    border-color: #1B2A44;
+    background: #1B2A44;
   }
   
   .global-review-status-inner > button svg {
@@ -137,14 +137,14 @@
   .global-review-status-track {
     height: 3px;
     overflow: hidden;
-    background: #e3dff2;
+    background: #E8EDFF;
   }
   
   .global-review-status-track span {
     height: 100%;
     display: block;
     border-radius: 999px;
-    background: linear-gradient(90deg, #4d2eab, #765aca);
+    background: linear-gradient(90deg, #1A36C4, #2347F5);
     transition: width 300ms ease;
   }
   
