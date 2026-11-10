@@ -96,7 +96,13 @@ export function buildMarkPrompt(doc: string, appendix: string, meta: { overLimit
     `Appendix items (not marked, check relevance only):\n${appendix || '(none)'}`;
 }
 
-const squash = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+const squash = (s: string) => s.normalize('NFKC').replace(/[‘’‛]/g, "'").replace(/[“”]/g, '"').replace(/[‐-―−]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
+/** A quote is verified when every non-trivial segment (split at an ellipsis) appears verbatim in the block, ignoring quote-mark, dash and spacing variants. */
+const quoteIn = (text: string, quote: string): boolean => {
+  const t = squash(text);
+  const segs = quote.split(/…|\.{3}/).map((x) => squash(x).replace(/^[\s.,;:'"]+|[\s.,;:'"]+$/g, '')).filter((x) => x.length >= 12);
+  return segs.length > 0 && segs.every((x) => t.includes(x));
+};
 const clean = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : '');
 const int = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : null);
 const levelRange = (l: string) => (l === '0' ? [0, 0] : l.split('-').map(Number));
@@ -121,8 +127,12 @@ export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): 
       if (!rs || !(LEVELS as readonly string[]).includes(level)) return null;
       const evidence = (Array.isArray(rs.evidence) ? rs.evidence : []).slice(0, 3).flatMap((e: unknown) => {
         const eo = (e ?? {}) as Record<string, unknown>;
-        const quote = clean(eo.quote), idx = int(eo.block_index), blk = idx === null ? undefined : byIndex.get(idx);
-        if (!quote || !blk || quote.split(' ').length > 45 || !squash(blk.text).includes(squash(quote).replace(/[….]+$/, ''))) { if (quote) dropped++; return []; }
+        const quote = clean(eo.quote), idx = int(eo.block_index);
+        if (!quote || quote.split(' ').length > 45) { if (quote) dropped++; return []; }
+        // Trust the cited block if it contains the quote; otherwise find the one block that does (the model may mis-number a block).
+        let blk = idx === null ? undefined : byIndex.get(idx);
+        if (!blk || !quoteIn(blk.text, quote)) blk = blocks.find((b) => quoteIn(b.text, quote));
+        if (!blk) { dropped++; return []; }
         return [{ quote, block_index: blk.block_index, page: blk.page_number, section: blk.section_title }];
       });
       // No verified evidence in the report text, no credit: a level above 0 must be backed by at least one verbatim quote.

@@ -71,7 +71,7 @@ test('trim picks real paragraphs by reason, protects marked evidence, and comput
   ];
   const m = assembleMarking(mk('3-4', 'word word'), body.map((b) => ({ ...b, text: 'word word ' + b.text })).slice(0, 0).concat([{ block_index: 0, page_number: 1, section_title: 'x', text: 'word word' }]));
   // protect block 2 by hand: it is the only evidence for a 3-4 strand
-  m.criteria[0].strands[0].evidence = [{ quote: 'q', block_index: 2, page: 1, section: 'Introduction' }];
+  m.criteria[0].strands[0].level = '3-4'; m.criteria[0].strands[0].evidence = [{ quote: 'q', block_index: 2, page: 1, section: 'Introduction' }];
   const raw = { trim: [
     { block_index: 2, action: 'remove', reason: 'redundant', why: 'Defines the variables.', serves: ['A1'] },
     { block_index: 1, action: 'remove', reason: 'repeated', why: 'Says the same as the method.', repeated_at: 3, serves: [] },
@@ -124,4 +124,21 @@ test('long paragraphs tagged as headings are body text, not section rows', () =>
   const s = splitDocument(b);
   assert.equal(s.sections.length, 1);
   assert.equal(s.sections[0].heading, 'Hypothesis'); assert.equal(s.sections[0].words, 41);
+});
+
+test('quote verification tolerates quote marks, dashes, spacing, ellipses and a wrongly numbered block, but never invented text', () => {
+  const bl = [
+    { block_index: 0, page_number: 1, section_title: 'Intro', text: 'Unrelated opening text about the topic of the study.' },
+    { block_index: 7, page_number: 4, section_title: 'Method', text: 'The dynamometer was held at the participant’s side – elbow straight – and three trials were taken with 30 s rest.' },
+  ];
+  const run = (quote, idx) => {
+    const raw = mk('3-4'); raw.criteria[0].strands[0].evidence = [{ quote, block_index: idx }];
+    return assembleMarking(raw, bl).criteria[0].strands[0];
+  };
+  assert.equal(run("The dynamometer was held at the participant's side - elbow straight", 7).evidence.length, 1);
+  assert.equal(run('The dynamometer was held at the participant’s side … three trials were taken with 30 s rest', 7).evidence.length, 1);
+  const moved = run('three trials were taken with 30 s rest', 0);
+  assert.equal(moved.evidence[0].block_index, 7); assert.equal(moved.evidence[0].page, 4); assert.equal(moved.level, '3-4');
+  const fake = run('five trials were taken with 60 s rest and a water break', 7);
+  assert.equal(fake.evidence.length, 0); assert.equal(fake.level, '0');
 });
