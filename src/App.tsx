@@ -4995,7 +4995,7 @@ function ProcessingWorkspace({
   );
 }
 
-type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan' | 'markmap';
+type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan' | 'markmap' | 'marks';
 
 type ReviewLoadState = 'loading' | 'ready' | 'error';
 
@@ -5147,11 +5147,11 @@ function CompletionWorkspace({
     typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('space') === 'teacher'
       ? 'markmap'
-      : 'detailed'
+      : 'marks'
   );
   function switchReviewSpace(space: 'student' | 'teacher') {
     setReviewSpace(space);
-    setActiveTab(space === 'teacher' ? 'markmap' : 'detailed');
+    setActiveTab(space === 'teacher' ? 'markmap' : 'marks');
     try {
       const url = new URL(window.location.href);
       url.searchParams.set('space', space);
@@ -5632,10 +5632,10 @@ function CompletionWorkspace({
             </p>
           </div>
           <nav className="review-tabbar" aria-label="IA review sections">
-            {reviewSpace === 'student' && (
-            <div className="review-tabgroup" role="tablist" aria-label="For the student">
-              <span className="review-tabgroup-label">For the student</span>
+            <div className="review-tabgroup" role="tablist" aria-label="Student report tabs">
+              <span className="review-tabgroup-label">{reviewSpace === 'teacher' ? 'Student report' : 'For the student'}</span>
               {([
+                ['marks', SearchCheck, 'Marks & fix plan', isFreeReview ? 'Locked' : 'Mark + steps'],
                 ['detailed', BookOpen, 'Feedback', isFreeReview ? 'First criterion preview' : 'By criterion'],
                 ['workshop', ListChecks, 'Section guide', 'All 9 IA sections'],
                 ['plan', ClipboardList, 'Progress plan', isFreeReview ? 'Locked' : 'Next steps'],
@@ -5657,7 +5657,6 @@ function CompletionWorkspace({
                 </button>
               ))}
             </div>
-            )}
             {reviewSpace === 'teacher' && (
             <div className="review-tabgroup review-tabgroup-teacher" role="tablist" aria-label="For the teacher">
               <span className="review-tabgroup-label">For the teacher</span>
@@ -5701,7 +5700,7 @@ function CompletionWorkspace({
               />
             ) : reviewData ? (
               <>
-                {reviewSpace === 'student' && activeTab === 'detailed' && (
+                {activeTab === 'detailed' && (
                   <DetailedReviewTab
                     data={reviewData}
                     isFreePreview={isFreeReview}
@@ -5710,7 +5709,7 @@ function CompletionWorkspace({
                   />
                 )}
 
-                {reviewSpace === 'student' && activeTab === 'workshop' && (
+                {activeTab === 'workshop' && (
                   <WorkshopGuidedReview
                     findings={reviewData.findings}
                     criteria={reviewData.criteria}
@@ -5720,7 +5719,7 @@ function CompletionWorkspace({
                   />
                 )}
 
-                {reviewSpace === 'student' && activeTab === 'comparison' && (
+                {activeTab === 'comparison' && (
                   isFreeReview ? <LockedReviewSection
                     title="Compare saved IA reviews"
                     description="Draft comparison is available with full review access."
@@ -5739,8 +5738,16 @@ function CompletionWorkspace({
 
                 {reviewSpace === 'teacher' && activeTab === 'markmap' && (
                   <MarkMapTab
+                    mode="teacher"
                     submissionId={submission?.id ?? ''}
-                    criteria={reviewData.criteria}
+                    findings={reviewData.findings}
+                    isFreePreview={isFreeReview}
+                  />
+                )}
+                {activeTab === 'marks' && (
+                  <MarkMapTab
+                    mode="student"
+                    submissionId={submission?.id ?? ''}
                     findings={reviewData.findings}
                     isFreePreview={isFreeReview}
                   />
@@ -5794,7 +5801,7 @@ function CompletionWorkspace({
                   </>
                 )}
 
-                {reviewSpace === 'student' && activeTab === 'plan' && (
+                {activeTab === 'plan' && (
                   <ProgressPlanTab
                     plan={reviewData.progressPlan}
                     isLocked={isFreeReview || reviewData.progressPlanLocked}

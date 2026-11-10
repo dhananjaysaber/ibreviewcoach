@@ -20,3 +20,16 @@
 .mm-table blockquote { margin: 0 0 6px; padding: 6px 10px; border-left: 3px solid var(--aurora-violet); background: var(--aurora-field); border-radius: 8px; font-style: italic; }
 .mm-table blockquote small { display: block; font-style: normal; font-size: .72rem; color: #8a84a8; }
 .mm-template { background: #fff; border-style: dashed; }
+.mm-hero-crit { display: flex; gap: 18px; flex-wrap: wrap; } .mm-hero-crit b { font-family: 'Sora', sans-serif; font-size: 1.4rem; display: block; } .mm-hero-crit small { font-size: .72rem; opacity: .85; }
+.mm-alert { background: #fff3ef; color: var(--aurora-coral-fg); border: 1px solid #f3c2b4; }
+.mm-lv { padding: 2px 8px; border-radius: 999px; font-size: .78rem; } .mm-lv-strong { background: #e3f6ec; color: var(--aurora-mint-fg); } .mm-lv-mid { background: #fff6d6; color: #8a6a00; } .mm-lv-low { background: #fde8e2; color: var(--aurora-coral-fg); }
+.mm-strand { border: 1px solid var(--aurora-pane-border); border-radius: 16px; background: #fff; overflow: hidden; }
+.mm-strand summary { display: flex; gap: 10px; align-items: center; padding: 12px 14px; cursor: pointer; font-size: .95rem; }
+.mm-chip { font-size: .7rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; } .mm-chip-strong { background: #e3f6ec; color: var(--aurora-mint-fg); } .mm-chip-mid { background: #fff6d6; color: #8a6a00; } .mm-chip-low { background: #fde8e2; color: var(--aurora-coral-fg); }
+.mm-strand-body { display: grid; gap: 12px; padding: 4px 16px 16px; font-size: .92rem; line-height: 1.6; color: #2f2a52; } .mm-strand-body p, .mm-strand-body ol { margin: 4px 0 0; } .mm-strand-body ol { padding-left: 20px; display: grid; gap: 6px; }
+.mm-ask { padding: 10px 12px; background: var(--aurora-field); border-radius: 12px; }
+.mm-example { padding: 12px 14px; border-radius: 14px; background: #f4f1ff; border: 1px dashed var(--aurora-violet); } .mm-example span { font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--aurora-violet); }
+.mm-prompt { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: var(--aurora-field); border: 1px solid var(--aurora-pane-border); } .mm-prompt p { flex: 1; margin: 0; font-size: .86rem; }
+.mm-copy { border: 1px solid var(--aurora-violet); background: #fff; color: var(--aurora-violet); border-radius: 8px; padding: 6px 12px; font-weight: 700; cursor: pointer; min-height: 36px; }
+.mm-done { padding: 10px 12px; border-radius: 12px; background: #e3f6ec; } .mm-retry { margin-left: 12px; }
+.mm-table { display: block; overflow-x: auto; }
