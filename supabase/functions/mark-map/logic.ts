@@ -85,7 +85,7 @@ Rules from the IB marking guidance you must follow:
 - Do not require uncertainty decimals to match; judge whether uncertainty is considered appropriately for the data.
 - EVIDENCE RULE: a strand may be given a level above 0 ONLY if you can quote verbatim text from the report that meets the wording of that level's descriptor. No quotation means level 0 for that strand. Statements of intent, text that only names a topic, text in appendices and text you would have to infer do not count. A criterion with no evidenced strand scores 0.
 - Data must be sufficient to support a conclusion; if the data set is too thin for the processing and the conclusion, that limits Data analysis and Conclusion.
-Method: for each strand give the level, one or two VERBATIM quotes from the IA (each at most 35 words) with the block_index they came from, and a reason. The reason is an analytical moderator justification of 2 to 3 sentences in the third person ("The candidate...", never "you"): (1) name the specific words of the awarded level's descriptor that the quoted evidence meets and where it appears, (2) say precisely which words of the next level's descriptor are not met and what is absent or inaccurate. Cite section names and numbers or terms from the report, so a moderator can check each claim. If nothing supports a level, quote nothing and say what you searched for. For the level above the one awarded, say in "missing" exactly what the descriptor needs that is not yet shown (plain advice; never write wording for the student to paste). Never invent evidence.
+Method: for each strand give the level, one or two VERBATIM quotes from the IA (each 8 to 35 words, copied character for character from ONE line of the report, never joining separate sentences or lines with an ellipsis, never paraphrased) with the block_index they came from, and a reason. The reason is an analytical moderator justification of 2 to 3 sentences in the third person ("The candidate...", never "you"): (1) name the specific words of the awarded level's descriptor that the quoted evidence meets and where it appears, (2) say precisely which words of the next level's descriptor are not met and what is absent or inaccurate. Cite section names and numbers or terms from the report, so a moderator can check each claim. If nothing supports a level, quote nothing and say what you searched for. For the level above the one awarded, say in "missing" exactly what the descriptor needs that is not yet shown (plain advice; never write wording for the student to paste). Never invent evidence.
 Also judge each appendix item supplied: is it relevant to the investigation (raw data, protocol, consent form, calculations) or irrelevant padding? Return JSON ONLY:
 {"criteria":[{"code":"A","mark":0,"why_mark":"3-5 analytical third-person sentences: which strands fixed the mark, the best-fit reasoning across them, and the single decisive gap to the next mark","strands":[{"id":"A1","level":"0|1-2|3-4|5-6","reason":"...","evidence":[{"quote":"...","block_index":0}],"missing":"..."}],"confidence":"high|medium|low"}],"appendix_check":[{"label":"...","relevant":true,"reason":"..."}],"data_sufficiency":"one sentence"}`;
 
@@ -147,6 +147,11 @@ export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): 
     if (mark === null) return null;
     const lo = Math.min(...strands.map((s) => levelRange(s.level)[0])), hi = Math.max(...strands.map((s) => levelRange(s.level).slice(-1)[0]));
     mark = Math.max(lo, Math.min(hi, Math.max(0, Math.min(c.max, mark))));
+    // A strand with no evidenced credit pulls the criterion down: the mark cannot exceed the rounded-up average of the strand levels (midpoints).
+    if (strands.some((x) => x.level === '0')) {
+      const mid = (l: string) => (l === '0' ? 0 : (levelRange(l)[0] + levelRange(l)[1]) / 2);
+      mark = Math.min(mark, Math.ceil(strands.reduce((a, x) => a + mid(x.level), 0) / strands.length));
+    }
     const why = clean(rc.why_mark);
     if (!why) return null;
     const conf = clean(rc.confidence);

@@ -142,3 +142,12 @@ test('quote verification tolerates quote marks, dashes, spacing, ellipses and a 
   const fake = run('five trials were taken with 60 s rest and a water break', 7);
   assert.equal(fake.evidence.length, 0); assert.equal(fake.level, '0');
 });
+
+test('an uncredited strand caps the criterion mark at the rounded-up average of the strand levels', () => {
+  const raw = mk('5-6'); raw.criteria[0].mark = 6;
+  raw.criteria[0].strands[1].evidence = [{ quote: 'invented sentence that is not present', block_index: 0 }];
+  const m = assembleMarking(raw, blocks);
+  // levels 5-6, 0, 5-6 -> midpoints 5.5, 0, 5.5 -> avg 3.67 -> ceil 4
+  assert.equal(m.criteria[0].mark, 4);
+  assert.equal(m.criteria[1].mark, 5); // fully evidenced criteria are unaffected
+});
