@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
     const map = stored!.result as Record<string, unknown> & { criteria: never };
     deadline = Date.now() + 125_000;
     const guide = split.overLimit ? wordGuide(split.sections, split.totalCounted) : '';
-    const codes = ['A', 'B', 'C', 'D'];
+    const codes = ['A', 'B', 'C', 'E'];
     // Each criterion is its own short call, run in parallel, so the whole plan stays well inside the 150 s function limit.
     const planCall = async (code: string) => {
       for (let attempt = 0; attempt < 2; attempt++) {

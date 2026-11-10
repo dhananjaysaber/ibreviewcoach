@@ -8522,7 +8522,7 @@ function useMarkMapTotals(ids: string[]): Record<string, { mark: number; maximum
 }
 
 type CriterionMarkView = { mark: number; max: number; why: string; confidence: string };
-const FEEDBACK_CODE: Record<string, string> = { ResearchDesign: 'A', DataAnalysis: 'B', Conclusion: 'C', Evaluation: 'D' };
+const FEEDBACK_CODE: Record<string, string> = { ResearchDesign: 'A', DataAnalysis: 'B', Conclusion: 'C', Evaluation: 'E' };
 function useCriterionMarks(submissionId: string): Record<string, CriterionMarkView> {
   const [marks, setMarks] = useState<Record<string, CriterionMarkView>>({});
   useEffect(() => {

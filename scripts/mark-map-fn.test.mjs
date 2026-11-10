@@ -5,13 +5,13 @@ import { STRANDS } from '../supabase/functions/mark-map/rubric.ts';
 
 const blocks = [{ block_index: 0, page_number: 1, section_title: 'Method', text: 'Participants completed three trials on a 20 m track with a stopwatch.' }];
 const mk = (level = '3-4', quote = 'three trials on a 20 m track') => ({
-  criteria: ['A', 'B', 'C', 'D'].map((code) => ({ code, mark: 3, why_mark: 'Best fit.', confidence: 'high',
+  criteria: ['A', 'B', 'C', 'E'].map((code) => ({ code, mark: 3, why_mark: 'Best fit.', confidence: 'high',
     strands: STRANDS.filter((s) => s.criterion === code).map((s) => ({ id: s.id, level, reason: 'r', missing: 'm', evidence: [{ quote, block_index: 0 }] })) })),
   appendix_check: [{ label: 'Raw data', relevant: true, reason: 'ok' }] });
 
 test('sheet has 11 strands (3+3+3+2)', () => {
   assert.equal(STRANDS.length, 11);
-  assert.deepEqual(['A', 'B', 'C', 'D'].map((c) => STRANDS.filter((s) => s.criterion === c).length), [3, 3, 3, 2]);
+  assert.deepEqual(['A', 'B', 'C', 'E'].map((c) => STRANDS.filter((s) => s.criterion === c).length), [3, 3, 3, 2]);
   assert.ok(STRANDS.every((s) => !/Justification$/.test(s.levels['3-4'])));
 });
 test('valid marking assembles with verified quotes and totals', () => {
@@ -91,7 +91,7 @@ test('trim picks real paragraphs by reason, protects marked evidence, and comput
   assert.equal(assembleTrim({}, body, m, 80), null);
 });
 test('plan needs every strand with steps, example and prompts', () => {
-  const plan = { criteria: ['A', 'B', 'C', 'D'].map((code) => ({ code, summary: 's', quick_wins: ['q'],
+  const plan = { criteria: ['A', 'B', 'C', 'E'].map((code) => ({ code, summary: 's', quick_wins: ['q'],
     strands: STRANDS.filter((s) => s.criterion === code).map((s) => ({ id: s.id, plain_ask: 'a', where_you_are: 'w', steps: ['one', 'two', 'three'], example: 'e', extend_prompts: ['p'], done_when: 'd' })) })) };
   assert.equal(assemblePlan(plan).length, 4);
   plan.criteria[2].strands[0].steps = ['only one'];
@@ -150,4 +150,57 @@ test('an uncredited strand caps the criterion mark at the rounded-up average of 
   // levels 5-6, 0, 5-6 -> midpoints 5.5, 0, 5.5 -> avg 3.67 -> ceil 4
   assert.equal(m.criteria[0].mark, 4);
   assert.equal(m.criteria[1].mark, 5); // fully evidenced criteria are unaffected
+});
+
+const twoBlocks = [
+  { block_index: 0, page_number: 1, section_title: 'Data', text: 'The mean grip strength of the participants was approximately 52.5 kg across the sample.' },
+  { block_index: 1, page_number: 2, section_title: 'Data', text: 'The mean grip strength of 53.0 kg is only the mean of the recorded values.' },
+];
+const withLevels = (levels, extra = {}) => {
+  const raw = mk('3-4', 'mean grip strength of the participants was approximately 52.5 kg');
+  for (const c of raw.criteria) for (const s of c.strands) if (levels[s.id]) s.level = levels[s.id];
+  return { ...raw, ...extra };
+};
+test('the criterion mark cannot round up from the strand average (5-6, 3-4, 3-4 holds A at 4)', () => {
+  const raw = withLevels({ A1: '5-6' }); raw.criteria[0].mark = 5;
+  const m = assembleMarking(raw, twoBlocks);
+  assert.equal(m.criteria[0].mark, 4);
+  assert.ok(m.limits.some((l) => l.kind === 'average' && l.criterion === 'A'));
+});
+test('all strands at the same level may reach the top of that level', () => {
+  const raw = withLevels({ A1: '5-6', A2: '5-6', A3: '5-6' }); raw.criteria[0].mark = 6;
+  assert.equal(assembleMarking(raw, twoBlocks).criteria[0].mark, 6);
+});
+test('a significant contradiction verified in the report caps B1 at 3-4 and is listed as a limit with an action', () => {
+  const raw = withLevels({ B1: '5-6', B2: '5-6', B3: '5-6' }); raw.criteria[1].mark = 6;
+  raw.inconsistencies = [{ strand: 'B1', severity: 'significant', what: 'The mean grip strength is given as two different values.', quote_a: 'approximately 52.5 kg across the sample', quote_b: 'mean grip strength of 53.0 kg is only the mean' }];
+  const m = assembleMarking(raw, twoBlocks);
+  const b = m.criteria[1];
+  assert.equal(b.strands[0].level, '3-4'); assert.match(b.strands[0].reason, /contradicts itself/);
+  assert.equal(b.mark, 5);
+  assert.equal(m.inconsistencies.length, 1);
+  assert.ok(m.limits.some((l) => l.kind === 'inconsistency' && /same value everywhere/.test(l.action)));
+});
+test('a minor slip is recorded with an action but does not cap the level', () => {
+  const raw = withLevels({ B1: '5-6' });
+  raw.inconsistencies = [{ strand: 'B1', severity: 'minor', what: 'Mean grip strength differs by 0.5 kg.', quote_a: 'approximately 52.5 kg across the sample', quote_b: 'mean grip strength of 53.0 kg is only the mean' }];
+  const m = assembleMarking(raw, twoBlocks);
+  assert.equal(m.criteria[1].strands[0].level, '5-6');
+  assert.ok(m.limits.some((l) => l.kind === 'inconsistency_minor'));
+});
+test('a contradiction whose quotes are not in the report is ignored', () => {
+  const raw = withLevels({ B1: '5-6' });
+  raw.inconsistencies = [{ strand: 'B1', severity: 'significant', what: 'Invented clash.', quote_a: 'a sentence that is not in the report at all', quote_b: 'mean grip strength of 53.0 kg is only the mean' }];
+  const m = assembleMarking(raw, twoBlocks);
+  assert.equal(m.inconsistencies.length, 0); assert.equal(m.criteria[1].strands[0].level, '5-6');
+});
+test('every strand has IB checks and Evaluation is criterion E with strands E1 and E2', async () => {
+  const { CHECKS, CRITERIA } = await import('../supabase/functions/mark-map/rubric.ts');
+  assert.ok(STRANDS.every((s) => CHECKS[s.id]?.length >= 1));
+  assert.deepEqual(CRITERIA.map((c) => c.code), ['A', 'B', 'C', 'E']);
+  assert.deepEqual(STRANDS.filter((s) => s.criterion === 'E').map((s) => s.id), ['E1', 'E2']);
+});
+test('client strand sheet mirrors the server sheet word for word', async () => {
+  const { STRAND_DESCRIPTORS } = await import('../src/lib/strandSheet.ts');
+  for (const s of STRANDS) for (const l of ['1-2', '3-4', '5-6']) assert.equal(STRAND_DESCRIPTORS[s.id][l], s.levels[l]);
 });

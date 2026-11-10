@@ -17,7 +17,9 @@ type TrimItem = {
 };
 type Trim = { over_by: number; items: TrimItem[]; enough: boolean; total_saved: number };
 type WordCount = { counted: number; limit: number; over_by: number; cut_at: { heading: string; page: number | null } | null; sections: SectionWords[] };
+type Limit = { kind: string; criterion: string; strand: string | null; detail: string; action: string };
 type MarkMapResult = {
+  limits?: Limit[];
   mark: number; maximum: number; source_complete: boolean; over_word_limit: boolean; word_count: WordCount; trim: Trim | null;
   criteria: CriterionMark[]; appendix_check: { label: string; relevant: boolean; reason: string }[]; data_sufficiency: string; plan: CriterionPlan[] | null;
 };
@@ -97,6 +99,14 @@ export function MarkMapTab({ submissionId, isFreePreview, mode, onScore }: { onS
     </>
   );
 
+  const limitsBox = (code: string) => {
+    const l = (map.limits ?? []).filter((x) => x.criterion === code);
+    if (!l.length) return null;
+    return (
+      <div className="mm-next mm-limits"><span>What is limiting this mark, and what to do</span>
+        <ul>{l.map((x, i) => <li key={i}><b>{x.strand ? x.strand + ': ' : ''}</b>{x.detail}<br /><em>What to do:</em> {x.action}</li>)}</ul></div>
+    );
+  };
   const hero = (
     <header className="mm-hero">
       <div><span>{mode === 'teacher' ? 'Recommended mark' : 'Your IA mark'}</span><strong>{map.mark} / {map.maximum}</strong></div>
@@ -114,6 +124,7 @@ export function MarkMapTab({ submissionId, isFreePreview, mode, onScore }: { onS
           <article className="mm-card" key={c.code}>
             <div className="mm-head"><h3>{c.code} · {c.criterion}</h3><div className="mm-mark"><strong>{c.mark} / {c.max}</strong><small>{c.confidence} confidence</small></div></div>
             <div className="mm-band"><span>Why this mark</span><p>{c.why_mark}</p></div>
+            {limitsBox(c.code)}
             <table className="mm-table"><thead><tr><th>Strand</th><th>Level</th><th>Descriptor that fits</th><th>Evidence in the IA</th><th>Needed for the next level</th></tr></thead>
               <tbody>{c.strands.map((s) => (
                 <tr key={s.id}><td><b>{s.id}</b> {s.name}</td>
@@ -143,6 +154,7 @@ export function MarkMapTab({ submissionId, isFreePreview, mode, onScore }: { onS
           <article className="mm-card" key={c.code}>
             <div className="mm-head"><h3>{c.code} · {c.criterion}</h3><div className="mm-mark"><strong>{c.mark} / {c.max}</strong></div></div>
             <div className="mm-band"><span>Why this mark</span><p>{cp?.summary ?? c.why_mark}</p></div>
+            {limitsBox(c.code)}
             {cp && cp.quick_wins.length > 0 && <div className="mm-next"><span>Quick wins</span><ul>{cp.quick_wins.map((q, i) => <li key={i}>{q}</li>)}</ul></div>}
             {c.strands.map((s) => {
               const p = cp?.strands.find((x) => x.id === s.id);

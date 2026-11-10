@@ -41,3 +41,7 @@
 .mm-trim-item { padding: 12px 14px; border: 1px solid var(--aurora-pane-border); border-radius: 14px; background: #fff; display: grid; gap: 6px; } .mm-trim-remove { border-left: 4px solid var(--aurora-coral-fg); } .mm-trim-shorten { border-left: 4px solid #d4a300; }
 .mm-trim-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .mm-trim-head small { color: #6b6590; } .mm-trim-item p { margin: 0; font-size: .9rem; } .mm-trim-item blockquote { margin: 0; padding: 6px 10px; border-left: 3px solid var(--aurora-violet); background: var(--aurora-field); border-radius: 8px; font-style: italic; font-size: .86rem; }
 .mm-chip-reason { background: var(--aurora-field); color: var(--aurora-violet); }
+
+.mm-limits{border-left:3px solid #b45309;background:#fff7ed}
+.mm-limits li{margin:.4rem 0}
+.mm-limits em{font-style:normal;font-weight:600}

@@ -88,8 +88,9 @@ export type MarkCopyStrand = {
   evidence: { quote: string; page: number | null; section: string | null }[];
 };
 export type MarkCopyCriterion = { code: string; criterion: string; max: number; mark: number; why_mark: string; confidence: string; strands: MarkCopyStrand[] };
+export type MarkCopyLimit = { kind: string; criterion: string; strand: string | null; detail: string; action: string };
 export type MarkCopyMap = {
-  mark: number; maximum: number; criteria: MarkCopyCriterion[]; data_sufficiency: string;
+  mark: number; maximum: number; criteria: MarkCopyCriterion[]; data_sufficiency: string; limits?: MarkCopyLimit[];
   appendix_check: { label: string; relevant: boolean; reason: string }[];
   word_count: { counted: number; limit: number; over_by: number; cut_at: { heading: string; page: number | null } | null };
 };
@@ -113,11 +114,17 @@ export function buildMarkCopyHtml(input: { map: MarkCopyMap; generatedOn: string
       <td>${escapeHtml(s.reason)}${next ? `<p class="next"><b>Not yet at ${escapeHtml(next)}:</b> ${escapeHtml(s.missing)}${nextText ? `<br><i>Descriptor: ${escapeHtml(nextText)}</i>` : ''}</p>` : ''}</td>
     </tr>`;
   }).join('');
+  const limitsFor = (code: string) => {
+    const l = (m.limits ?? []).filter((x) => x.criterion === code);
+    return l.length ? `<div class="lim"><b>What limits this mark</b><ul>${l.map((x) => `<li>${escapeHtml(x.detail)} <i>To fix:</i> ${escapeHtml(x.action)}</li>`).join('')}</ul></div>` : '';
+  };
   const crit = m.criteria.map((c) => `
     <section>
       <h2>${escapeHtml(c.code)} · ${escapeHtml(c.criterion)} <span class="band">${c.mark} / ${c.max} · ${escapeHtml(c.confidence)} confidence</span></h2>
       <p class="why"><b>Moderator justification.</b> ${escapeHtml(c.why_mark)}</p>
       <table><thead><tr><th>Strand</th><th>Level</th><th>Descriptor met</th><th>Evidence in the report</th><th>Moderator justification</th></tr></thead><tbody>${rows(c)}</tbody></table>
+      ${limitsFor(c.code)}
+      <p class="tmark"><b>Teacher's own mark:</b> ______ / ${c.max} &nbsp; <b>Difference from recommended (${c.mark}):</b> ______</p>
     </section>`).join('');
   const wc = m.word_count;
   const words = wc
@@ -134,6 +141,7 @@ h1{font-size:21px;margin:0 0 4px}.sub{color:#555;margin:0 0 18px;font-size:12px}
 h2{font-size:16px;border-bottom:2px solid #1a1a1a;padding-bottom:4px;margin:26px 0 8px}
 .band{float:right;font:600 12px/1.9 system-ui,sans-serif}
 .why{margin:0 0 10px}
+.lim{border-left:3px solid #b45309;background:#fff7ed;padding:6px 10px;margin:10px 0;font-size:12px}.lim ul{margin:4px 0 0 16px;padding:0}.tmark{margin:8px 0 0;font:12px system-ui,sans-serif;border:1px dashed #999;padding:6px 8px}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th,td{border:1px solid #b9b9b9;padding:6px 8px;vertical-align:top;text-align:left}
 th{background:#eee;font:600 11px system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em}
@@ -153,6 +161,6 @@ ${crit}
 <section><h2>Word limit</h2>${words}</section>
 <section><h2>Appendix relevance</h2>${app}</section>
 <section><h2>Data sufficiency</h2><p>${escapeHtml(m.data_sufficiency || 'Not stated.')}</p></section>
-<p class="foot">Every quotation is verified verbatim against the candidate's report. Levels follow the teacher strand sheet; criterion marks are the best-fit whole mark within the strand levels.</p>
+<p class="foot">Every quotation is verified verbatim against the candidate's report. Levels follow the teacher strand sheet; a criterion mark is a whole mark that cannot round up from the average of its strand levels. Where the report contradicts its own figures, the affected strand is held at 3-4.</p>
 </body></html>`;
 }
