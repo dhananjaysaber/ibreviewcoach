@@ -27,3 +27,12 @@ test('appendix reliance is flagged', () => {
   assert.ok(policyFlags([para('Raw data are shown in Appendix B.')]).some((f) => f.id === 'appendix_reliance'));
   assert.ok(!policyFlags([para('Table 1 shows the data.')]).some((f) => f.id === 'appendix_reliance'));
 });
+
+test('DOIs, links and the reference list are not flagged as identifying details', () => {
+  const doi = [{ block_type: 'paragraph', text: 'See https://doi.org/10.1007/s40279-014-0287-2 and doi:10.15294/jpehs.v11i2.18563 for the review.' }];
+  assert.equal(policyFlags(doi).some((f) => f.id === 'school_identifying'), false);
+  const refs = [{ block_type: 'paragraph', text: 'Body text.\nReferences\nPurnama, A. (2024). Universitas Pendidikan Indonesia. 075 123 4567 City Academy' }];
+  assert.equal(policyFlags(refs).some((f) => f.id === 'school_identifying'), false);
+  const real = [{ block_type: 'paragraph', text: 'We tested pupils at Greenfield International School. Email me at a.b@gmail.com or call 98765 43210.' }];
+  assert.equal(policyFlags(real).find((f) => f.id === 'school_identifying')?.evidence.length > 0, true);
+});

@@ -295,7 +295,12 @@ export function assembleTrim(raw: Record<string, unknown>, body: Block[], markin
   }
   if (!picked.length) return null;
   picked.sort((a, b) => (a.serves.length ? 1 : 0) - (b.serves.length ? 1 : 0) || TIER[a.reason] - TIER[b.reason]);
+  // Keep the list usable: stop at the item that gets the report under the limit (plus a small margin), never more than 25.
   let run = 0;
-  const items = picked.map((p) => { run += p.words_saved; return { ...p, running_total: run }; });
+  const items: TrimItem[] = [];
+  for (const p of picked) {
+    if (items.length >= 25 || (run >= overBy && items.length >= 5)) break;
+    run += p.words_saved; items.push({ ...p, running_total: run });
+  }
   return { over_by: overBy, items, enough: run >= overBy, total_saved: run };
 }

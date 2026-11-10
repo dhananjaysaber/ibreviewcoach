@@ -30,7 +30,12 @@ export function countBodyWords(blocks: PolicyBlock[]): number {
 
 const EXPERIMENT = /\b(consum(?:e|ed|ing|ption of)|ingest(?:ed|ing|ion)?|drank|drink(?:ing)?|ate|eating|supplement(?:ed|ation)?|caffeine|energy drink|blood sample|blood sampling|finger[- ]?prick|lactate (?:sample|sampling)|urine|saliva|sweat sample)\b/gi;
 const SCHOOL = /\b(?:[A-Z][A-Za-z'’.-]+\s+){1,4}(?:School|College|Academy|Gymnasium)\b/g;
-const CONTACT = /[\w.+-]+@[\w-]+\.[\w.-]+|\b(?:\+?\d[\d\s-]{8,}\d)\b/g;
+const CONTACT = /[\w.+-]+@[\w-]+\.[\w.-]+|(?<![\w./-])\+?\d{2,5}[\s-]?\d{3,5}[\s-]?\d{3,5}(?![\w./-])/g;
+/** Citations are not identifying details: drop links, DOIs and everything from the reference list onwards before scanning. */
+const scrub = (t: string) => {
+  const refs = t.search(/^\s*(?:references?|bibliography|works cited)\s*$/im);
+  return (refs >= 0 ? t.slice(0, refs) : t).replace(/\b(?:https?:\/\/|www\.)\S+|\bdoi:\s*\S+|\b10\.\d{4,}\/\S+/gi, ' ');
+};
 const APPENDIX = /\b(?:see|in|refer to|shown in|included in)\s+(?:the\s+)?appendix(?:\s+[A-Z0-9]+)?\b/gi;
 
 export function policyFlags(blocks: PolicyBlock[]): PolicyFlag[] {
@@ -54,13 +59,14 @@ export function policyFlags(blocks: PolicyBlock[]): PolicyFlag[] {
       evidence: exp.map((m) => snippet(text, m.index ?? 0, m[0].length)),
     });
   }
-  const ident = [...text.matchAll(SCHOOL), ...text.matchAll(CONTACT)].slice(0, 3);
+  const scanned = scrub(text);
+  const ident = [...scanned.matchAll(SCHOOL), ...scanned.matchAll(CONTACT)].slice(0, 3);
   if (ident.length) {
     flags.push({
       id: 'school_identifying',
       title: 'Possible school-identifying or contact details',
       message: 'Reports sent to the IB should not identify the school or individuals. Check these passages and remove identifying details.',
-      evidence: ident.map((m) => snippet(text, m.index ?? 0, m[0].length)),
+      evidence: ident.map((m) => snippet(scanned, m.index ?? 0, m[0].length)),
     });
   }
   const app = [...text.matchAll(APPENDIX)].slice(0, 3);
