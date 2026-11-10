@@ -50,7 +50,7 @@ export function buildTeacherCopyHtml(input: TeacherCopyInput): string {
     <section>
       <h2>${escapeHtml(s.label)} <span class="band">Indicative band ${escapeHtml(s.indicative_band || 'n/a')}</span></h2>
       <ul>${rows || '<li class="note"><p>No annotations recorded.</p></li>'}</ul>
-      ${s.limiting_clause ? `<p class="limit-line"><strong>Limiting the next band:</strong> ${escapeHtml(s.limiting_clause)}</p>` : ''}
+      ${s.limiting_clause && !s.limiting_clause.includes("[object Object]") ? `<p class="limit-line"><strong>Limiting the next band:</strong> ${escapeHtml(s.limiting_clause)}</p>` : ''}
     </section>`;
   }).join('');
   const compliance = input.notes.filter((n) => n.kind === 'compliance' && !summaries.some((s) => s.criterion_code === n.criterion_code));

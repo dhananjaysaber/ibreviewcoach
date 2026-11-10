@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { templateAdvice } from '../lib/templateAdvice';
 import { NOT_REACHED, STRAND_DESCRIPTORS } from '../lib/strandSheet';
 import type { WorkshopFinding } from '../lib/sectionMap';
 import './mark-map.css';
@@ -26,7 +25,7 @@ type MarkMapResult = {
 const where = (page: number | null, section: string | null) => [section, page ? 'page ' + page : ''].filter(Boolean).join(' · ') || 'whole document';
 const status = (level: string) => (level === '5-6' ? { k: 'strong', t: 'Strong' } : level === '3-4' ? { k: 'mid', t: 'Getting there' } : { k: 'low', t: 'Needs work' });
 
-export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { submissionId: string; findings: WorkshopFinding[]; isFreePreview: boolean; mode: 'student' | 'teacher' }) {
+export function MarkMapTab({ submissionId, isFreePreview, mode, onScore }: { onScore?: (s: { mark: number; maximum: number } | null) => void; findings?: WorkshopFinding[]; submissionId: string; isFreePreview: boolean; mode: 'student' | 'teacher' }) {
   const [map, setMap] = useState<MarkMapResult | null>(null);
   const [ready, setReady] = useState(false);
   const [checked, setChecked] = useState(false);
@@ -62,6 +61,8 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
       if (d.map) { setMap(d.map); if (!d.map.plan) void makePlan(); else setStep(''); } else setStep('');
     } catch (e) { setError(e instanceof Error ? e.message : 'The marking could not be prepared. Try again.'); setStep(''); }
   }
+
+  useEffect(() => { onScore?.(map ? { mark: map.mark, maximum: map.maximum } : null); }, [map, onScore]);
 
   const planBy = useMemo(() => new Map((map?.plan ?? []).map((p) => [p.code, p])), [map]);
 
@@ -101,7 +102,6 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
       <p className="mm-note">Best-fit marking against the teacher strand sheet, using only evidence in the report body. Whole marks only. Marks are indicative and non-binding.{map.data_sufficiency ? ' Data sufficiency: ' + map.data_sufficiency : ''}</p>
       {notices}
       {map.criteria.map((c) => {
-        const advice = templateAdvice(c.criterion, findings);
         return (
           <article className="mm-card" key={c.code}>
             <div className="mm-head"><h3>{c.code} · {c.criterion}</h3><div className="mm-mark"><strong>{c.mark} / {c.max}</strong><small>{c.confidence} confidence</small></div></div>
@@ -114,9 +114,6 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
                   <td>{s.evidence.length ? s.evidence.map((e, j) => <blockquote key={j}>{e.quote}<small>{where(e.page, e.section)}</small></blockquote>) : <span className="mm-sub">{s.reason}</span>}</td>
                   <td>{s.level === '5-6' ? <span className="mm-sub">Top level reached</span> : s.missing}</td></tr>
               ))}</tbody></table>
-            {advice.length > 0 && (
-              <div className="mm-next mm-template"><span>Ideal IA template suggestions (advice only, not part of the mark)</span>
-                <ul>{advice.map((a, i) => <li key={i}><b>{a.section}:</b> {a.title}</li>)}</ul></div>)}
           </article>
         );
       })}
@@ -134,7 +131,6 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
       {error && <p role="alert" className="sx-error">{error}</p>}
       {map.criteria.map((c) => {
         const cp = planBy.get(c.code);
-        const advice = templateAdvice(c.criterion, findings);
         return (
           <article className="mm-card" key={c.code}>
             <div className="mm-head"><h3>{c.code} · {c.criterion}</h3><div className="mm-mark"><strong>{c.mark} / {c.max}</strong></div></div>
@@ -161,9 +157,6 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
                 </details>
               );
             })}
-            {advice.length > 0 && (
-              <div className="mm-next mm-template"><span>Ideal IA template suggestions (advice only)</span>
-                <ul>{advice.map((a, i) => <li key={i}><b>{a.section}:</b> {a.title}</li>)}</ul></div>)}
           </article>
         );
       })}

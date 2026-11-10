@@ -5273,6 +5273,8 @@ function CompletionWorkspace({
   const [annotationShareOpen, setAnnotationShareOpen] = useState(false);
   const [previousDraft, setPreviousDraft] = useState<DraftSnapshot | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [markMapScore, setMarkMapScore] = useState<{ mark: number; maximum: number } | null>(null);
+  useEffect(() => { setMarkMapScore(null); }, [submission?.id]);
   const [comparisonMessage, setComparisonMessage] = useState('');
 
   const accessMode =
@@ -5679,10 +5681,12 @@ function CompletionWorkspace({
             <div>
               <span>Indicative range</span>
               <strong>
-                {completion?.overallMarkRange
+                {markMapScore
+                  ? `${markMapScore.mark} / ${markMapScore.maximum}`
+                  : completion?.overallMarkRange
                   ? `${completion.overallMarkRange[0]}–${completion.overallMarkRange[1]}`
                   : 'Ready'}
-                {completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
+                {!markMapScore && completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
               </strong>
             </div>
             <div>
@@ -5743,7 +5747,6 @@ function CompletionWorkspace({
                 ['detailed', BookOpen, 'Feedback', isFreeReview ? 'First criterion preview' : 'By criterion'],
                 ['workshop', ListChecks, 'Section guide', 'All 9 IA sections'],
                 ['plan', ClipboardList, 'Progress plan', isFreeReview ? 'Locked' : 'Next steps'],
-                ['comparison', Layers3, 'Compare drafts', 'Changes and bands'],
               ] as const).map(([id, Icon, label, hint]) => (
                 <button
                   key={id}
@@ -5842,6 +5845,7 @@ function CompletionWorkspace({
 
                 {reviewSpace === 'teacher' && activeTab === 'markmap' && (
                   <MarkMapTab
+                    onScore={setMarkMapScore}
                     mode="teacher"
                     submissionId={submission?.id ?? ''}
                     findings={reviewData.findings}
@@ -5850,6 +5854,7 @@ function CompletionWorkspace({
                 )}
                 {activeTab === 'marks' && (
                   <MarkMapTab
+                    onScore={setMarkMapScore}
                     mode="student"
                     submissionId={submission?.id ?? ''}
                     findings={reviewData.findings}

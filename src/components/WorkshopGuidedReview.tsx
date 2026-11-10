@@ -34,7 +34,6 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
  const strengths=mapped.filter(x=>x.sectionId===sectionId&&x.finding.finding_type==='strength');
  const audit=verified[sectionId];
  const view=rubricView(section.criterion,criteria.find(x=>norm(x.criterion_name)===norm(section.criterion)||norm(x.criterion)===norm(section.criterion))?.indicative_mark_range??null);
- const official=criteria.find(x=>norm(x.criterion_name)===norm(section.criterion)||norm(x.criterion)===norm(section.criterion));
  useEffect(()=>{setVerified({});setMessage('')},[submissionId]);
  useEffect(()=>{
   if(freePreview||!submissionId||!findings.length){setDone(new Set());return;}
@@ -137,7 +136,6 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
    <header className="sx-head">
     <div><span className="sx-eyebrow">{section.criterion} · Section {sectionNo} of {SEHS_WORKSHOP_SECTIONS.length}{pageHit?' · Page '+pageHit[1]:''}</span><h3>{section.name.replace(/^\d+\s*[·.\-]\s*/,'')}</h3></div>
     <div className="sx-head-side"><span className={'sx-chip sx-chip-'+status.k}>{status.t}</span>
-     {official?.indicative_mark_range&&<small>Indicative IB range {official.indicative_mark_range.join('–')} of {official.criterion_max_marks??6} for {section.criterion}</small>}
      <small>{doneTotal>0?doneCount+' of '+doneTotal+' fixes ticked':'All clear: nothing flagged'}</small></div>
    </header>
 
@@ -145,7 +143,7 @@ export function WorkshopGuidedReview({findings,criteria,freePreview=false,submis
     <div className="sx-group-head"><h4><span className="sx-mark sx-mark-todo">!</span>Fix these{issues.length>0?' ('+(issues.length-doneCount)+' left)':''}</h4>
      {plansReady&&needPlan.length>0&&!freePreview&&<button className="sx-btn" type="button" onClick={()=>void makePlans(needPlan)} disabled={planBusy}>{planBusy?'Making your plan…':'Make a clear step-by-step plan'}</button>}</div>
     {planMsg&&<p role="alert" className="sx-error">{planMsg}</p>}
-    {issues.length===0&&<p className="sx-muted">{auditChecks.length?'Nothing flagged here. Open the green items below to see why.':'No specific problems are mapped to this section. That does not mean it is perfect. Open the full check at the bottom to compare it with the Ideal IA template.'}</p>}
+    {issues.length===0&&<p className="sx-muted">{auditChecks.length?'Nothing flagged here. Open the green items below to see why.':'The review did not flag a specific problem in this section. The steps that decide your mark for '+section.criterion+' are in Marks & fix plan: open the strands under that criterion for exactly what to do next.'}</p>}
     {issues.map(x=>{const f=x.finding;const pl=plans[f.id];const isDone=done.has(f.id);const quote=quoteOf(x);const ex=x.check?CHECK_EXPLAINERS[x.check.id]:undefined;const example=pl?.example||ex?.example||x.check?.example||'';
      return <details key={f.id} className={'sx-row '+(isDone?'sx-row-done':'sx-row-todo')}>
       <summary><span className={'sx-mark '+(isDone?'sx-mark-ok':'sx-mark-todo')} aria-hidden="true">{isDone?'✓':'!'}</span>

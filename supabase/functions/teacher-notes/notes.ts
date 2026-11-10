@@ -142,7 +142,10 @@ export function summariseCriteria(
     const code = String(row?.criterion ?? '');
     if (!isCriterionCode(code)) continue;
     const gap = row.next_band_gap as { unmet_clauses?: unknown } | undefined;
-    const first = Array.isArray(gap?.unmet_clauses) ? String(gap!.unmet_clauses![0] ?? '') : '';
+    const c0 = Array.isArray(gap?.unmet_clauses) ? (gap!.unmet_clauses as unknown[])[0] : undefined;
+    const first = typeof c0 === 'string' ? c0 : c0 && typeof c0 === 'object'
+      ? String((c0 as Record<string, unknown>).text ?? (c0 as Record<string, unknown>).clause ?? (c0 as Record<string, unknown>).descriptor ?? (c0 as Record<string, unknown>).requirement ?? '')
+      : '';
     out.push({
       criterion_code: code,
       label: CRITERION_LABEL[code].long,
