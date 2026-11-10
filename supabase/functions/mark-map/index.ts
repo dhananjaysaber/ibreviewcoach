@@ -21,8 +21,10 @@ const reply = (status: number, payload: unknown) => new Response(JSON.stringify(
 const isUuid = (s: unknown): s is string =>
   typeof s === 'string' && /^[\da-f]{8}-[\da-f]{4}-[1-8][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(s);
 
+let deadline = 0;
 async function callClaude(apiKey: string, system: string, user: string, maxTokens: number): Promise<Record<string, unknown> | null> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
+    signal: AbortSignal.timeout(Math.max(20_000, deadline - Date.now())),
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, temperature: 0, system, messages: [{ role: 'user', content: user }] }),
@@ -84,9 +86,9 @@ Deno.serve(async (req) => {
     if (action === 'generate') {
       let marking: ReturnType<typeof assembleMarking> = null;
       // A second pass only if some strand lost credit for lacking a verifiable quotation; keep the better of the two.
-      const t0 = Date.now();
+      const t0 = Date.now(); deadline = t0 + 125_000;
       for (let attempt = 0; attempt < 2; attempt++) {
-        if (attempt > 0 && Date.now() - t0 > 55_000) break; // a second full pass would risk the 150 s function limit
+        if (attempt > 0 && Date.now() - t0 > 40_000) break; // a second full pass would risk the 150 s function limit
         const raw = await callClaude(apiKey, MARK_SYSTEM, buildMarkPrompt(doc, appendixDigest(split.appendix), split), 9000);
         const got = raw ? assembleMarking(raw, split.body) : null;
         if (got && (!marking || got.ungrounded_strands < marking.ungrounded_strands)) marking = got;
@@ -103,6 +105,7 @@ Deno.serve(async (req) => {
       return reply(200, { map, created_at: new Date().toISOString() });
     }
     const map = stored!.result as Record<string, unknown> & { criteria: never };
+    deadline = Date.now() + 125_000;
     const guide = split.overLimit ? wordGuide(split.sections, split.totalCounted) : '';
     const codes = ['A', 'B', 'C', 'D'];
     // Each criterion is its own short call, run in parallel, so the whole plan stays well inside the 150 s function limit.
