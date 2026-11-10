@@ -331,6 +331,7 @@ function App() {
   });
 
   const [isViewingSavedReport, setIsViewingSavedReport] = useState(false);
+  const signingOutHereRef = useRef(false);
 
   const [selectedCreditPack, setSelectedCreditPack] =
     useState<PayPalCreditPack | null>(null);
@@ -418,6 +419,26 @@ function App() {
       }
 
       setSession(nextSession);
+
+      if (event === 'SIGNED_OUT' && !signingOutHereRef.current) {
+        // Signed out from another browser tab: leave the report area at once
+        // and ask the person to sign in again.
+        clearSavedCompletedReview();
+        clearAccountConversionReview();
+        setSelectedFile(null);
+        setSubmission(null);
+        setPipelineProgress(null);
+        setCompletion(null);
+        setIsAdmin(false);
+        setIsViewingSavedReport(false);
+        setAccountSection('dashboard');
+        setMainView('landing');
+        window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+        replaceAppRoute('/');
+        setAuthError('');
+        setAuthMessage('You were signed out. Sign in again to continue.');
+        setAuthPanelMode('sign-in');
+      }
 
       if (event === 'PASSWORD_RECOVERY') {
         setAuthPanelMode('reset-password');
@@ -1794,6 +1815,7 @@ function App() {
     setAuthBusy(true);
     setAuthError('');
     setAuthMessage('');
+    signingOutHereRef.current = true;
 
     try {
       await signOutAccount();
@@ -1826,6 +1848,7 @@ function App() {
     } catch (error) {
       setAuthError(getErrorMessage(error));
     } finally {
+      signingOutHereRef.current = false;
       setAuthBusy(false);
     }
   }
@@ -5363,9 +5386,15 @@ function CompletionWorkspace({
       } catch (error) {
         console.error('Detailed review could not be loaded', error);
 
+        const { data: sessionCheck } = await supabase.auth.getSession();
+        const signedOut =
+          !sessionCheck.session || sessionCheck.session.user.is_anonymous;
+
         if (active) {
           setReviewError(
-            'The saved detailed review could not be displayed. Please try loading it again.'
+            signedOut
+              ? SESSION_ENDED_MESSAGE
+              : 'The saved detailed review could not be displayed. Please try loading it again.'
           );
           setReviewLoadState('error');
         }
@@ -6832,7 +6861,34 @@ type ReviewDataErrorProps = {
   onRetry: () => void;
 };
 
+const SESSION_ENDED_MESSAGE =
+  'Your session has ended. Sign in again to see this review.';
+
 function ReviewDataError({ message, onRetry }: ReviewDataErrorProps) {
+  const sessionEnded = message === SESSION_ENDED_MESSAGE;
+
+  if (sessionEnded) {
+    return (
+      <div className="review-data-state review-data-state-error" role="alert">
+        <AlertCircle aria-hidden="true" />
+
+        <div>
+          <strong>You are signed out</strong>
+          <span>{message}</span>
+
+          <button
+            className="retry-button"
+            type="button"
+            onClick={() => window.location.assign('/')}
+          >
+            <LogIn aria-hidden="true" />
+            Sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="review-data-state review-data-state-error" role="alert">
       <AlertCircle aria-hidden="true" />
