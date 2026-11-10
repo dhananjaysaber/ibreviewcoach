@@ -163,3 +163,39 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 
 .landing-main, .landing-page, main.landing-main { background: var(--p-ivory) !important; }
 .landing-main .landing-section-heading h2, .landing-main .landing-limits-card h2 { letter-spacing: -0.012em !important; }
+
+/* ---- Split-screen sign-in (matches the Login board) ---- */
+.auth-panel:not(.auth-panel-account) {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 5fr) minmax(320px, 6fr) !important;
+  align-content: start;
+  width: min(940px, calc(100vw - 32px)) !important;
+  max-width: none !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 22px !important;
+  background: #fff !important;
+  column-gap: 0;
+}
+.auth-panel:not(.auth-panel-account) > :not(.auth-aside):not(.auth-close-button) { grid-column: 2; margin-left: clamp(24px, 4vw, 48px); margin-right: clamp(24px, 4vw, 48px); }
+.auth-panel:not(.auth-panel-account) > .auth-brand-mark { margin-top: clamp(28px, 5vw, 48px); }
+.auth-panel:not(.auth-panel-account) > :last-child { margin-bottom: clamp(24px, 4vw, 44px); }
+.auth-panel .auth-close-button { z-index: 3; }
+.auth-aside {
+  grid-column: 1; grid-row: 1 / span 40;
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 14px;
+  padding: clamp(28px, 4vw, 44px);
+  color: #F6F3EC;
+  background: radial-gradient(120% 80% at 0% 0%, rgba(139,92,246,.45), transparent 60%), radial-gradient(90% 70% at 100% 100%, rgba(91,95,239,.4), transparent 60%), #080C1C;
+}
+.auth-aside-brand { display: inline-flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono Variable', monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #E7C16E; position: absolute; top: 28px; }
+.auth-aside-brand svg { width: 18px; height: 18px; }
+.auth-aside h2 { font-family: 'Fraunces Variable', serif; font-size: clamp(26px, 3vw, 36px); line-height: 1.12; margin: 0; color: #fff; font-weight: 500; }
+.auth-aside p { margin: 0; color: rgba(246,243,236,.72); font-size: 14px; line-height: 1.6; }
+.auth-aside ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 8px; font-size: 13.5px; color: rgba(246,243,236,.85); }
+.auth-aside li::before { content: '✓'; color: #E7C16E; margin-right: 10px; }
+@media (max-width: 720px) {
+  .auth-panel:not(.auth-panel-account) { grid-template-columns: 1fr !important; }
+  .auth-aside { display: none; }
+  .auth-panel:not(.auth-panel-account) > :not(.auth-aside):not(.auth-close-button) { grid-column: 1; }
+}

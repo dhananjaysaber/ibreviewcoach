@@ -2519,6 +2519,18 @@ function AuthPanel({
         aria-modal="true"
         aria-labelledby="auth-panel-title"
       >
+        {mode !== 'account' && (
+          <aside className="auth-aside" aria-hidden="true">
+            <span className="auth-aside-brand"><GraduationCap />IB IA Review Coach</span>
+            <h2>{mode === 'sign-in' || mode === 'forgot-password' ? 'Welcome back. Your plan is where you left it.' : 'Your IA, marked and coached strand by strand.'}</h2>
+            <p>Every report you upload is saved with its marks, your fix plan and your progress between drafts.</p>
+            <ul>
+              <li>Marked against the IB SEHS criteria</li>
+              <li>Step-by-step fixes, never ghost-written text</li>
+              <li>Private to your account</li>
+            </ul>
+          </aside>
+        )}
         {!requiresCompletion && (
           <button
             className="auth-close-button"
