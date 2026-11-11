@@ -263,7 +263,7 @@ The STUDENT part is coaching, not authoring: never write sentences, numbers or w
 For EVERY strand return:
 - plain_ask: what this strand is asking for, in one simple sentence.
 - where_you_are: 2 sentences on what they already do (point to the section) and what is missing.
-- steps: 3 to 6 concrete actions, each starting with a verb, saying where in the IA to do it, using their own variables and sample. Cover every item listed as holding the mark down and every missing template check for the strand. Aim at the next level up.
+- steps: 3 to 6 concrete actions, each starting with a verb, saying where in the IA to do it, using their own variables and sample. Cover every item listed as holding the mark down, except the 'Moderator template' items, which are shown to the student separately with their own fix: do not repeat those. Aim your steps at the words of the next level's descriptor and at the quality of what is already written. Aim at the next level up.
 - done_when: one line they can use to check the strand is finished.
 - coach: for the TEACHER only, and only if the strand is below 5-6 (otherwise null): {"need":"what the descriptor needs, in plain words so it cannot be misread","miss":"what is missing in this report, quoting the weak passage in single quotes","ask":["2 or 3 questions or directions the teacher can use in conversation"],"strong":"what a stronger version contains, described by its features","direction":"2 or 3 sentences on this student's own topic that show the teacher what to steer the student towards, spoken or as prompts, written so the teacher guides and does not hand over wording"}.
 Rules: do not tell students to match decimals or to carry uncertainties forward; mark positively; the report body counts, not appendices; stay within the 3,200-word limit by saying what to shorten when relevant; the moderator template checks are required, not optional.
@@ -271,24 +271,27 @@ Also per criterion: summary (2 sentences on why they got this mark and the singl
 Use single quotes inside strings. Return JSON ONLY for the ONE criterion you are asked about: {"code":"RD","summary":"...","quick_wins":["..."],"strands":[{"id":"RD1","plain_ask":"...","where_you_are":"...","steps":["..."],"done_when":"...","coach":{"need":"...","miss":"...","ask":["..."],"strong":"...","direction":"..."}}]}`;
 
 export const ANNOTATE_SYSTEM = `You are the internal assessor writing margin comments on an IB SEHS IA for the external moderator. Each comment is attached to ONE highlighted passage of the report and must be about that passage only.
-For every numbered passage you are given, write one comment of 25 to 45 words in the third person ('The candidate...') with three parts in flowing prose, not labelled:
-1. EVIDENCE: what this passage actually contains, naming specifics from it (the variables, tool, sample, value, table, source or claim it makes).
-2. ANALYSIS: what that achieves against the strand, in positive terms, using the strand's own descriptor ideas (for example 'so the question is set in a specific context').
-3. GAP, only if the level is below 5-6: one diplomatic clause saying what would take this passage further, phrased as an opportunity ('would be stronger if...', 'could go further by...'). Keep the gap about THIS passage. If the passage fully meets the strand, say what makes it secure and add no gap.
-Start the comment with the strand code and level, for example 'RD1 3-4:'.
-Do NOT mention: word counts or word limits, the number of sources in the report, source verification, template checks, other sections of the report, marks, or what the student 'should' do. Do not repeat the descriptor wording word for word, and do not use 'unverifiable'. Use single quotes inside strings.
-Return JSON ONLY: {"comments":[{"id":"RD1","n":1,"text":"RD1 3-4: ..."}]}  where n is the passage number given for that strand (use n 0 for a strand with no passage).`;
+You are given, for each strand, the descriptor wording and the IB moderator's template expectations for that strand, each marked SHOWN or NOT SHOWN in the report as a whole.
+For every numbered passage, write one comment of 35 to 60 words in the third person ('The candidate...'), in flowing prose, in this order:
+1. TEMPLATE: briefly name which template expectations this passage answers, with specifics from it (the variables, tool, sample, value, table, source or claim). Mention only expectations this passage actually addresses.
+2. RUBRIC: in positive terms, say what that achieves against the strand's descriptor ideas, so the level is justified (for example 'so the considerations are described rather than explained').
+3. GAP, only if the level is below 5-6: one diplomatic clause that names a template expectation marked NOT SHOWN that belongs to this passage's section, or what would take this passage to the next level, phrased as an opportunity ('would be stronger if...', 'could go further by...'). Never invent a gap for something the passage already shows. If the passage fully meets the strand, say what makes it secure and add no gap.
+Start the comment with the strand code and level, for example 'RD2 3-4:'.
+Do NOT mention: word counts or word limits, the number of sources, source verification, other sections of the report, marks, or what the student 'should' do. Do not repeat the descriptor wording word for word. Use single quotes inside strings.
+Return JSON ONLY: {"comments":[{"id":"RD2","n":1,"text":"RD2 3-4: ..."}]}  where n is the passage number given for that strand (use n 0 for a strand with no passage).`;
 
 export type AnnotationSet = Record<string, string[]>;
 /** One prompt line group per strand, with its numbered passages. Only what each passage shows is supplied, so comments stay specific to it. */
 export function buildAnnotatePrompt(m: Marking): string {
   return m.criteria.flatMap((c) => c.strands.map((s) => {
     const def = STRANDS.find((x) => x.id === s.id);
+    const tpl = TEMPLATE_CHECKS.filter((t) => t.strand === s.id && t.id !== 'bg_sources' && t.id !== 'lit_new');
     const next = s.level === '0' ? def?.levels['1-2'] : s.level === '1-2' ? def?.levels['3-4'] : s.level === '3-4' ? def?.levels['5-6'] : '';
     return `STRAND ${s.id} ${s.name}: level ${s.level}.\n` +
       (s.level !== '0' && def?.levels[s.level] ? `  Level ${s.level} descriptor: ${def.levels[s.level]}\n` : '') +
       (next ? `  Next level up: ${next}\n` : '') +
       `  Assessor's reasoning: ${s.reason}\n  Missing for the next level: ${s.missing || 'n/a'}\n` +
+      (tpl.length ? `  Template expectations:\n${tpl.map((t) => `    - ${t.text} [${s.failed_checks.includes(t.id) ? 'NOT SHOWN' : 'SHOWN'}]`).join('\n')}\n` : '') +
       (s.evidence.length ? s.evidence.map((e, i) => `  PASSAGE ${i + 1} (${e.section ?? 'report'}, page ${e.page ?? '?'}): '${e.quote}'`).join('\n') : '  No passage supports this strand (use n 0).');
   })).join('\n\n');
 }
@@ -322,7 +325,7 @@ export function wordGuide(sections: SectionWords[], totalCounted: number): strin
 export function buildPlanPrompt(m: Marking, doc: string, guide = '', only?: string): string {
   const lines = m.criteria.filter((c) => !only || c.code === only).map((c) => `Criterion ${c.code} ${c.criterion}: ${c.mark}/${c.max}. ${c.why_mark}\n` + c.strands.map((s) =>
     `  ${s.id} ${s.name}: level ${s.level}. ${s.reason} Missing for next level: ${s.missing}`).join('\n')).join('\n');
-  const lim = (m.limits ?? []).filter((x) => !only || x.criterion === only);
+  const lim = (m.limits ?? []).filter((x) => (!only || x.criterion === only) && x.kind !== 'template');
   const limText = lim.length ? `\n\nWhat is holding the mark down (build the steps so each of these is fixed):\n` + lim.map((x) => `- ${x.strand ?? x.criterion}: ${x.detail}`).join('\n') : '';
   return `${only ? `Write the plan for criterion ${only} only.\n\n` : ''}Marking result:\n${lines}${limText}\n\nIA text:\n${doc}${guide}`;
 }

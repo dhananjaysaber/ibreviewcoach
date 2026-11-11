@@ -84,6 +84,7 @@ function build(){
  document.body.setAttribute('data-ready','1');
 }
 function layoutIn(doc,txt,cc,svg,limit,reorder){
+ var sx=window.pageXOffset,sy=window.pageYOffset;
  var boxes=[].slice.call(cc.querySelectorAll('.cb'));
  cc.style.height='';
  var dr=doc.getBoundingClientRect(),unp=txt.querySelector('.unp'),unTop=unp?unp.getBoundingClientRect().top:dr.bottom;
@@ -110,6 +111,7 @@ function layoutIn(doc,txt,cc,svg,limit,reorder){
   var d='M'+(bx-4)+' '+y0+' L'+bx+' '+y0+' L'+bx+' '+y1+' L'+(bx-4)+' '+y1+' M'+bx+' '+ym+' L'+vx+' '+ym+' L'+vx+' '+by+' L'+bl+' '+by;
   var p=document.createElementNS(SVGNS,'path');p.setAttribute('d',d);p.setAttribute('fill','none');p.setAttribute('stroke','#B03A3A');p.setAttribute('stroke-width','0.8');svg.appendChild(p);
  });
+ if(reorder&&(window.pageXOffset!==sx||window.pageYOffset!==sy))window.scrollTo(sx,sy);
 }
 function layout(){layoutIn(doc,txt,cc,document.getElementById('ln'),0,true);}
 /* Printing: the report is split into A4 pages here, so every page carries its own comment margin and pointers that line up with the text. */
@@ -164,7 +166,7 @@ function addComment(){
  try{r.surroundContents(m);}catch(e){m.appendChild(r.extractContents());r.insertNode(m);}
  sel.removeAllRanges();
  var b=makeBox({label:'Teacher',text:''},id);cc.appendChild(b);layout();
- var s=b.querySelector('.tx');s.focus();
+ var s=b.querySelector('.tx');try{s.focus({preventScroll:true});}catch(e){s.focus();}if(b.scrollIntoView)b.scrollIntoView({block:'nearest'});
 }
 function toggleHF(id,btn,word){
  var h=document.getElementById(id),on=h.classList.contains('on');

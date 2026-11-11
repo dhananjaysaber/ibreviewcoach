@@ -130,3 +130,5 @@
   .ws .w-sheet{box-shadow:none;border:0;padding:0;max-width:none}
   
 }
+
+.ws .w-tpl{display:inline-block;font:700 .6rem var(--w-mono);text-transform:uppercase;letter-spacing:.05em;background:#FFF3C4;color:#7A5200;border-radius:4px;padding:1px 5px;margin-right:6px;vertical-align:1px}

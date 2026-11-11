@@ -240,11 +240,14 @@ test('numbered citations are counted and word budgets over the limit become limi
   const l = wordLimits([{ heading: 'Background', words: 812, table_words: 0, budget: { label: 'Background information', max: 750 } }, { heading: 'Hypothesis', words: 90, table_words: 0, budget: { label: 'Alternate hypothesis', max: 120 } }]);
   assert.equal(l.length, 1); assert.match(l[0].detail, /812/);
 });
-test('annotation comments are validated per strand', () => {
-  const ok = { comments: STRANDS.map((s) => ({ id: s.id, text: s.id + ' 3-4: controls named, confounders not mitigated.' })) };
-  assert.equal(Object.keys(assembleAnnotations(ok)).length, 11);
-  assert.equal(assembleAnnotations({ comments: [{ id: 'RD1', text: 'x' }] }), null);
-  assert.equal(assembleAnnotations(null), null);
+test('annotation comments are kept per passage and validated per strand', () => {
+  const m = { criteria: [{ strands: STRANDS.map((s) => ({ id: s.id, level: '3-4', evidence: [{ quote: 'a' }, { quote: 'b' }] })) }] };
+  const ok = { comments: STRANDS.flatMap((s) => [{ id: s.id, n: 1, text: s.id + ' 3-4: first passage.' }, { id: s.id, n: 2, text: s.id + ' 3-4: second passage.' }]) };
+  const got = assembleAnnotations(ok, m);
+  assert.equal(Object.keys(got).length, 11);
+  assert.deepEqual(got.RD1, ['RD1 3-4: first passage.', 'RD1 3-4: second passage.']);
+  assert.equal(assembleAnnotations({ comments: [{ id: 'RD1', n: 1, text: 'x' }] }, m), null);
+  assert.equal(assembleAnnotations(null, m), null);
 });
 
 test('client template checks mirror the server checks exactly', async () => {

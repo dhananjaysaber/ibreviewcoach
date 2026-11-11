@@ -47,17 +47,26 @@ export function sectionView(m: MarkMap, secId: string) {
   const checks: (TemplateCheck & { met: boolean })[] = TEMPLATE_CHECKS.filter((t) => t.section === secId).map((t) => ({ ...t, met: !(strandOf(m, t.strand)?.failed_checks ?? []).includes(t.id) }));
   const limits = (m.limits ?? []).filter((l) => l.strand && sec.strands.includes(l.strand) && (l.kind !== 'template' || TEMPLATE_CHECKS.some((t) => t.section === secId && l.detail.includes(t.text))) && (l.kind !== 'words' || secId === 'bg'));
   const avg = (m.limits ?? []).filter((l) => l.kind === 'average' && l.criterion && sec.strands.some((id) => id.startsWith(l.criterion)) && secId === criterionHome(l.criterion));
-  const did = strands.flatMap((s) => s.evidence.slice(0, 2).map((e) => ({ id: s.id, quote: e.quote, where: [e.section, e.page ? 'page ' + e.page : ''].filter(Boolean).join(', ') })));
-  const lacking = [...strands.filter((s) => s.level !== '5-6' && s.missing).map((s) => ({ id: s.id, text: s.missing })), ...checks.filter((c) => !c.met).map((c) => ({ id: c.strand, text: c.text }))];
-  const fixes = strands.flatMap((s) => {
-    const p = planOf(m, s.id);
-    return (p?.steps ?? (s.level === '5-6' ? [] : [s.missing])).filter(Boolean).map((t, i) => ({ key: `${s.id}-${i}`, id: s.id, text: t }));
+  // A strand can span several sections (RD1 covers the question, background and hypothesis). Its evidence and rubric steps are shown where they belong, not repeated in each.
+  const home = (id: string) => STRAND_HOME[id] === secId;
+  const did = strands.flatMap((s) => {
+    const here = s.evidence.filter((e) => !!e.section && sec.match.test(e.section));
+    return (here.length ? here : home(s.id) ? s.evidence : []).slice(0, 2).map((e) => ({ id: s.id, quote: e.quote, where: [e.section, e.page ? 'page ' + e.page : ''].filter(Boolean).join(', ') }));
   });
-  const done = strands.map((s) => planOf(m, s.id)?.done_when).filter(Boolean) as string[];
+  const lacking = [...strands.filter((s) => home(s.id) && s.level !== '5-6' && s.missing).map((s) => ({ id: s.id, text: s.missing })), ...checks.filter((c) => !c.met).map((c) => ({ id: c.strand, text: c.text }))];
+  const tplFixes = checks.filter((c) => !c.met).map((c) => ({ key: `tpl-${c.id}`, id: c.strand, text: c.fix, tpl: true }));
+  const ruleFixes = strands.filter((s) => home(s.id)).flatMap((s) => {
+    const p = planOf(m, s.id);
+    return (p?.steps ?? (s.level === '5-6' ? [] : [s.missing])).filter(Boolean).map((t, i) => ({ key: `${s.id}-${i}`, id: s.id, text: t, tpl: false }));
+  });
+  const fixes = [...tplFixes, ...ruleFixes];
+  const done = strands.filter((s) => home(s.id)).map((s) => planOf(m, s.id)?.done_when).filter(Boolean) as string[];
   const worst = strands.some((s) => s.level === '0' || s.level === '1-2') || checks.filter((c) => !c.met).length >= 2;
   const status: 'red' | 'amber' | 'green' = worst ? 'red' : strands.every((s) => s.level === '5-6') && checks.every((c) => c.met) ? 'green' : 'amber';
   return { sec, strands, checks, limits: [...limits, ...avg], did, lacking, fixes, done, status };
 }
+/** The section where each strand's rubric steps are shown. */
+const STRAND_HOME: Record<string, string> = { RD1: 'bg', RD2: 'va', RD3: 'me', DA1: 'da', DA2: 'da', DA3: 'da', CO1: 'co', CO2: 'co', CO3: 'co', EV1: 'ev', EV2: 'ev' };
 const criterionHome = (code: string) => ({ RD: 'bg', DA: 'da', CO: 'co', EV: 'ev' } as Record<string, string>)[code];
 
 export { STRAND_NAMES };

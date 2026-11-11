@@ -63,7 +63,7 @@ export function StudentWorkspace({ mm, submissionId, isFreePreview, ticks, setTi
               {v.fixes.length ? v.fixes.map((f) => (
                 <div className="w-fix" key={f.key}>
                   <input type="checkbox" id={'fx-' + f.key + v.sec.id} checked={!!ticks[f.key]} onChange={(e) => setTick(f.key, e.target.checked)} />
-                  <label htmlFor={'fx-' + f.key + v.sec.id}><span className="w-code">{f.id}</span>{f.text}</label>
+                  <label htmlFor={'fx-' + f.key + v.sec.id}><span className="w-code">{f.id}</span>{f.tpl && <span className="w-tpl">Template</span>}{f.text}</label>
                 </div>)) : <p style={{ margin: 0 }}>No fixes needed for this section.</p>}</div>
             <div className="w-blk"><h3><b>4</b>You are done when</h3>
               {v.done.length ? <ul>{v.done.map((d, k) => <li key={k}>{d}</li>)}</ul> : <p style={{ margin: 0 }}>Every item above is met and every fix is ticked.</p>}</div>
