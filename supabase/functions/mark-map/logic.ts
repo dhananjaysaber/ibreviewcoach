@@ -4,7 +4,7 @@
  * Call 2 turns the result into a plain-language, IA-specific fix plan for the student.
  * The Ideal IA template is never an input to a mark.
  */
-import { CRITERIA, LEVELS, STRANDS, type Strand } from './rubric.ts';
+import { CHECKS, CRITERIA, LEVELS, STRANDS, type Strand } from './rubric.ts';
 
 export type Block = { block_index: number; block_type?: string | null; page_number: number | null; section_title: string | null; text: string };
 export const WORD_LIMIT = 3200;
@@ -33,7 +33,7 @@ export function splitDocument(blocks: Block[]) {
   let cur: SectionWords = { heading: 'Start of report', words: 0, table_words: 0, budget: null };
   const push = () => { if (cur.words || cur.table_words) sections.push(cur); };
   for (const b of blocks) {
-    const isHeading = b.block_type === 'heading';
+    const isHeading = b.block_type === 'heading' && b.text.length <= 120 && words(b.text) <= 14;
     const head = isHeading ? b.text : (b.section_title ?? '') || (b.text.length < 80 ? b.text : '');
     if (APPENDIX.test(head)) inAppendix = true;
     if (inAppendix) { appendix.push(b); continue; }
@@ -74,7 +74,8 @@ export function appendixDigest(appendix: Block[], max = 14): string {
 const strandSheet = () => CRITERIA.map((c) =>
   `CRITERION ${c.code}: ${c.name} (0-6)\n` + STRANDS.filter((s) => s.criterion === c.code).map((s) =>
     `  ${s.id} ${s.name}\n    0: The report does not reach the standard described by the descriptors below.\n` +
-    LEVELS.slice(1).map((l) => `    ${l}: ${s.levels[l]}`).join('\n')).join('\n')).join('\n\n');
+    LEVELS.slice(1).map((l) => `    ${l}: ${s.levels[l]}`).join('\n') +
+    `\n    IB checks for this strand: ${(CHECKS[s.id] ?? []).join(' | ')}`).join('\n')).join('\n\n');
 
 export const MARK_SYSTEM = `You are an experienced IB Sports, Exercise and Health Science (SEHS) IA moderator marking an Internal Assessment with the teacher strand sheet, which breaks the official IB criteria into strands.
 Rules from the IB marking guidance you must follow:
@@ -83,10 +84,13 @@ Rules from the IB marking guidance you must follow:
 - Use ONLY evidence in the report text supplied. Appendices are not read and not marked. Raw data tables and graphs in the report body ARE evidence (they do not count towards the word limit). Do not reward length, effort or formatting. Do not default to a mid mark.
 - Do NOT propagate uncertainties: if an earlier error (a wrong value, a wrong method) is carried into later work consistently, penalise it once where it was made, not again later.
 - Do not require uncertainty decimals to match; judge whether uncertainty is considered appropriately for the data.
+- EVIDENCE RULE: a strand may be given a level above 0 ONLY if you can quote verbatim text from the report that meets the wording of that level's descriptor. No quotation means level 0 for that strand. Statements of intent, text that only names a topic, text in appendices and text you would have to infer do not count. A criterion with no evidenced strand scores 0.
+- IB CHECKS: each strand lists what IB teachers check for (from the IB SEHS teacher support material). Judge the evidence against those checks. A missed check can lower or confirm a level; it never raises one. Apply them strictly: a generic limitation or generic improvement does not reach 3-4 on E1 or E2 unless tied to a specific weakness of this method; switching air conditioning off is not control of temperature; a non-significant result presented as support limits C1.
+- CONSISTENCY: if the report contradicts itself (the same quantity with different values in different places, text that differs from a table or graph, a conclusion that differs from the analysis), list it under "inconsistencies" with two verbatim quotes, one from each place. Mark it as 'significant' if it affects a processed value or the conclusion, or 'minor' if it is a small slip in presentation. Do not invent inconsistencies and do not list differences that are only rounding.
 - Data must be sufficient to support a conclusion; if the data set is too thin for the processing and the conclusion, that limits Data analysis and Conclusion.
-Method: for each strand give the level, one or two VERBATIM quotes from the IA (each at most 35 words) with the block_index they came from, and a short reason. If nothing supports a level, quote nothing and say what you searched for. For the level above the one awarded, say in "missing" exactly what the descriptor needs that is not yet shown (plain advice; never write wording for the student to paste). Never invent evidence.
-Also judge each appendix item supplied: is it relevant to the investigation (raw data, protocol, consent form, calculations) or irrelevant padding? Return JSON ONLY:
-{"criteria":[{"code":"A","mark":0,"why_mark":"2-4 plain sentences naming what fixed the mark","strands":[{"id":"A1","level":"0|1-2|3-4|5-6","reason":"...","evidence":[{"quote":"...","block_index":0}],"missing":"..."}],"confidence":"high|medium|low"}],"appendix_check":[{"label":"...","relevant":true,"reason":"..."}],"data_sufficiency":"one sentence"}`;
+Method: for each strand give the level, one or two VERBATIM quotes from the IA (each 8 to 35 words, copied character for character from ONE line of the report, never joining separate sentences or lines with an ellipsis, never paraphrased) with the block_index they came from, and a reason. The reason is an analytical moderator justification of 2 to 3 sentences in the third person ("The candidate...", never "you"): (1) name the specific words of the awarded level's descriptor that the quoted evidence meets and where it appears, (2) say precisely which words of the next level's descriptor are not met and what is absent or inaccurate. Cite section names and numbers or terms from the report, so a moderator can check each claim. If nothing supports a level, quote nothing and say what you searched for. For the level above the one awarded, say in "missing" exactly what the descriptor needs that is not yet shown (plain advice; never write wording for the student to paste). Never invent evidence.
+Also judge each appendix item supplied: is it relevant to the investigation (raw data, protocol, consent form, calculations) or irrelevant padding? The output must be valid JSON: inside any string value use single quotes for your own quotation marks, and write any double quote that is part of a copied report quote as \\\"; never leave a raw double quote inside a string. Return JSON ONLY:
+{"criteria":[{"code":"A","mark":0,"why_mark":"3-5 analytical third-person sentences: which strands fixed the mark, the best-fit reasoning across them, and the single decisive gap to the next mark","strands":[{"id":"A1","level":"0|1-2|3-4|5-6","reason":"...","evidence":[{"quote":"...","block_index":0}],"missing":"..."}],"confidence":"high|medium|low"}],"appendix_check":[{"label":"...","relevant":true,"reason":"..."}],"data_sufficiency":"one sentence","inconsistencies":[{"strand":"B1","severity":"significant|minor","what":"which quantity or statement disagrees, in one sentence","quote_a":"...","quote_b":"..."}]}`;
 
 export function buildMarkPrompt(doc: string, appendix: string, meta: { overLimit: boolean; totalCounted: number }): string {
   return `Strand sheet:\n${strandSheet()}\n\n` +
@@ -95,20 +99,39 @@ export function buildMarkPrompt(doc: string, appendix: string, meta: { overLimit
     `Appendix items (not marked, check relevance only):\n${appendix || '(none)'}`;
 }
 
-const squash = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+const squash = (s: string) => s.normalize('NFKC').replace(/[‘’‛]/g, "'").replace(/[“”]/g, '"').replace(/[‐-―−]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
+/** A quote is verified when every non-trivial segment (split at an ellipsis) appears verbatim in the block, ignoring quote-mark, dash and spacing variants. */
+const quoteIn = (text: string, quote: string): boolean => {
+  const t = squash(text);
+  const segs = quote.split(/…|\.{3}/).map((x) => squash(x).replace(/^[\s.,;:'"]+|[\s.,;:'"]+$/g, '')).filter((x) => x.length >= 12);
+  return segs.length > 0 && segs.every((x) => t.includes(x));
+};
 const clean = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : '');
 const int = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : null);
 const levelRange = (l: string) => (l === '0' ? [0, 0] : l.split('-').map(Number));
 
-export type StrandMark = { id: string; name: string; criterion: string; level: string; reason: string; missing: string; evidence: { quote: string; block_index: number; page: number | null; section: string | null }[] };
+export type StrandMark = { id: string; name: string; criterion: string; level: string; reason: string; missing: string; evidence: { quote: string; block_index: number; page: number | null; section: string | null }[]; no_evidence?: boolean };
 export type CriterionMark = { code: string; criterion: string; max: number; mark: number; why_mark: string; strands: StrandMark[]; confidence: string };
-export type Marking = { criteria: CriterionMark[]; appendix_check: { label: string; relevant: boolean; reason: string }[]; data_sufficiency: string; dropped_quotes: number };
+export type Inconsistency = { strand: string; severity: 'significant' | 'minor'; what: string; quote_a: string; quote_b: string; page_a: number | null; page_b: number | null };
+export type Limit = { kind: 'no_evidence' | 'inconsistency' | 'inconsistency_minor' | 'average'; criterion: string; strand: string | null; detail: string; action: string };
+export type Marking = { criteria: CriterionMark[]; appendix_check: { label: string; relevant: boolean; reason: string }[]; data_sufficiency: string; dropped_quotes: number; ungrounded_strands: number; inconsistencies: Inconsistency[]; limits: Limit[] };
 
 export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): Marking | null {
   const byIndex = new Map(blocks.map((b) => [b.block_index, b]));
-  let dropped = 0;
+  let dropped = 0, ungrounded = 0;
   const rawCriteria = Array.isArray(raw.criteria) ? raw.criteria as Record<string, unknown>[] : [];
   const criteria: CriterionMark[] = [];
+  const limits: Limit[] = [];
+  // Contradictions inside the report. Both quotes must be found in the report text, otherwise the item is dropped.
+  const inconsistencies: Inconsistency[] = (Array.isArray(raw.inconsistencies) ? raw.inconsistencies : []).slice(0, 8).flatMap((x: unknown) => {
+    const o = (x ?? {}) as Record<string, unknown>;
+    const qa = clean(o.quote_a), qb = clean(o.quote_b), what = clean(o.what), strand = clean(o.strand).toUpperCase();
+    if (!qa || !qb || !what || qa.split(' ').length > 45 || qb.split(' ').length > 45) return [];
+    const ba = blocks.find((b) => quoteIn(b.text, qa)), bb = blocks.find((b) => quoteIn(b.text, qb));
+    if (!ba || !bb || (ba.block_index === bb.block_index && squash(qa) === squash(qb))) return [];
+    return [{ strand: ['B1', 'B2', 'B3', 'C1'].includes(strand) ? strand : 'B1', severity: clean(o.severity) === 'significant' ? 'significant' as const : 'minor' as const, what, quote_a: qa, quote_b: qb, page_a: ba.page_number, page_b: bb.page_number }];
+  });
+  const FIX_INCONSISTENCY = 'Check the correct value against your raw data and table, then use that same value everywhere (text, table, graph and conclusion). Re-check any calculation that used the wrong value.';
   for (const c of CRITERIA) {
     const rc = rawCriteria.find((x) => clean(x?.code).toUpperCase() === c.code);
     if (!rc) return null;
@@ -120,16 +143,51 @@ export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): 
       if (!rs || !(LEVELS as readonly string[]).includes(level)) return null;
       const evidence = (Array.isArray(rs.evidence) ? rs.evidence : []).slice(0, 3).flatMap((e: unknown) => {
         const eo = (e ?? {}) as Record<string, unknown>;
-        const quote = clean(eo.quote), idx = int(eo.block_index), blk = idx === null ? undefined : byIndex.get(idx);
-        if (!quote || !blk || quote.split(' ').length > 45 || !squash(blk.text).includes(squash(quote).replace(/[….]+$/, ''))) { if (quote) dropped++; return []; }
+        const quote = clean(eo.quote), idx = int(eo.block_index);
+        if (!quote || quote.split(' ').length > 45) { if (quote) dropped++; return []; }
+        // Trust the cited block if it contains the quote; otherwise find the one block that does (the model may mis-number a block).
+        let blk = idx === null ? undefined : byIndex.get(idx);
+        if (!blk || !quoteIn(blk.text, quote)) blk = blocks.find((b) => quoteIn(b.text, quote));
+        if (!blk) { dropped++; return []; }
         return [{ quote, block_index: blk.block_index, page: blk.page_number, section: blk.section_title }];
       });
+      // No verified evidence in the report text, no credit: a level above 0 must be backed by at least one verbatim quote.
+      if (level !== '0' && evidence.length === 0) {
+        ungrounded++;
+        limits.push({ kind: 'no_evidence', criterion: c.code, strand: s.id, detail: `${s.id} ${s.name}: no text in the report body shows this, so it earns no credit.`, action: clean(rs.missing) || `Show ${s.name.toLowerCase()} in the body of the report, not only in an appendix.` });
+        strands.push({ id: s.id, name: s.name, criterion: c.code, level: '0', reason: 'No verified quotation from the report supports this strand, so no credit is given. ' + clean(rs.reason), missing: clean(rs.missing), evidence, no_evidence: true });
+        continue;
+      }
       strands.push({ id: s.id, name: s.name, criterion: c.code, level, reason: clean(rs.reason), missing: clean(rs.missing), evidence });
+    }
+    for (const inc of inconsistencies.filter((i) => i.severity === 'significant' && i.strand.startsWith(c.code))) {
+      const st = strands.find((x) => x.id === inc.strand);
+      if (st && st.level === '5-6') {
+        st.level = '3-4';
+        st.reason = `Capped at 3-4 because the report contradicts itself: ${inc.what} ` + st.reason;
+      }
+      limits.push({ kind: 'inconsistency', criterion: c.code, strand: inc.strand, detail: `${inc.what} Found at: "${inc.quote_a}" and "${inc.quote_b}".`, action: FIX_INCONSISTENCY });
+    }
+    for (const inc of inconsistencies.filter((i) => i.severity === 'minor' && i.strand.startsWith(c.code))) {
+      limits.push({ kind: 'inconsistency_minor', criterion: c.code, strand: inc.strand, detail: `${inc.what} Found at: "${inc.quote_a}" and "${inc.quote_b}".`, action: FIX_INCONSISTENCY + ' This is a small slip and is not lowering the mark now, but a moderator will notice it.' });
     }
     let mark = int(rc.mark);
     if (mark === null) return null;
     const lo = Math.min(...strands.map((s) => levelRange(s.level)[0])), hi = Math.max(...strands.map((s) => levelRange(s.level).slice(-1)[0]));
     mark = Math.max(lo, Math.min(hi, Math.max(0, Math.min(c.max, mark))));
+    // The criterion mark cannot round up from the strand levels: it is held at the average of the strand midpoints, rounded half down.
+    // If every strand sits at the same level the top of that level is allowed.
+    {
+      const mid = (l: string) => (l === '0' ? 0 : (levelRange(l)[0] + levelRange(l)[1]) / 2);
+      const avg = strands.reduce((a, x) => a + mid(x.level), 0) / strands.length;
+      const same = strands.every((x) => x.level === strands[0].level);
+      const cap = Math.max(lo, same ? levelRange(strands[0].level).slice(-1)[0] : Math.ceil(avg - 0.5));
+      if (mark > cap) {
+        const weak = strands.filter((x) => mid(x.level) < avg).map((x) => x.id);
+        limits.push({ kind: 'average', criterion: c.code, strand: null, detail: `${c.criterion} is held at ${cap}/${c.max} because its strands average about ${avg.toFixed(1)}; the weaker strands (${weak.join(', ') || 'none'}) limit it.`, action: `Raise ${weak.join(', ') || 'the weaker strands'} first: ${strands.filter((x) => weak.includes(x.id)).map((x) => x.missing).filter(Boolean).join(' ')}`.trim() });
+        mark = cap;
+      }
+    }
     const why = clean(rc.why_mark);
     if (!why) return null;
     const conf = clean(rc.confidence);
@@ -140,7 +198,7 @@ export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): 
     const label = clean(o.label);
     return label ? [{ label, relevant: o.relevant === true, reason: clean(o.reason) }] : [];
   });
-  return { criteria, appendix_check, data_sufficiency: clean(raw.data_sufficiency), dropped_quotes: dropped };
+  return { criteria, appendix_check, data_sufficiency: clean(raw.data_sufficiency), dropped_quotes: dropped, ungrounded_strands: ungrounded, inconsistencies, limits };
 }
 
 export function totals(list: CriterionMark[]) {
@@ -161,25 +219,47 @@ For EVERY strand return:
 - done_when: one line they can use to check the strand is finished.
 Rules: do not tell students to match decimals or to carry uncertainties forward; mark positively; the report body counts, not appendices; stay within the 3,200-word limit by saying what to shorten when relevant.
 Also per criterion: summary (2 sentences on why they got this mark and the single biggest thing to fix) and quick_wins (up to 3 small fixes).
-If a word-count guide is supplied, also return "trim": a ranked list of up to 25 SPECIFIC paragraphs or lines (by block_index from the IA text) that the student can remove or shorten, best to cut first, until the words saved add up to at least the words over the limit. Choose by LOGIC, never just to hit a number. Each item: {"block_index":0,"action":"remove|shorten","reason":"irrelevant|repeated|redundant|low_value|too_detailed","why":"one plain sentence saying exactly why this text can go, naming what makes it weak","serves":["A1"],"repeated_at":null,"shorten_to_words":0,"keep_point":"if shortening, the one point worth keeping, in a few words"}.
+Return JSON ONLY for the ONE criterion you are asked about: {"code":"A","summary":"...","quick_wins":["..."],"strands":[{"id":"A1","plain_ask":"...","where_you_are":"...","steps":["..."],"example":"...","extend_prompts":["..."],"done_when":"..."}]}`;
+
+export const TRIM_SYSTEM = `You are an IB SEHS moderator helping a student bring an IA under the word limit. You are given the marking of the IA, the IA text and a word-count guide.
+Return a ranked list of up to 14 SPECIFIC paragraphs or lines (by block_index from the IA text) that the student can remove or shorten, best to cut first, until the words saved add up to at least the words over the limit. Choose by LOGIC, never just to hit a number. Each item: {"block_index":0,"action":"remove|shorten","reason":"irrelevant|repeated|redundant|low_value|too_detailed","why":"under 20 words, why this text can go","serves":["A1"],"repeated_at":null,"shorten_to_words":0,"keep_point":"under 8 words, or empty"}. Output compact single-line JSON with no indentation or blank lines.
 Reasons: irrelevant = does not help answer the research question or any strand; repeated = says again what another place already says (give that other place's block_index in repeated_at); redundant = a table, graph or figure already shows it, or it only defines or explains common knowledge such as the variables; low_value = generic text that earns no marks; too_detailed = true and useful but longer than needed, so shorten it.
-"serves" lists the strand ids (A1 to D2) the text helps earn marks for, or [] if none. Cut text that serves no strand first, then repeated, then redundant. Never choose the research question, text that is the only evidence for a strand at level 3-4 or 5-6, the link between the data and the conclusion, or limitations and improvements that explain impact; shorten those at most. Do not rewrite their text.
-Return JSON ONLY: {"criteria":[{"code":"A","summary":"...","quick_wins":["..."],"strands":[{"id":"A1","plain_ask":"...","where_you_are":"...","steps":["..."],"example":"...","extend_prompts":["..."],"done_when":"..."}]}],"trim":[...]}`;
+"serves" lists the strand ids (A1 to E2) the text helps earn marks for, or [] if none. Cut text that serves no strand first, then repeated, then redundant. Never choose the research question, text that is the only evidence for a strand at level 3-4 or 5-6, the link between the data and the conclusion, or limitations and improvements that explain impact; shorten those at most. Do not rewrite their text.
+Return JSON ONLY: {"trim":[...]}`;
 
 export function wordGuide(sections: SectionWords[], totalCounted: number): string {
   return `\n\nWord-count guide: the limit is ${WORD_LIMIT}; the report has ${totalCounted} counted words, so about ${totalCounted - WORD_LIMIT} must go. Tables, graphs, references and appendices do not count. Sections:\n` +
     sections.map((x) => `- "${x.heading}": ${x.words} words` + (x.budget ? ` (IB workshop template budget: ${x.budget.min ? x.budget.min + '-' : 'max '}${x.budget.max} for ${x.budget.label})` : '')).join('\n');
 }
 
-export function buildPlanPrompt(m: Marking, doc: string, guide = ''): string {
-  const lines = m.criteria.map((c) => `Criterion ${c.code} ${c.criterion}: ${c.mark}/${c.max}. ${c.why_mark}\n` + c.strands.map((s) =>
+export function buildPlanPrompt(m: Marking, doc: string, guide = '', only?: string): string {
+  const lines = m.criteria.filter((c) => !only || c.code === only).map((c) => `Criterion ${c.code} ${c.criterion}: ${c.mark}/${c.max}. ${c.why_mark}\n` + c.strands.map((s) =>
     `  ${s.id} ${s.name}: level ${s.level}. ${s.reason} Missing for next level: ${s.missing}`).join('\n')).join('\n');
-  return `Marking result:\n${lines}\n\nIA text:\n${doc}${guide}`;
+  const lim = (m.limits ?? []).filter((x) => !only || x.criterion === only);
+  const limText = lim.length ? `\n\nWhat is holding the mark down (build the steps so each of these is fixed):\n` + lim.map((x) => `- ${x.strand ?? x.criterion}: ${x.detail}`).join('\n') : '';
+  return `${only ? `Write the plan for criterion ${only} only.\n\n` : ''}Marking result:\n${lines}${limText}\n\nIA text:\n${doc}${guide}`;
 }
 
 export type StrandPlan = { id: string; plain_ask: string; where_you_are: string; steps: string[]; example: string; extend_prompts: string[]; done_when: string };
 export type CriterionPlan = { code: string; summary: string; quick_wins: string[]; strands: StrandPlan[] };
 const list = (v: unknown, max: number) => (Array.isArray(v) ? v.map(clean).filter(Boolean).slice(0, max) : []);
+
+export function assembleCriterionPlan(x: Record<string, unknown> | null, code: string): CriterionPlan | null {
+  if (!x) return null;
+  const rs = Array.isArray(x.strands) ? x.strands as Record<string, unknown>[] : [];
+  const strands: StrandPlan[] = [];
+  for (const s of STRANDS.filter((t: Strand) => t.criterion === code)) {
+    const y = rs.find((z) => clean(z?.id).toUpperCase() === s.id);
+    if (!y) return null;
+    const steps = list(y.steps, 7), prompts = list(y.extend_prompts, 4);
+    const plain_ask = clean(y.plain_ask), where_you_are = clean(y.where_you_are), example = clean(y.example), done_when = clean(y.done_when);
+    if (!plain_ask || steps.length < 2 || !example || !prompts.length || !where_you_are) return null;
+    strands.push({ id: s.id, plain_ask, where_you_are, steps, example, extend_prompts: prompts, done_when });
+  }
+  const summary = clean(x.summary);
+  if (!summary) return null;
+  return { code, summary, quick_wins: list(x.quick_wins, 3), strands };
+}
 
 export function assemblePlan(raw: Record<string, unknown>): CriterionPlan[] | null {
   const rc = Array.isArray(raw.criteria) ? raw.criteria as Record<string, unknown>[] : [];
@@ -253,7 +333,12 @@ export function assembleTrim(raw: Record<string, unknown>, body: Block[], markin
   }
   if (!picked.length) return null;
   picked.sort((a, b) => (a.serves.length ? 1 : 0) - (b.serves.length ? 1 : 0) || TIER[a.reason] - TIER[b.reason]);
+  // Keep the list usable: stop at the item that gets the report under the limit (plus a small margin), never more than 25.
   let run = 0;
-  const items = picked.map((p) => { run += p.words_saved; return { ...p, running_total: run }; });
+  const items: TrimItem[] = [];
+  for (const p of picked) {
+    if (items.length >= 25 || (run >= overBy && items.length >= 5)) break;
+    run += p.words_saved; items.push({ ...p, running_total: run });
+  }
   return { over_by: overBy, items, enough: run >= overBy, total_saved: run };
 }

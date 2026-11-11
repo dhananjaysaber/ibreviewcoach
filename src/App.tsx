@@ -128,6 +128,8 @@ import './premium-workspace.css';
 import './admin-control-centre.css';
 import './share-review.css';
 import './aurora.css';
+import './scholar.css';
+import './premium.css';
 import { TeacherCopyPanel } from './components/TeacherCopyPanel';
 
 type AppStatus =
@@ -330,6 +332,7 @@ function App() {
   });
 
   const [isViewingSavedReport, setIsViewingSavedReport] = useState(false);
+  const signingOutHereRef = useRef(false);
 
   const [selectedCreditPack, setSelectedCreditPack] =
     useState<PayPalCreditPack | null>(null);
@@ -417,6 +420,26 @@ function App() {
       }
 
       setSession(nextSession);
+
+      if (event === 'SIGNED_OUT' && !signingOutHereRef.current) {
+        // Signed out from another browser tab: leave the report area at once
+        // and ask the person to sign in again.
+        clearSavedCompletedReview();
+        clearAccountConversionReview();
+        setSelectedFile(null);
+        setSubmission(null);
+        setPipelineProgress(null);
+        setCompletion(null);
+        setIsAdmin(false);
+        setIsViewingSavedReport(false);
+        setAccountSection('dashboard');
+        setMainView('landing');
+        window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+        replaceAppRoute('/');
+        setAuthError('');
+        setAuthMessage('You were signed out. Sign in again to continue.');
+        setAuthPanelMode('sign-in');
+      }
 
       if (event === 'PASSWORD_RECOVERY') {
         setAuthPanelMode('reset-password');
@@ -1793,6 +1816,7 @@ function App() {
     setAuthBusy(true);
     setAuthError('');
     setAuthMessage('');
+    signingOutHereRef.current = true;
 
     try {
       await signOutAccount();
@@ -1825,6 +1849,7 @@ function App() {
     } catch (error) {
       setAuthError(getErrorMessage(error));
     } finally {
+      signingOutHereRef.current = false;
       setAuthBusy(false);
     }
   }
@@ -1859,7 +1884,7 @@ function App() {
       : mainView === 'compare'
       ? 'compare'
       : mainView === 'workspace'
-      ? 'review'
+      ? isViewingSavedReport ? 'reports' : 'review'
       : mainView === 'pricing'
       ? 'credits'
       : accountSection === 'billing'
@@ -2494,6 +2519,18 @@ function AuthPanel({
         aria-modal="true"
         aria-labelledby="auth-panel-title"
       >
+        {mode !== 'account' && (
+          <aside className="auth-aside" aria-hidden="true">
+            <span className="auth-aside-brand"><GraduationCap />IB IA Review Coach</span>
+            <h2>{mode === 'sign-in' || mode === 'forgot-password' ? 'Welcome back. Your plan is where you left it.' : 'Your IA, marked and coached strand by strand.'}</h2>
+            <p>Every report you upload is saved with its marks, your fix plan and your progress between drafts.</p>
+            <ul>
+              <li>Marked against the IB SEHS criteria</li>
+              <li>Step-by-step fixes, never ghost-written text</li>
+              <li>Private to your account</li>
+            </ul>
+          </aside>
+        )}
         {!requiresCompletion && (
           <button
             className="auth-close-button"
@@ -2931,13 +2968,18 @@ function LandingPage({
         <div className="landing-hero-inner">
           <div className="landing-hero-copy">
             <span className="landing-kicker">
-              IB SEHS internal assessment feedback
+              IB SEHS · Internal assessment · 24 marks
             </span>
 
-            <h1>Improve your IB SEHS IA with feedback that makes the next step clear.</h1>
+            <h1>
+              Know <mark>exactly what to fix</mark> in your IA before it is
+              marked.
+            </h1>
 
             <p className="landing-hero-lead">
-              Upload your draft and receive evidence-linked criterion feedback, clear improvement actions, an interactive annotated IA and a prioritised revision plan — while keeping the writing your own.
+              Upload your draft. Get a clear, step-by-step plan for every weak
+              spot, marked against the official IB criteria. We coach. We never
+              write your IA.
             </p>
 
             <div className="landing-hero-actions">
@@ -2950,7 +2992,7 @@ function LandingPage({
                 {primaryActionLabel}
               </button>
 
-              {paymentsEnabled && (
+              {paymentsEnabled ? (
                 <button
                   className="landing-secondary-button"
                   type="button"
@@ -2959,64 +3001,59 @@ function LandingPage({
                   See pricing
                   <ChevronRight aria-hidden="true" />
                 </button>
+              ) : (
+                <a className="landing-secondary-button" href="#how-it-works">
+                  How it works
+                  <ChevronRight aria-hidden="true" />
+                </a>
               )}
             </div>
 
             <div className="landing-trust-row">
               <span>
                 <ShieldCheck aria-hidden="true" />
-                Private document handling
+                Your file stays private
               </span>
 
               <span>
                 <BookOpen aria-hidden="true" />
-                Coaching, not IA writing
+                Plain words for every student
               </span>
 
               <span>
                 <CheckCircle2 aria-hidden="true" />
-                One free limited preview per verified account
+                Annotated copy for teachers
               </span>
             </div>
           </div>
 
-          <div className="landing-review-preview">
+          <div className="landing-review-preview" aria-label="Sample annotated report">
             <div className="landing-preview-header">
-              <span>Detailed Review</span>
-              <strong>SEHS IA • 24 marks</strong>
+              <span>Sample · Methodology · Page 3</span>
+              <strong>Annotated</strong>
             </div>
 
-            <div className="landing-preview-score">
-              <span>Indicative range</span>
-              <strong>12–16 / 24</strong>
-            </div>
+            <p className="landing-preview-text">
+              Participants completed three trials on a 20 m track. Times were
+              recorded with a stopwatch.{' '}
+              <mark>
+                The same tester started and stopped the timer for every trial
+              </mark>{' '}
+              and results were written in a table.
+            </p>
 
-            <div className="landing-preview-tabs">
-              <span className="active">Detailed Review</span>
-              <span>Annotated IA</span>
-              <span>Progress Plan</span>
-            </div>
-
-            <article className="landing-preview-finding">
-              <span className="landing-preview-priority">High priority</span>
-              <strong>Research Design</strong>
+            <div className="landing-preview-finding">
+              <span className="landing-preview-pin">1</span>
               <p>
-                The control variable is identified, but the method does not
-                explain how it remained consistent across every trial.
+                <strong>Stated, not yet described.</strong> Say what decides a
+                fair start and stop, so another student could repeat it.
               </p>
+            </div>
 
-              <div>
-                <span>Specific action</span>
-                <p>
-                  State the controlled value, how it was maintained and how
-                  consistency was checked.
-                </p>
-              </div>
-            </article>
-
-            <div className="landing-preview-footer">
-              <Target aria-hidden="true" />
-              <span>Prioritised next steps prepared</span>
+            <div className="landing-preview-chips">
+              <span className="chip-good">Research question ✓</span>
+              <span className="chip-fix">Method 1 fix</span>
+              <span className="chip-good">Variables ✓</span>
             </div>
           </div>
         </div>
@@ -3041,6 +3078,79 @@ function LandingPage({
         <div>
           <strong>Private</strong>
           <span>Account-owned report history</span>
+        </div>
+      </section>
+
+      <section className="landing-section landing-audience" id="student-teacher">
+        <div className="landing-audience-grid">
+          <article className="landing-audience-card landing-audience-student">
+            <span className="landing-section-label">For the student</span>
+            <h2>A plan you can follow, one step at a time.</h2>
+            <ul>
+              <li>What is missing, in plain words</li>
+              <li>Why it earns marks</li>
+              <li>A worked example from a different topic</li>
+              <li>Questions to help you extend your own ideas</li>
+            </ul>
+            <button type="button" onClick={onStartFreeReview}>
+              {primaryActionLabel}
+            </button>
+          </article>
+
+          <article className="landing-audience-card landing-audience-teacher">
+            <span className="landing-section-label">For the teacher</span>
+            <h2>Marking evidence, strand by strand.</h2>
+            <ul>
+              <li>Levels for every IB strand, with quoted evidence</li>
+              <li>One whole mark per criterion</li>
+              <li>Annotated IA and Word copy</li>
+              <li>Full control: every student tab too</li>
+            </ul>
+            <button
+              type="button"
+              onClick={accountState === 'permanent' ? onOpenReports : onSignIn}
+            >
+              Open the teacher report
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <section className="landing-section landing-ladder">
+        <div className="landing-section-heading">
+          <span className="landing-section-label">What a fix looks like</span>
+          <h2>Climb one step on the IB ladder.</h2>
+        </div>
+
+        <div className="landing-ladder-card">
+          <div>
+            <div className="landing-ladder-steps" aria-hidden="true">
+              <span>Stated</span>
+              <span className="on">Described</span>
+              <span>Explained</span>
+            </div>
+            <p>
+              You are here: your method <b>states</b> what you did. The next
+              level <b>describes</b> it so someone else could repeat it.
+            </p>
+          </div>
+
+          <div>
+            <h3>Do this first</h3>
+            <ol>
+              <li>Find your method paragraph.</li>
+              <li>Ask: could a classmate repeat it?</li>
+              <li>Add what is still unclear.</li>
+            </ol>
+          </div>
+
+          <aside className="landing-ladder-example">
+            <span>Example · not text for your IA</span>
+            <p>
+              A swim coach says &ldquo;kick sets were timed&rdquo;. A clearer
+              version says who timed, from which signal, to what accuracy.
+            </p>
+          </aside>
         </div>
       </section>
 
@@ -3144,7 +3254,7 @@ function LandingPage({
         </div>
       </section>
 
-      <section className="landing-section landing-how-section">
+      <section className="landing-section landing-how-section" id="how-it-works">
         <div className="landing-section-heading">
           <span>How it works</span>
           <h2>A clear path from draft to revision.</h2>
@@ -4229,6 +4339,7 @@ function ReportsDashboard({
     };
   }, [refreshKey]);
 
+  const markMapTotals = useMarkMapTotals(reports.map((r) => r.submission_id));
   const filteredReports = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
@@ -4484,9 +4595,11 @@ function ReportsDashboard({
                 </div>
 
                 <div className="premium-report-mark">
-                  <small>Indicative range</small>
+                  <small>{markMapTotals[report.submission_id] ? 'Marked' : 'Indicative range'}</small>
                   <strong>
-                    {markSummary
+                    {markMapTotals[report.submission_id]
+                      ? `${markMapTotals[report.submission_id].mark} / ${markMapTotals[report.submission_id].maximum}`
+                      : markSummary
                       ? `${markSummary.range[0]}–${markSummary.range[1]} / ${markSummary.maximum}`
                       : 'Open report'}
                   </strong>
@@ -5175,6 +5288,8 @@ function CompletionWorkspace({
   const [annotationShareOpen, setAnnotationShareOpen] = useState(false);
   const [previousDraft, setPreviousDraft] = useState<DraftSnapshot | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [markMapScore, setMarkMapScore] = useState<{ mark: number; maximum: number } | null>(null);
+  useEffect(() => { setMarkMapScore(null); }, [submission?.id]);
   const [comparisonMessage, setComparisonMessage] = useState('');
 
   const accessMode =
@@ -5289,9 +5404,15 @@ function CompletionWorkspace({
       } catch (error) {
         console.error('Detailed review could not be loaded', error);
 
+        const { data: sessionCheck } = await supabase.auth.getSession();
+        const signedOut =
+          !sessionCheck.session || sessionCheck.session.user.is_anonymous;
+
         if (active) {
           setReviewError(
-            'The saved detailed review could not be displayed. Please try loading it again.'
+            signedOut
+              ? SESSION_ENDED_MESSAGE
+              : 'The saved detailed review could not be displayed. Please try loading it again.'
           );
           setReviewLoadState('error');
         }
@@ -5575,10 +5696,12 @@ function CompletionWorkspace({
             <div>
               <span>Indicative range</span>
               <strong>
-                {completion?.overallMarkRange
+                {markMapScore
+                  ? `${markMapScore.mark} / ${markMapScore.maximum}`
+                  : completion?.overallMarkRange
                   ? `${completion.overallMarkRange[0]}–${completion.overallMarkRange[1]}`
                   : 'Ready'}
-                {completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
+                {!markMapScore && completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
               </strong>
             </div>
             <div>
@@ -5591,9 +5714,9 @@ function CompletionWorkspace({
                 {isFreeReview
                   ? 'Locked'
                   : reviewData?.progressPlan.nextCheckinDate
-                  ? formatReviewDate(reviewData.progressPlan.nextCheckinDate)
+                  ? checkinLabel(reviewData.progressPlan.nextCheckinDate)
                   : completion?.nextCheckinDate
-                  ? formatReviewDate(completion.nextCheckinDate)
+                  ? checkinLabel(completion.nextCheckinDate)
                   : 'Prepared'}
               </strong>
             </div>
@@ -5639,7 +5762,6 @@ function CompletionWorkspace({
                 ['detailed', BookOpen, 'Feedback', isFreeReview ? 'First criterion preview' : 'By criterion'],
                 ['workshop', ListChecks, 'Section guide', 'All 9 IA sections'],
                 ['plan', ClipboardList, 'Progress plan', isFreeReview ? 'Locked' : 'Next steps'],
-                ['comparison', Layers3, 'Compare drafts', 'Changes and bands'],
               ] as const).map(([id, Icon, label, hint]) => (
                 <button
                   key={id}
@@ -5702,6 +5824,7 @@ function CompletionWorkspace({
               <>
                 {activeTab === 'detailed' && (
                   <DetailedReviewTab
+                    submissionId={submission?.id ?? ''}
                     data={reviewData}
                     isFreePreview={isFreeReview}
                     paymentsEnabled={paymentsEnabled}
@@ -5738,6 +5861,7 @@ function CompletionWorkspace({
 
                 {reviewSpace === 'teacher' && activeTab === 'markmap' && (
                   <MarkMapTab
+                    onScore={setMarkMapScore}
                     mode="teacher"
                     submissionId={submission?.id ?? ''}
                     findings={reviewData.findings}
@@ -5746,6 +5870,7 @@ function CompletionWorkspace({
                 )}
                 {activeTab === 'marks' && (
                   <MarkMapTab
+                    onScore={setMarkMapScore}
                     mode="student"
                     submissionId={submission?.id ?? ''}
                     findings={reviewData.findings}
@@ -6758,7 +6883,34 @@ type ReviewDataErrorProps = {
   onRetry: () => void;
 };
 
+const SESSION_ENDED_MESSAGE =
+  'Your session has ended. Sign in again to see this review.';
+
 function ReviewDataError({ message, onRetry }: ReviewDataErrorProps) {
+  const sessionEnded = message === SESSION_ENDED_MESSAGE;
+
+  if (sessionEnded) {
+    return (
+      <div className="review-data-state review-data-state-error" role="alert">
+        <AlertCircle aria-hidden="true" />
+
+        <div>
+          <strong>You are signed out</strong>
+          <span>{message}</span>
+
+          <button
+            className="retry-button"
+            type="button"
+            onClick={() => window.location.assign('/')}
+          >
+            <LogIn aria-hidden="true" />
+            Sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="review-data-state review-data-state-error" role="alert">
       <AlertCircle aria-hidden="true" />
@@ -6777,6 +6929,7 @@ function ReviewDataError({ message, onRetry }: ReviewDataErrorProps) {
 }
 
 type DetailedReviewTabProps = {
+  submissionId: string;
   data: DetailedReviewData;
   isFreePreview: boolean;
   paymentsEnabled: boolean;
@@ -6784,6 +6937,7 @@ type DetailedReviewTabProps = {
 };
 
 function DetailedReviewTab({
+  submissionId,
   data,
   isFreePreview,
   paymentsEnabled,
@@ -6793,6 +6947,7 @@ function DetailedReviewTab({
     () => buildCriterionSections(data.criteria, data.findings),
     [data.criteria, data.findings]
   );
+  const criterionMarks = useCriterionMarks(submissionId);
 
   return (
     <section
@@ -6834,6 +6989,7 @@ function DetailedReviewTab({
             key={section.code}
             section={section}
             number={index + 1}
+            marked={criterionMarks[FEEDBACK_CODE[section.code] ?? '']}
           />
         ))}
       </div>
@@ -6860,11 +7016,13 @@ type CriterionSection = {
 type CriterionReviewSectionProps = {
   section: CriterionSection;
   number: number;
+  marked?: CriterionMarkView;
 };
 
 function CriterionReviewSection({
   section,
   number,
+  marked,
 }: CriterionReviewSectionProps) {
   const scoreRange = section.coaching?.indicative_mark_range;
   const maximumMark = section.coaching?.criterion_max_marks;
@@ -6887,23 +7045,24 @@ function CriterionReviewSection({
         </div>
 
         <div className="criterion-score-group">
-          <span>Indicative range</span>
+          <span>{marked ? 'Marked' : 'Indicative range'}</span>
           <strong>
-            {scoreRange ? `${scoreRange[0]}–${scoreRange[1]}` : 'Review ready'}
-            {maximumMark ? ` / ${maximumMark}` : ''}
+            {marked
+              ? `${marked.mark} / ${marked.max}`
+              : `${scoreRange ? `${scoreRange[0]}–${scoreRange[1]}` : 'Review ready'}${maximumMark ? ` / ${maximumMark}` : ''}`}
           </strong>
-          {section.coaching?.confidence && (
-            <small>{capitalize(section.coaching.confidence)} confidence</small>
+          {(marked?.confidence || section.coaching?.confidence) && (
+            <small>{capitalize(marked?.confidence || section.coaching?.confidence || '')} confidence</small>
           )}
         </div>
       </header>
 
-      {section.coaching?.why_this_range && (
+      {(marked?.why || section.coaching?.why_this_range) && (
         <div className="criterion-range-rationale">
           <SearchCheck aria-hidden="true" />
           <div>
-            <strong>Why this range</strong>
-            <p>{section.coaching.why_this_range}</p>
+            <strong>{marked ? 'Why this mark' : 'Why this range'}</strong>
+            <p>{marked?.why || section.coaching?.why_this_range}</p>
           </div>
         </div>
       )}
@@ -6944,9 +7103,20 @@ type FindingCardProps = {
 function FindingCard({ finding, number }: FindingCardProps) {
   const location = formatFindingLocation(finding);
   const isStrength = finding.finding_type === 'strength';
+  const [detail, setDetail] = useState<{ action: string; must: string[] } | null>(null);
+  const loadedDetail = useRef(false);
+  function loadDetail() {
+    if (isStrength || loadedDetail.current) return;
+    loadedDetail.current = true;
+    void supabase.from('ia_action_plans').select('plan').eq('finding_id', finding.id).limit(1).then(({ data }) => {
+      const pl = (Array.isArray(data) ? data[0]?.plan : null) as { detailed_action?: string; must_show?: string[] } | null;
+      if (pl?.detailed_action) setDetail({ action: pl.detailed_action, must: Array.isArray(pl.must_show) ? pl.must_show : [] });
+    });
+  }
 
   return (
     <details
+      onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) loadDetail(); }}
       className={`finding-card finding-${finding.priority} ${
         isStrength ? 'finding-good' : 'finding-fix'
       }`}
@@ -6994,11 +7164,11 @@ function FindingCard({ finding, number }: FindingCardProps) {
           <span>
             {isStrength ? 'How to retain this strength' : 'Specific action'}
           </span>
-          <p>{finding.specific_action}</p>
+          <p>{detail?.action ?? finding.specific_action}</p>
 
-          {finding.required_elements.length > 0 && (
+          {(detail?.must?.length ? detail.must : finding.required_elements).length > 0 && (
             <ul>
-              {finding.required_elements.map((element) => (
+              {(detail?.must?.length ? detail.must : finding.required_elements).map((element) => (
                 <li key={element}>{element}</li>
               ))}
             </ul>
@@ -7416,7 +7586,7 @@ function ProgressPlanTab({
           <div className="plan-checkin-card">
             <Clock3 aria-hidden="true" />
             <span>Suggested check-in</span>
-            <strong>{formatReviewDate(plan.nextCheckinDate)}</strong>
+            <strong>{checkinLabel(plan.nextCheckinDate)}</strong>
           </div>
         )}
       </div>
@@ -8328,6 +8498,52 @@ function normalizeReportHistoryRow(value: unknown): ReportHistoryRow | null {
     annotated_docx_ready: value.annotated_docx_ready === true,
     is_latest_version: value.is_latest_version === true,
   };
+}
+
+/** Marks from the strand mark map, the single source of truth, keyed by submission id. */
+function useMarkMapTotals(ids: string[]): Record<string, { mark: number; maximum: number }> {
+  const [totals, setTotals] = useState<Record<string, { mark: number; maximum: number }>>({});
+  const key = ids.join(',');
+  useEffect(() => {
+    if (!key) return;
+    let live = true;
+    void supabase.from('ia_mark_maps').select('submission_id,mark:result->>mark,maximum:result->>maximum').eq('map_version', 'mark-map-v2').in('submission_id', key.split(',')).then(({ data }) => {
+      if (!live || !Array.isArray(data)) return;
+      const next: Record<string, { mark: number; maximum: number }> = {};
+      for (const r of data as { submission_id: string; mark: string | null; maximum: string | null }[]) {
+        const mark = Number(r.mark), maximum = Number(r.maximum);
+        if (Number.isFinite(mark) && Number.isFinite(maximum) && maximum > 0) next[r.submission_id] = { mark, maximum };
+      }
+      setTotals(next);
+    });
+    return () => { live = false; };
+  }, [key]);
+  return totals;
+}
+
+type CriterionMarkView = { mark: number; max: number; why: string; confidence: string };
+const FEEDBACK_CODE: Record<string, string> = { ResearchDesign: 'A', DataAnalysis: 'B', Conclusion: 'C', Evaluation: 'E' };
+function useCriterionMarks(submissionId: string): Record<string, CriterionMarkView> {
+  const [marks, setMarks] = useState<Record<string, CriterionMarkView>>({});
+  useEffect(() => {
+    setMarks({});
+    if (!submissionId) return;
+    let live = true;
+    void supabase.from('ia_mark_maps').select('criteria:result->criteria').eq('submission_id', submissionId).eq('map_version', 'mark-map-v2').maybeSingle().then(({ data }) => {
+      const list = (data as { criteria?: { code: string; mark: number; max: number; why_mark: string; confidence: string }[] } | null)?.criteria;
+      if (!live || !Array.isArray(list)) return;
+      const next: Record<string, CriterionMarkView> = {};
+      for (const c of list) next[c.code] = { mark: c.mark, max: c.max, why: c.why_mark, confidence: c.confidence };
+      setMarks(next);
+    });
+    return () => { live = false; };
+  }, [submissionId]);
+  return marks;
+}
+
+function checkinLabel(date: string): string {
+  const t = new Date(date).getTime();
+  return Number.isFinite(t) && t < Date.now() - 86_400_000 ? 'After your next draft' : formatReviewDate(date);
 }
 
 function deriveReportMarkSummary(criterionScores: unknown): {

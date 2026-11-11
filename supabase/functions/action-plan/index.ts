@@ -8,7 +8,7 @@ import { PLAN_SYSTEM, assemblePlans, buildUserPrompt, type FindingInput, type Mo
 
 const VERSION = 'action-plan-v1';
 const MODEL = 'claude-sonnet-4-6';
-const MAX_PER_CALL = 30;
+const MAX_PER_CALL = 12;
 const cors = {
   'access-control-allow-origin': '*',
   'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type',
@@ -24,11 +24,11 @@ async function askModel(apiKey: string, findings: FindingInput[]): Promise<Model
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
-      model: MODEL, max_tokens: 6000, temperature: 0.2, system: PLAN_SYSTEM,
-      messages: [{ role: 'user', content: buildUserPrompt(findings) }],
+      model: MODEL, max_tokens: 8000, temperature: 0.2, system: PLAN_SYSTEM,
+      messages: [{ role: 'user', content: buildUserPrompt(findings).replace(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '') }],
     }),
   });
-  if (!res.ok) throw new Error(`AI provider returned ${res.status}`);
+  if (!res.ok) { const eb = (await res.text()).slice(0, 300); console.error('provider error', res.status, eb); throw new Error(`AI provider returned ${res.status}`); }
   const data = await res.json();
   const text: string = (data?.content ?? []).map((c: { text?: string }) => c.text ?? '').join('');
   const start = text.indexOf('{');
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
   if (!apiKey) return reply(503, { error: 'AI provider key is not configured server-side' });
   const requested = Array.isArray(body.finding_ids) ? body.finding_ids.filter(isUuid).slice(0, MAX_PER_CALL) : [];
   if (!requested.length) return reply(400, { error: 'finding_ids required' });
-  const todoIds = requested.filter((id) => !have.has(id));
+  const todoIds = requested.filter((id) => !(have.get(id) as { detailed_action?: unknown } | undefined)?.detailed_action);
   if (!todoIds.length) return reply(200, { plans: Object.fromEntries(have), generated: 0 });
 
   const { data: rows, error: fErr } = await db.from('ia_detailed_findings')

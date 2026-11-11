@@ -6,7 +6,7 @@
  * The Ideal IA template is never an input to a mark. Requires the signed-in owner with full review access.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { MARK_SYSTEM, PLAN_SYSTEM, WORD_LIMIT, appendixDigest, assembleMarking, assemblePlan, assembleTrim, buildDocument, buildMarkPrompt, buildPlanPrompt, splitDocument, totals, wordGuide, type Block } from './logic.ts';
+import { MARK_SYSTEM, PLAN_SYSTEM, TRIM_SYSTEM, WORD_LIMIT, assembleCriterionPlan, appendixDigest, assembleMarking, assemblePlan, assembleTrim, buildDocument, buildMarkPrompt, buildPlanPrompt, splitDocument, totals, wordGuide, type Block } from './logic.ts';
 
 const VERSION = 'mark-map-v2';
 const MODEL = 'claude-sonnet-4-6';
@@ -21,8 +21,10 @@ const reply = (status: number, payload: unknown) => new Response(JSON.stringify(
 const isUuid = (s: unknown): s is string =>
   typeof s === 'string' && /^[\da-f]{8}-[\da-f]{4}-[1-8][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(s);
 
+let deadline = 0;
 async function callClaude(apiKey: string, system: string, user: string, maxTokens: number): Promise<Record<string, unknown> | null> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
+    signal: AbortSignal.timeout(Math.max(20_000, deadline - Date.now())),
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, temperature: 0, system, messages: [{ role: 'user', content: user }] }),
@@ -31,8 +33,13 @@ async function callClaude(apiKey: string, system: string, user: string, maxToken
   const data = await res.json();
   const text: string = (data?.content ?? []).map((c: { text?: string }) => c.text ?? '').join('');
   const a = text.indexOf('{'), b = text.lastIndexOf('}');
-  if (a < 0 || b <= a) return null;
-  try { return JSON.parse(text.slice(a, b + 1)); } catch { return null; }
+  if (a < 0 || b <= a) { console.error('no JSON in model output', data?.stop_reason, text.slice(0, 200)); return null; }
+  try { return JSON.parse(text.slice(a, b + 1)); } catch (e) {
+    if (data?.stop_reason === 'max_tokens') {
+      // Salvage a truncated list: keep every complete array item and close the JSON.
+      const cut = text.lastIndexOf('},');
+      if (cut > a) { try { return JSON.parse(text.slice(a, cut + 1) + ']}'); } catch { /* fall through */ } }
+    } console.error('JSON parse failed', data?.stop_reason, data?.usage?.output_tokens, e instanceof Error ? e.message : e, text.slice(Math.max(0, text.length - 160))); return null; }
 }
 
 Deno.serve(async (req) => {
@@ -49,7 +56,7 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return reply(400, { error: 'Invalid JSON' }); }
   const { submission_id } = body;
-  const action = body.action === 'generate' ? 'generate' : body.action === 'plan' ? 'plan' : 'get';
+  const action = body.action === 'generate' ? 'generate' : body.action === 'plan' ? 'plan' : body.action === 'trim' ? 'trim' : 'get';
   if (!isUuid(submission_id)) return reply(400, { error: 'submission_id required' });
 
   const db = createClient(url, service, { auth: { persistSession: false } });
@@ -63,7 +70,8 @@ Deno.serve(async (req) => {
   if (stErr) return reply(500, { error: 'The mark map schema has not been installed on this environment' });
   if (action === 'get') return reply(200, { map: stored?.result ?? null, created_at: stored?.created_at ?? null });
   if (action === 'generate' && stored?.result) return reply(200, { map: stored.result, created_at: stored.created_at });
-  if (action === 'plan' && !stored?.result) return reply(409, { error: 'Mark the IA first.' });
+  if ((action === 'plan' || action === 'trim') && !stored?.result) return reply(409, { error: 'Mark the IA first.' });
+  if (action === 'trim' && (stored!.result as { trim?: unknown }).trim) return reply(200, { map: stored!.result, created_at: stored!.created_at });
   if (action === 'plan' && (stored!.result as { plan?: unknown }).plan) return reply(200, { map: stored!.result, created_at: stored!.created_at });
 
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
@@ -76,10 +84,15 @@ Deno.serve(async (req) => {
 
   try {
     if (action === 'generate') {
-      let marking = null;
-      for (let attempt = 0; attempt < 2 && !marking; attempt++) {
+      let marking: ReturnType<typeof assembleMarking> = null;
+      // A second pass only if some strand lost credit for lacking a verifiable quotation; keep the better of the two.
+      const t0 = Date.now(); deadline = t0 + 125_000;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (attempt > 0 && Date.now() - t0 > 40_000) break; // a second full pass would risk the 150 s function limit
         const raw = await callClaude(apiKey, MARK_SYSTEM, buildMarkPrompt(doc, appendixDigest(split.appendix), split), 9000);
-        marking = raw ? assembleMarking(raw, split.body) : null;
+        const got = raw ? assembleMarking(raw, split.body) : null;
+        if (got && (!marking || got.ungrounded_strands < marking.ungrounded_strands)) marking = got;
+        if (marking && marking.ungrounded_strands === 0) break;
       }
       if (!marking) return reply(502, { error: 'The marking could not be completed. Please try again.' });
       const map = {
@@ -92,13 +105,42 @@ Deno.serve(async (req) => {
       return reply(200, { map, created_at: new Date().toISOString() });
     }
     const map = stored!.result as Record<string, unknown> & { criteria: never };
-    let plan = null, trim = null;
+    deadline = Date.now() + 125_000;
     const guide = split.overLimit ? wordGuide(split.sections, split.totalCounted) : '';
-    for (let attempt = 0; attempt < 2 && !plan; attempt++) {
-      const raw = await callClaude(apiKey, PLAN_SYSTEM, buildPlanPrompt(map as never, doc, guide), 16000);
-      plan = raw ? assemblePlan(raw) : null;
-      trim = plan && raw && split.overLimit ? assembleTrim(raw, split.body, map as never, split.overBy) : null;
+    const codes = ['A', 'B', 'C', 'E'];
+    // Each criterion is its own short call, run in parallel, so the whole plan stays well inside the 150 s function limit.
+    const planCall = async (code: string) => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const raw = await callClaude(apiKey, PLAN_SYSTEM, buildPlanPrompt(map as never, doc, '', code), 6500);
+          const got = assembleCriterionPlan(raw, code);
+          if (got) return got;
+        } catch (_e) { /* retry once */ }
+      }
+      return null;
+    };
+    const trimCall = async () => {
+      if (!split.overLimit) return null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const raw = await callClaude(apiKey, TRIM_SYSTEM, buildPlanPrompt(map as never, doc, guide), 5000);
+          const got = raw ? assembleTrim(raw, split.body, map as never, split.overBy) : null;
+          if (got) return got;
+          console.error('trim attempt produced no usable list', attempt, raw ? Object.keys(raw) : 'null');
+        } catch (e) { console.error('trim attempt failed', attempt, e instanceof Error ? e.message : e); }
+      }
+      return null;
+    };
+    if (action === 'trim') {
+      const got = await trimCall();
+      if (!got) return reply(502, { error: 'The list of what to cut could not be completed. Please try again.' });
+      const withTrim = { ...map, trim: got };
+      const { error: tErr } = await db.from('ia_mark_maps').upsert({ submission_id, student_id: user.id, map_version: VERSION, result: withTrim, model_id: MODEL }, { onConflict: 'submission_id,map_version' });
+      if (tErr) return reply(500, { error: 'Could not save the list' });
+      return reply(200, { map: withTrim, created_at: new Date().toISOString() });
     }
+    const [parts, trim] = await Promise.all([Promise.all(codes.map(planCall)), trimCall()]);
+    const plan = parts.every(Boolean) ? parts : null;
     if (!plan) return reply(502, { error: 'The fix plan could not be completed. Please try again.' });
     const next = { ...map, plan, trim };
     const { error: saveErr } = await db.from('ia_mark_maps').upsert({ submission_id, student_id: user.id, map_version: VERSION, result: next, model_id: MODEL }, { onConflict: 'submission_id,map_version' });

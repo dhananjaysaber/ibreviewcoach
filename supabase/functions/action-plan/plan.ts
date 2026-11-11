@@ -7,12 +7,14 @@ export type FindingInput = {
   rubric_requirement: string; specific_action: string; why: string; completion_check: string;
   required_elements: string[] | null; evidence_excerpt: string | null;
 };
-export type ModelPlan = { finding_id?: unknown; goal?: unknown; why?: unknown; steps?: unknown; example?: unknown; done_when?: unknown };
-export type Plan = { goal: string; why: string; steps: string[]; example: string; done_when: string };
+export type ModelPlan = { finding_id?: unknown; goal?: unknown; why?: unknown; steps?: unknown; example?: unknown; done_when?: unknown; detailed_action?: unknown; must_show?: unknown };
+export type Plan = { goal: string; why: string; steps: string[]; example: string; done_when: string; detailed_action?: string; must_show?: string[] };
 
 export const PLAN_SYSTEM = `You are a friendly, experienced IB Sports, Exercise and Health Science teacher explaining to ONE student how to fix a point in their own Internal Assessment.
 Write in plain student-friendly language, speaking to the student as "you". Short sentences. No jargon without a quick explanation.
 For each finding return a clear plan:
+- detailed_action: 3 to 4 sentences (max 110 words) in the style of a moderator's margin instruction. Name the EXACT part of THEIR IA (the section, table, calculation, variable or data set) and say precisely what must be clarified, stated, shown or corrected there and how it must match what they actually did. Example of the level of precision: "Clarify in the standard deviation section exactly which data set the standard deviation was computed from, state whether it represents spread of participant means or within-participant trial variability, and correct the descriptive text to match the actual calculation." Describe what to do, never supply the wording.
+- must_show: 2 to 4 short bullet points (max 22 words each) listing the specific elements the revised IA must contain, naming their own variables, data or section.
 - goal: one line saying what you are fixing (max 20 words).
 - why: 1 to 2 sentences on why this matters for how a moderator reads the IA, naming the IB criterion (max 45 words).
 - steps: 3 or 4 small actions in order, each starting with a verb (find, decide, work out, add, check). Each max 28 words. Say WHERE in the IA to look. Be concrete about what to think about or calculate, but do not give the answer.
@@ -23,7 +25,7 @@ Hard rules:
 - Do not state marks or bands. Do not promise a higher band.
 - Do not invent facts about the student's data beyond the finding supplied.
 - Keep the student's own ideas as theirs: you explain, they write.
-Return ONLY JSON: {"plans":[{"finding_id":"...","goal":"...","why":"...","steps":["..."],"example":"...","done_when":"..."}]}`;
+Return ONLY JSON: {"plans":[{"finding_id":"...","detailed_action":"...","must_show":["..."],"goal":"...","why":"...","steps":["..."],"example":"...","done_when":"..."}]}`;
 
 export const buildUserPrompt = (findings: FindingInput[]): string =>
   'Findings to turn into plans (use each id exactly):\n' + JSON.stringify(findings.map((f) => ({
@@ -41,6 +43,9 @@ const BAND_CLAIM = /\b(band|level)\s*\d|\b\d+\s*(?:\/|out of)\s*\d+\s*marks?|\bg
 export function checkPlan(raw: ModelPlan): { ok: true; plan: Plan } | { ok: false; reason: string } {
   const goal = clean(raw.goal), why = clean(raw.why), done = clean(raw.done_when), example = clean(raw.example);
   const steps = Array.isArray(raw.steps) ? raw.steps.map(clean).filter(Boolean) : [];
+  const detailed = clean(raw.detailed_action);
+  const must = Array.isArray(raw.must_show) ? raw.must_show.map(clean).filter(Boolean).slice(0, 5) : [];
+  if (!detailed || words(detailed) > 130 || must.length < 1 || must.some((m) => words(m) > 30)) return { ok: false, reason: 'detailed action' };
   if (!goal || !why || !done || !example) return { ok: false, reason: 'missing field' };
   if (words(goal) > 24) return { ok: false, reason: 'goal too long' };
   if (words(why) > 55) return { ok: false, reason: 'why too long' };
@@ -48,10 +53,10 @@ export function checkPlan(raw: ModelPlan): { ok: true; plan: Plan } | { ok: fals
   if (words(done) > 38) return { ok: false, reason: 'done_when too long' };
   if (steps.length < 2 || steps.length > 5) return { ok: false, reason: 'step count' };
   if (steps.some((s) => words(s) > 34)) return { ok: false, reason: 'step too long' };
-  const all = [goal, why, example, done, ...steps].join(' ');
+  const all = [goal, why, example, done, detailed, ...must, ...steps].join(' ');
   if (PASTEABLE.test(all)) return { ok: false, reason: 'pasteable wording' };
   if (BAND_CLAIM.test(all)) return { ok: false, reason: 'band claim' };
-  return { ok: true, plan: { goal, why, steps, example, done_when: done } };
+  return { ok: true, plan: { goal, why, steps, example, done_when: done, detailed_action: detailed, must_show: must } };
 }
 
 export function assemblePlans(findings: FindingInput[], modelPlans: ModelPlan[]) {

@@ -12,7 +12,7 @@
   padding-top: 22px;
   display: grid;
   gap: 18px;
-  border-top: 1px solid #e4e1f0;
+  border-top: 1px solid #E8EDFF;
 }
 
 .account-commerce-loading {
@@ -87,7 +87,7 @@
   height: 39px;
   display: grid;
   place-items: center;
-  border: 1px solid #d8d3ec;
+  border: 1px solid #E8EDFF;
   border-radius: 12px;
   color: var(--blue);
   background: white;
@@ -96,8 +96,8 @@
 
 .account-commerce-icon-button:hover,
 .account-invoice-close:hover {
-  border-color: #b7aedd;
-  background: #f5f4fc;
+  border-color: #8FA3FA;
+  background: #F2F4F7;
 }
 
 .account-commerce-icon-button svg,
@@ -117,10 +117,10 @@
   padding: 16px;
   display: grid;
   gap: 5px;
-  border: 1px solid #e0dcef;
+  border: 1px solid #E8EDFF;
   border-radius: 16px;
-  background: linear-gradient(145deg, #ffffff, #f8f7fd);
-  box-shadow: 0 8px 20px rgba(39, 19, 97, 0.05);
+  background: linear-gradient(145deg, #ffffff, #F2F4F7);
+  box-shadow: 0 8px 20px rgba(27, 42, 68, 0.05);
 }
 
 .account-credit-card-icon {
@@ -163,9 +163,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px 22px;
-  border: 1px solid #e2dff0;
+  border: 1px solid #E8EDFF;
   border-radius: 13px;
-  background: #f7f5ff;
+  background: #F2F4F7;
 }
 
 .account-credit-breakdown span {
@@ -255,10 +255,10 @@
   padding: 16px;
   display: grid;
   gap: 14px;
-  border: 1px solid #e0dcef;
+  border: 1px solid #E8EDFF;
   border-radius: 17px;
   background: white;
-  box-shadow: 0 8px 22px rgba(39, 19, 97, 0.045);
+  box-shadow: 0 8px 22px rgba(27, 42, 68, 0.045);
 }
 
 .account-purchase-primary {
@@ -349,9 +349,9 @@
   padding: 10px 11px;
   display: grid;
   gap: 4px;
-  border: 1px solid #e6e4f1;
+  border: 1px solid #E8EDFF;
   border-radius: 11px;
-  background: #fbfaff;
+  background: #F2F4F7;
 }
 
 .account-purchase-detail span {
@@ -403,7 +403,7 @@
   border: 1px solid var(--blue);
   color: white;
   background: var(--blue);
-  box-shadow: 0 7px 16px rgba(76, 46, 166, 0.17);
+  box-shadow: 0 7px 16px rgba(26, 54, 196, 0.17);
 }
 
 .account-commerce-primary-button:hover:not(:disabled) {
@@ -412,14 +412,14 @@
 }
 
 .account-commerce-secondary-button {
-  border: 1px solid #d3cde9;
+  border: 1px solid #E8EDFF;
   color: var(--navy);
   background: white;
 }
 
 .account-commerce-secondary-button:hover:not(:disabled) {
-  border-color: #b4abda;
-  background: #f7f6fc;
+  border-color: #8FA3FA;
+  background: #F2F4F7;
 }
 
 .account-commerce-primary-button:disabled,
@@ -441,10 +441,10 @@
   place-items: center;
   align-content: center;
   gap: 5px;
-  border: 1px dashed #d0cae8;
+  border: 1px dashed #E8EDFF;
   border-radius: 16px;
   color: var(--muted);
-  background: #fbfaff;
+  background: #F2F4F7;
   text-align: center;
 }
 
@@ -473,7 +473,7 @@
   display: grid;
   place-items: center;
   overflow-y: auto;
-  background: rgba(19, 10, 46, 0.72);
+  background: rgba(14, 23, 38, 0.72);
   backdrop-filter: blur(7px);
 }
 
@@ -486,7 +486,7 @@
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 24px;
   background: white;
-  box-shadow: 0 28px 75px rgba(17, 7, 48, 0.3);
+  box-shadow: 0 28px 75px rgba(14, 23, 38, 0.3);
 }
 
 .account-invoice-close {
@@ -535,8 +535,8 @@
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  border-top: 1px solid #e2dfef;
-  border-bottom: 1px solid #e2dfef;
+  border-top: 1px solid #E8EDFF;
+  border-bottom: 1px solid #E8EDFF;
 }
 
 .account-invoice-line > div {
@@ -587,7 +587,7 @@
   display: grid;
   gap: 5px;
   border-radius: 12px;
-  background: #f6f5fc;
+  background: #F2F4F7;
 }
 
 .account-invoice-payment-details span {
@@ -673,7 +673,7 @@
   padding: clamp(26px, 4vw, 54px) 20px 64px;
   background: radial-gradient(
       circle at 15% 8%,
-      rgba(91, 60, 182, 0.12),
+      rgba(35, 71, 245, 0.12),
       transparent 28%
     ),
     radial-gradient(
@@ -681,7 +681,7 @@
       rgba(210, 172, 85, 0.12),
       transparent 24%
     ),
-    linear-gradient(180deg, #f8f7fd 0%, #f0eef9 100%);
+    linear-gradient(180deg, #F2F4F7 0%, #F2F4F7 100%);
 }
 
 .account-page-shell {
@@ -710,7 +710,7 @@
 
 .account-page-back-button {
   padding: 8px 12px;
-  border: 1px solid #d6d1eb;
+  border: 1px solid #E8EDFF;
   border-radius: 11px;
   color: var(--navy);
   background: rgba(255, 255, 255, 0.88);
@@ -718,7 +718,7 @@
 }
 
 .account-page-back-button:hover {
-  border-color: #b7aed9;
+  border-color: #8FA3FA;
   background: white;
 }
 
@@ -729,7 +729,7 @@
 }
 
 .account-page-security {
-  color: #554780;
+  color: #1A36C4;
 }
 
 .account-page-hero {
@@ -738,14 +738,14 @@
   grid-template-columns: auto minmax(0, 1fr) minmax(250px, auto);
   gap: 22px;
   align-items: center;
-  border: 1px solid rgba(216, 210, 237, 0.95);
+  border: 1px solid rgba(232, 237, 255, 0.95);
   border-radius: 24px;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.98),
-    rgba(249, 247, 255, 0.96)
+    rgba(242, 244, 247, 0.96)
   );
-  box-shadow: 0 20px 55px rgba(33, 17, 82, 0.1);
+  box-shadow: 0 20px 55px rgba(14, 23, 38, 0.1);
 }
 
 .account-page-hero-mark {
@@ -756,7 +756,7 @@
   border-radius: 18px;
   color: white;
   background: linear-gradient(145deg, var(--navy), var(--blue));
-  box-shadow: 0 14px 28px rgba(64, 38, 141, 0.25);
+  box-shadow: 0 14px 28px rgba(26, 54, 196, 0.25);
 }
 
 .account-page-hero-mark svg {
@@ -800,9 +800,9 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: 11px;
   align-items: center;
-  border: 1px solid #dcd7f0;
+  border: 1px solid #E8EDFF;
   border-radius: 15px;
-  background: #f7f6fe;
+  background: #F2F4F7;
 }
 
 .account-page-identity > svg {
@@ -844,10 +844,10 @@
 
 .account-page-primary {
   padding: clamp(20px, 3vw, 30px);
-  border: 1px solid #ddd8ef;
+  border: 1px solid #E8EDFF;
   border-radius: 22px;
   background: white;
-  box-shadow: 0 14px 36px rgba(35, 18, 84, 0.07);
+  box-shadow: 0 14px 36px rgba(14, 23, 38, 0.07);
 }
 
 .account-page-primary .account-commerce {
@@ -867,10 +867,10 @@
   padding: 19px;
   display: grid;
   gap: 7px;
-  border: 1px solid #dfdaf0;
+  border: 1px solid #E8EDFF;
   border-radius: 18px;
   background: white;
-  box-shadow: 0 10px 28px rgba(36, 19, 86, 0.06);
+  box-shadow: 0 10px 28px rgba(14, 23, 38, 0.06);
 }
 
 .account-page-action-icon {
@@ -930,7 +930,7 @@
   border: 1px solid var(--blue);
   color: white;
   background: var(--blue);
-  box-shadow: 0 8px 18px rgba(69, 39, 160, 0.18);
+  box-shadow: 0 8px 18px rgba(26, 54, 196, 0.18);
 }
 
 .account-page-primary-button:hover:not(:disabled) {
@@ -939,14 +939,14 @@
 }
 
 .account-page-secondary-button {
-  border: 1px solid #cfc9e8;
+  border: 1px solid #E8EDFF;
   color: var(--navy);
-  background: #f7f5ff;
+  background: #F2F4F7;
 }
 
 .account-page-secondary-button:hover:not(:disabled) {
-  border-color: #b6add8;
-  background: #f2f0fb;
+  border-color: #8FA3FA;
+  background: #F2F4F7;
 }
 
 .account-page-signout-button {

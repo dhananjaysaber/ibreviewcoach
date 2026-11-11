@@ -343,6 +343,38 @@ export function PremiumWorkspaceShell({
         </div>
       </aside>
 
+      <header className="tn-bar">
+        <button className="tn-brand" type="button" onClick={accountAction} aria-label="IB IA Review home">
+          <span><GraduationCap aria-hidden="true" /></span>
+          <strong>IB IA Review</strong>
+        </button>
+        <nav className="tn-nav" aria-label={isAdmin ? 'Admin workspace' : 'Member workspace'}>
+          {navigation.map((item) => (
+            <button
+              type="button"
+              key={item.key}
+              className={activeView === item.key ? 'tn-link tn-link-active' : 'tn-link'}
+              aria-current={activeView === item.key ? 'page' : undefined}
+              onClick={() => runNavigation(item.action)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+        <div className="tn-right">
+          {showLiveReview && (
+            <button className={`tn-status tn-status-${review.state}`} type="button" onClick={onOpenReview}>
+              {review.state === 'processing' ? 'Review in progress' : 'Review needs attention'}
+            </button>
+          )}
+          {showReadyNotification && (
+            <button className="tn-status tn-status-complete" type="button" onClick={onOpenReview}>Review ready</button>
+          )}
+          <span className="premium-account-avatar" title={email ?? ''}>{accountInitial}</span>
+          <button className="tn-signout" type="button" onClick={onSignOut} disabled={busy}>Sign out</button>
+        </div>
+      </header>
+
       <section className="premium-workspace-stage">
         <header className="premium-topbar">
           <div className="premium-topbar-left">

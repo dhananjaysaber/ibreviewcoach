@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { templateAdvice } from '../lib/templateAdvice';
 import { NOT_REACHED, STRAND_DESCRIPTORS } from '../lib/strandSheet';
 import type { WorkshopFinding } from '../lib/sectionMap';
 import './mark-map.css';
@@ -18,7 +17,9 @@ type TrimItem = {
 };
 type Trim = { over_by: number; items: TrimItem[]; enough: boolean; total_saved: number };
 type WordCount = { counted: number; limit: number; over_by: number; cut_at: { heading: string; page: number | null } | null; sections: SectionWords[] };
+type Limit = { kind: string; criterion: string; strand: string | null; detail: string; action: string };
 type MarkMapResult = {
+  limits?: Limit[];
   mark: number; maximum: number; source_complete: boolean; over_word_limit: boolean; word_count: WordCount; trim: Trim | null;
   criteria: CriterionMark[]; appendix_check: { label: string; relevant: boolean; reason: string }[]; data_sufficiency: string; plan: CriterionPlan[] | null;
 };
@@ -26,19 +27,27 @@ type MarkMapResult = {
 const where = (page: number | null, section: string | null) => [section, page ? 'page ' + page : ''].filter(Boolean).join(' · ') || 'whole document';
 const status = (level: string) => (level === '5-6' ? { k: 'strong', t: 'Strong' } : level === '3-4' ? { k: 'mid', t: 'Getting there' } : { k: 'low', t: 'Needs work' });
 
-export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { submissionId: string; findings: WorkshopFinding[]; isFreePreview: boolean; mode: 'student' | 'teacher' }) {
+export function MarkMapTab({ submissionId, isFreePreview, mode, onScore }: { onScore?: (s: { mark: number; maximum: number } | null) => void; findings?: WorkshopFinding[]; submissionId: string; isFreePreview: boolean; mode: 'student' | 'teacher' }) {
   const [map, setMap] = useState<MarkMapResult | null>(null);
   const [ready, setReady] = useState(false);
   const [checked, setChecked] = useState(false);
   const [step, setStep] = useState<'' | 'marking' | 'plan'>('');
   const [error, setError] = useState('');
 
-  const call = useCallback(async (action: 'get' | 'generate' | 'plan') => {
+  const call = useCallback(async (action: 'get' | 'generate' | 'plan' | 'trim') => {
     const { data, error: e } = await supabase.functions.invoke('mark-map', { body: { submission_id: submissionId, action } });
     if (e) throw e;
     if (data?.error) throw new Error(String(data.error));
     return data as { map: MarkMapResult | null };
   }, [submissionId]);
+
+  const [trimBusy, setTrimBusy] = useState(false);
+  const makeTrim = useCallback(async () => {
+    setTrimBusy(true); setError('');
+    try { const d = await call('trim'); if (d.map) setMap(d.map); }
+    catch (e) { setError(e instanceof Error ? e.message : 'The list of what to cut could not be prepared. Try again.'); }
+    finally { setTrimBusy(false); }
+  }, [call]);
 
   const makePlan = useCallback(async () => {
     setStep('plan'); setError('');
@@ -63,6 +72,8 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
     } catch (e) { setError(e instanceof Error ? e.message : 'The marking could not be prepared. Try again.'); setStep(''); }
   }
 
+  useEffect(() => { onScore?.(map ? { mark: map.mark, maximum: map.maximum } : null); }, [map, onScore]);
+
   const planBy = useMemo(() => new Map((map?.plan ?? []).map((p) => [p.code, p])), [map]);
 
   if (isFreePreview) return <section className="mm-root"><p className="mm-note">Marks and the fix plan need the full review.</p></section>;
@@ -80,7 +91,7 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
 
   const notices = (
     <>
-      <WordGuide map={map} mode={mode} />
+      <WordGuide map={map} mode={mode} onTrim={() => void makeTrim()} trimBusy={trimBusy} planBusy={step === 'plan'} />
       {!map.source_complete && <p className="mm-note">The IA was long, so only part of it could be read. Treat the marks as provisional.</p>}
       {map.appendix_check.length > 0 && (
         <details className="mm-note"><summary>Appendices: {map.appendix_check.filter((a) => a.relevant).length} relevant, {map.appendix_check.filter((a) => !a.relevant).length} not relevant (appendices are not marked)</summary>
@@ -88,6 +99,14 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
     </>
   );
 
+  const limitsBox = (code: string) => {
+    const l = (map.limits ?? []).filter((x) => x.criterion === code);
+    if (!l.length) return null;
+    return (
+      <div className="mm-next mm-limits"><span>What is limiting this mark, and what to do</span>
+        <ul>{l.map((x, i) => <li key={i}><b>{x.strand ? x.strand + ': ' : ''}</b>{x.detail}<br /><em>What to do:</em> {x.action}</li>)}</ul></div>
+    );
+  };
   const hero = (
     <header className="mm-hero">
       <div><span>{mode === 'teacher' ? 'Recommended mark' : 'Your IA mark'}</span><strong>{map.mark} / {map.maximum}</strong></div>
@@ -101,11 +120,11 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
       <p className="mm-note">Best-fit marking against the teacher strand sheet, using only evidence in the report body. Whole marks only. Marks are indicative and non-binding.{map.data_sufficiency ? ' Data sufficiency: ' + map.data_sufficiency : ''}</p>
       {notices}
       {map.criteria.map((c) => {
-        const advice = templateAdvice(c.criterion, findings);
         return (
           <article className="mm-card" key={c.code}>
             <div className="mm-head"><h3>{c.code} · {c.criterion}</h3><div className="mm-mark"><strong>{c.mark} / {c.max}</strong><small>{c.confidence} confidence</small></div></div>
             <div className="mm-band"><span>Why this mark</span><p>{c.why_mark}</p></div>
+            {limitsBox(c.code)}
             <table className="mm-table"><thead><tr><th>Strand</th><th>Level</th><th>Descriptor that fits</th><th>Evidence in the IA</th><th>Needed for the next level</th></tr></thead>
               <tbody>{c.strands.map((s) => (
                 <tr key={s.id}><td><b>{s.id}</b> {s.name}</td>
@@ -114,9 +133,6 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
                   <td>{s.evidence.length ? s.evidence.map((e, j) => <blockquote key={j}>{e.quote}<small>{where(e.page, e.section)}</small></blockquote>) : <span className="mm-sub">{s.reason}</span>}</td>
                   <td>{s.level === '5-6' ? <span className="mm-sub">Top level reached</span> : s.missing}</td></tr>
               ))}</tbody></table>
-            {advice.length > 0 && (
-              <div className="mm-next mm-template"><span>Ideal IA template suggestions (advice only, not part of the mark)</span>
-                <ul>{advice.map((a, i) => <li key={i}><b>{a.section}:</b> {a.title}</li>)}</ul></div>)}
           </article>
         );
       })}
@@ -134,11 +150,11 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
       {error && <p role="alert" className="sx-error">{error}</p>}
       {map.criteria.map((c) => {
         const cp = planBy.get(c.code);
-        const advice = templateAdvice(c.criterion, findings);
         return (
           <article className="mm-card" key={c.code}>
             <div className="mm-head"><h3>{c.code} · {c.criterion}</h3><div className="mm-mark"><strong>{c.mark} / {c.max}</strong></div></div>
             <div className="mm-band"><span>Why this mark</span><p>{cp?.summary ?? c.why_mark}</p></div>
+            {limitsBox(c.code)}
             {cp && cp.quick_wins.length > 0 && <div className="mm-next"><span>Quick wins</span><ul>{cp.quick_wins.map((q, i) => <li key={i}>{q}</li>)}</ul></div>}
             {c.strands.map((s) => {
               const p = cp?.strands.find((x) => x.id === s.id);
@@ -161,9 +177,6 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
                 </details>
               );
             })}
-            {advice.length > 0 && (
-              <div className="mm-next mm-template"><span>Ideal IA template suggestions (advice only)</span>
-                <ul>{advice.map((a, i) => <li key={i}><b>{a.section}:</b> {a.title}</li>)}</ul></div>)}
           </article>
         );
       })}
@@ -173,7 +186,7 @@ export function MarkMapTab({ submissionId, findings, isFreePreview, mode }: { su
 
 const REASON: Record<string, string> = { irrelevant: 'Not relevant', repeated: 'Repeated', redundant: 'Redundant', low_value: 'Earns no marks', too_detailed: 'Too detailed' };
 
-function WordGuide({ map, mode }: { map: MarkMapResult; mode: 'student' | 'teacher' }) {
+function WordGuide({ map, mode, onTrim, trimBusy, planBusy }: { map: MarkMapResult; mode: 'student' | 'teacher'; onTrim: () => void; trimBusy: boolean; planBusy: boolean }) {
   const wc = map.word_count;
   if (!wc) return null;
   const trim = map.trim;
@@ -191,7 +204,9 @@ function WordGuide({ map, mode }: { map: MarkMapResult; mode: 'student' | 'teach
           <tbody>{wc.sections.filter((x) => x.words > 0).map((x, i) => (
             <tr key={i}><td><b>{x.heading}</b></td><td>{x.words}</td>
               <td>{x.budget ? <span className={x.words > x.budget.max ? 'mm-warn' : 'mm-ok'}>{budgetText(x.budget)}{x.words > x.budget.max ? ' · ' + (x.words - x.budget.max) + ' over' : ''}</span> : <span className="mm-sub">no set budget</span>}</td></tr>))}</tbody></table></div>
-        {wc.over_by > 0 && !trim && <p className="mm-sub">Your list of what to remove appears once the fix plan is ready.</p>}
+        {wc.over_by > 0 && !trim && (planBusy || !map.plan
+          ? <p className="mm-sub">Your list of what to remove appears once the fix plan is ready.</p>
+          : <p className="mm-sub">The fix plan is ready but the list of what to cut is not. <button className="sx-btn mm-retry" type="button" onClick={onTrim} disabled={trimBusy}>{trimBusy ? 'Finding what to cut…' : 'Find what to cut'}</button></p>)}
         {trim && (
           <div className="mm-trim">
             <h4>What to remove or shorten, in this order</h4>

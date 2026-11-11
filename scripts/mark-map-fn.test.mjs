@@ -5,13 +5,13 @@ import { STRANDS } from '../supabase/functions/mark-map/rubric.ts';
 
 const blocks = [{ block_index: 0, page_number: 1, section_title: 'Method', text: 'Participants completed three trials on a 20 m track with a stopwatch.' }];
 const mk = (level = '3-4', quote = 'three trials on a 20 m track') => ({
-  criteria: ['A', 'B', 'C', 'D'].map((code) => ({ code, mark: 3, why_mark: 'Best fit.', confidence: 'high',
+  criteria: ['A', 'B', 'C', 'E'].map((code) => ({ code, mark: 3, why_mark: 'Best fit.', confidence: 'high',
     strands: STRANDS.filter((s) => s.criterion === code).map((s) => ({ id: s.id, level, reason: 'r', missing: 'm', evidence: [{ quote, block_index: 0 }] })) })),
   appendix_check: [{ label: 'Raw data', relevant: true, reason: 'ok' }] });
 
 test('sheet has 11 strands (3+3+3+2)', () => {
   assert.equal(STRANDS.length, 11);
-  assert.deepEqual(['A', 'B', 'C', 'D'].map((c) => STRANDS.filter((s) => s.criterion === c).length), [3, 3, 3, 2]);
+  assert.deepEqual(['A', 'B', 'C', 'E'].map((c) => STRANDS.filter((s) => s.criterion === c).length), [3, 3, 3, 2]);
   assert.ok(STRANDS.every((s) => !/Justification$/.test(s.levels['3-4'])));
 });
 test('valid marking assembles with verified quotes and totals', () => {
@@ -23,6 +23,7 @@ test('valid marking assembles with verified quotes and totals', () => {
 test('invented quotes are dropped', () => {
   const m = assembleMarking(mk('3-4', 'this sentence is not in the IA'), blocks);
   assert.equal(m.criteria[0].strands[0].evidence.length, 0); assert.equal(m.dropped_quotes, 11);
+  assert.equal(m.criteria[0].strands[0].level, '0'); assert.equal(m.criteria[0].mark, 0); assert.equal(m.ungrounded_strands, 11);
 });
 test('mark is clamped into the strand range (best fit cannot leave it)', () => {
   const raw = mk('1-2'); raw.criteria[0].mark = 6;
@@ -70,7 +71,7 @@ test('trim picks real paragraphs by reason, protects marked evidence, and comput
   ];
   const m = assembleMarking(mk('3-4', 'word word'), body.map((b) => ({ ...b, text: 'word word ' + b.text })).slice(0, 0).concat([{ block_index: 0, page_number: 1, section_title: 'x', text: 'word word' }]));
   // protect block 2 by hand: it is the only evidence for a 3-4 strand
-  m.criteria[0].strands[0].evidence = [{ quote: 'q', block_index: 2, page: 1, section: 'Introduction' }];
+  m.criteria[0].strands[0].level = '3-4'; m.criteria[0].strands[0].evidence = [{ quote: 'q', block_index: 2, page: 1, section: 'Introduction' }];
   const raw = { trim: [
     { block_index: 2, action: 'remove', reason: 'redundant', why: 'Defines the variables.', serves: ['A1'] },
     { block_index: 1, action: 'remove', reason: 'repeated', why: 'Says the same as the method.', repeated_at: 3, serves: [] },
@@ -90,9 +91,116 @@ test('trim picks real paragraphs by reason, protects marked evidence, and comput
   assert.equal(assembleTrim({}, body, m, 80), null);
 });
 test('plan needs every strand with steps, example and prompts', () => {
-  const plan = { criteria: ['A', 'B', 'C', 'D'].map((code) => ({ code, summary: 's', quick_wins: ['q'],
+  const plan = { criteria: ['A', 'B', 'C', 'E'].map((code) => ({ code, summary: 's', quick_wins: ['q'],
     strands: STRANDS.filter((s) => s.criterion === code).map((s) => ({ id: s.id, plain_ask: 'a', where_you_are: 'w', steps: ['one', 'two', 'three'], example: 'e', extend_prompts: ['p'], done_when: 'd' })) })) };
   assert.equal(assemblePlan(plan).length, 4);
   plan.criteria[2].strands[0].steps = ['only one'];
   assert.equal(assemblePlan(plan), null);
+});
+
+test('a strand with evidence keeps its level while an unevidenced strand in the same criterion gets 0', () => {
+  const raw = mk('3-4');
+  raw.criteria[0].strands[1].evidence = [{ quote: 'not in the report at all', block_index: 0 }];
+  raw.criteria[0].mark = 3;
+  const m = assembleMarking(raw, blocks);
+  const [a1, a2] = m.criteria[0].strands;
+  assert.equal(a1.level, '3-4'); assert.equal(a2.level, '0'); assert.equal(a2.no_evidence, true);
+  assert.match(a2.reason, /no credit/i);
+  assert.equal(m.ungrounded_strands, 1);
+  assert.ok(m.criteria[0].mark <= 4);
+});
+test('a strand claimed at 5-6 with no evidence at all cannot lift the criterion mark', () => {
+  const raw = mk('0'); raw.criteria[2].mark = 5;
+  raw.criteria[2].strands[0].level = '5-6'; raw.criteria[2].strands[0].evidence = [];
+  const m = assembleMarking(raw, blocks);
+  assert.equal(m.criteria[2].mark, 0);
+});
+test('long paragraphs tagged as headings are body text, not section rows', () => {
+  const long = Array(40).fill('word').join(' ');
+  const b = [
+    { block_index: 0, block_type: 'heading', page_number: 1, section_title: 'Hypothesis', text: 'Hypothesis' },
+    { block_index: 1, block_type: 'heading', page_number: 1, section_title: 'Hypothesis', text: long },
+  ];
+  const s = splitDocument(b);
+  assert.equal(s.sections.length, 1);
+  assert.equal(s.sections[0].heading, 'Hypothesis'); assert.equal(s.sections[0].words, 41);
+});
+
+test('quote verification tolerates quote marks, dashes, spacing, ellipses and a wrongly numbered block, but never invented text', () => {
+  const bl = [
+    { block_index: 0, page_number: 1, section_title: 'Intro', text: 'Unrelated opening text about the topic of the study.' },
+    { block_index: 7, page_number: 4, section_title: 'Method', text: 'The dynamometer was held at the participant’s side – elbow straight – and three trials were taken with 30 s rest.' },
+  ];
+  const run = (quote, idx) => {
+    const raw = mk('3-4'); raw.criteria[0].strands[0].evidence = [{ quote, block_index: idx }];
+    return assembleMarking(raw, bl).criteria[0].strands[0];
+  };
+  assert.equal(run("The dynamometer was held at the participant's side - elbow straight", 7).evidence.length, 1);
+  assert.equal(run('The dynamometer was held at the participant’s side … three trials were taken with 30 s rest', 7).evidence.length, 1);
+  const moved = run('three trials were taken with 30 s rest', 0);
+  assert.equal(moved.evidence[0].block_index, 7); assert.equal(moved.evidence[0].page, 4); assert.equal(moved.level, '3-4');
+  const fake = run('five trials were taken with 60 s rest and a water break', 7);
+  assert.equal(fake.evidence.length, 0); assert.equal(fake.level, '0');
+});
+
+test('an uncredited strand caps the criterion mark at the rounded-up average of the strand levels', () => {
+  const raw = mk('5-6'); raw.criteria[0].mark = 6;
+  raw.criteria[0].strands[1].evidence = [{ quote: 'invented sentence that is not present', block_index: 0 }];
+  const m = assembleMarking(raw, blocks);
+  // levels 5-6, 0, 5-6 -> midpoints 5.5, 0, 5.5 -> avg 3.67 -> ceil 4
+  assert.equal(m.criteria[0].mark, 4);
+  assert.equal(m.criteria[1].mark, 5); // fully evidenced criteria are unaffected
+});
+
+const twoBlocks = [
+  { block_index: 0, page_number: 1, section_title: 'Data', text: 'The mean grip strength of the participants was approximately 52.5 kg across the sample.' },
+  { block_index: 1, page_number: 2, section_title: 'Data', text: 'The mean grip strength of 53.0 kg is only the mean of the recorded values.' },
+];
+const withLevels = (levels, extra = {}) => {
+  const raw = mk('3-4', 'mean grip strength of the participants was approximately 52.5 kg');
+  for (const c of raw.criteria) for (const s of c.strands) if (levels[s.id]) s.level = levels[s.id];
+  return { ...raw, ...extra };
+};
+test('the criterion mark cannot round up from the strand average (5-6, 3-4, 3-4 holds A at 4)', () => {
+  const raw = withLevels({ A1: '5-6' }); raw.criteria[0].mark = 5;
+  const m = assembleMarking(raw, twoBlocks);
+  assert.equal(m.criteria[0].mark, 4);
+  assert.ok(m.limits.some((l) => l.kind === 'average' && l.criterion === 'A'));
+});
+test('all strands at the same level may reach the top of that level', () => {
+  const raw = withLevels({ A1: '5-6', A2: '5-6', A3: '5-6' }); raw.criteria[0].mark = 6;
+  assert.equal(assembleMarking(raw, twoBlocks).criteria[0].mark, 6);
+});
+test('a significant contradiction verified in the report caps B1 at 3-4 and is listed as a limit with an action', () => {
+  const raw = withLevels({ B1: '5-6', B2: '5-6', B3: '5-6' }); raw.criteria[1].mark = 6;
+  raw.inconsistencies = [{ strand: 'B1', severity: 'significant', what: 'The mean grip strength is given as two different values.', quote_a: 'approximately 52.5 kg across the sample', quote_b: 'mean grip strength of 53.0 kg is only the mean' }];
+  const m = assembleMarking(raw, twoBlocks);
+  const b = m.criteria[1];
+  assert.equal(b.strands[0].level, '3-4'); assert.match(b.strands[0].reason, /contradicts itself/);
+  assert.equal(b.mark, 5);
+  assert.equal(m.inconsistencies.length, 1);
+  assert.ok(m.limits.some((l) => l.kind === 'inconsistency' && /same value everywhere/.test(l.action)));
+});
+test('a minor slip is recorded with an action but does not cap the level', () => {
+  const raw = withLevels({ B1: '5-6' });
+  raw.inconsistencies = [{ strand: 'B1', severity: 'minor', what: 'Mean grip strength differs by 0.5 kg.', quote_a: 'approximately 52.5 kg across the sample', quote_b: 'mean grip strength of 53.0 kg is only the mean' }];
+  const m = assembleMarking(raw, twoBlocks);
+  assert.equal(m.criteria[1].strands[0].level, '5-6');
+  assert.ok(m.limits.some((l) => l.kind === 'inconsistency_minor'));
+});
+test('a contradiction whose quotes are not in the report is ignored', () => {
+  const raw = withLevels({ B1: '5-6' });
+  raw.inconsistencies = [{ strand: 'B1', severity: 'significant', what: 'Invented clash.', quote_a: 'a sentence that is not in the report at all', quote_b: 'mean grip strength of 53.0 kg is only the mean' }];
+  const m = assembleMarking(raw, twoBlocks);
+  assert.equal(m.inconsistencies.length, 0); assert.equal(m.criteria[1].strands[0].level, '5-6');
+});
+test('every strand has IB checks and Evaluation is criterion E with strands E1 and E2', async () => {
+  const { CHECKS, CRITERIA } = await import('../supabase/functions/mark-map/rubric.ts');
+  assert.ok(STRANDS.every((s) => CHECKS[s.id]?.length >= 1));
+  assert.deepEqual(CRITERIA.map((c) => c.code), ['A', 'B', 'C', 'E']);
+  assert.deepEqual(STRANDS.filter((s) => s.criterion === 'E').map((s) => s.id), ['E1', 'E2']);
+});
+test('client strand sheet mirrors the server sheet word for word', async () => {
+  const { STRAND_DESCRIPTORS } = await import('../src/lib/strandSheet.ts');
+  for (const s of STRANDS) for (const l of ['1-2', '3-4', '5-6']) assert.equal(STRAND_DESCRIPTORS[s.id][l], s.levels[l]);
 });
