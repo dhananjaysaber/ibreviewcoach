@@ -70,7 +70,10 @@ import {
 } from './lib/anonymousSession';
 
 import { supabase } from './lib/supabase';
-import { MarkMapTab } from './components/MarkMapTab';
+import { StudentWorkspace, ProgressView, useTicks } from './components/StudentWorkspace';
+import { TeacherWorkspace } from './components/TeacherWorkspace';
+import { AnnotatedCopy } from './components/AnnotatedCopy';
+import { useMarkMap } from './lib/useMarkMap';
 import { WorkshopGuidedReview } from './components/WorkshopGuidedReview';
 import { CompareIas } from './components/CompareIas';
 import { DraftComparison, type DraftSnapshot } from './components/DraftComparison';
@@ -5108,7 +5111,7 @@ function ProcessingWorkspace({
   );
 }
 
-type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan' | 'markmap' | 'marks';
+type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan' | 'markmap' | 'marks' | 'anncopy' | 'progress';
 
 type ReviewLoadState = 'loading' | 'ready' | 'error';
 
@@ -5299,6 +5302,9 @@ function CompletionWorkspace({
     'unassigned';
 
   const isFreeReview = accessMode === 'free_review';
+  const mm = useMarkMap(submission?.id ?? '', isFreeReview);
+  const [ticks, setTick] = useTicks(submission?.id ?? '');
+  useEffect(() => { if (mm.map) setMarkMapScore({ mark: mm.map.mark, maximum: mm.map.maximum }); }, [mm.map]);
 
   const hasFullReviewAccess =
     accessMode === 'paid_credit' || accessMode === 'complimentary';
@@ -5758,10 +5764,9 @@ function CompletionWorkspace({
             <div className="review-tabgroup" role="tablist" aria-label="Student report tabs">
               <span className="review-tabgroup-label">{reviewSpace === 'teacher' ? 'Student report' : 'For the student'}</span>
               {([
-                ['marks', SearchCheck, 'Marks & fix plan', isFreeReview ? 'Locked' : 'Mark + steps'],
-                ['detailed', BookOpen, 'Feedback', isFreeReview ? 'First criterion preview' : 'By criterion'],
-                ['workshop', ListChecks, 'Section guide', 'All 9 IA sections'],
-                ['plan', ClipboardList, 'Progress plan', isFreeReview ? 'Locked' : 'Next steps'],
+                ['marks', SearchCheck, 'Fix your IA', isFreeReview ? 'Locked' : 'Section by section'],
+                ['anncopy', Eye, 'Annotated copy', isFreeReview ? 'Locked' : 'Comments beside your report'],
+                ['progress', ListChecks, 'Progress', isFreeReview ? 'Locked' : 'Fixes you have ticked'],
               ] as const).map(([id, Icon, label, hint]) => (
                 <button
                   key={id}
@@ -5791,8 +5796,21 @@ function CompletionWorkspace({
               >
                 <SearchCheck aria-hidden="true" />
                 <span>
-                  <strong>Mark map</strong>
-                  <small>Recommended mark</small>
+                  <strong>Teacher view</strong>
+                  <small>Marks and coaching</small>
+                </span>
+              </button>
+              <button
+                className={`review-tab ${activeTab === 'anncopy' ? 'review-tab-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'anncopy'}
+                onClick={() => setActiveTab('anncopy')}
+              >
+                <Eye aria-hidden="true" />
+                <span>
+                  <strong>Annotated copy</strong>
+                  <small>Comments by strand code</small>
                 </span>
               </button>
               <button
@@ -5804,7 +5822,7 @@ function CompletionWorkspace({
               >
                 <Eye aria-hidden="true" />
                 <span>
-                  <strong>Annotated IA</strong>
+                  <strong>Annotated file</strong>
                   <small>{isFreeReview ? '20-line preview' : 'Marked copy and notes'}</small>
                 </span>
               </button>
@@ -5860,23 +5878,15 @@ function CompletionWorkspace({
                 )}
 
                 {reviewSpace === 'teacher' && activeTab === 'markmap' && (
-                  <MarkMapTab
-                    onScore={setMarkMapScore}
-                    mode="teacher"
-                    submissionId={submission?.id ?? ''}
-                    findings={reviewData.findings}
-                    isFreePreview={isFreeReview}
-                  />
+                  <TeacherWorkspace mm={mm} submissionId={submission?.id ?? ''} isFreePreview={isFreeReview} openAnnotated={() => setActiveTab('anncopy')} />
                 )}
                 {activeTab === 'marks' && (
-                  <MarkMapTab
-                    onScore={setMarkMapScore}
-                    mode="student"
-                    submissionId={submission?.id ?? ''}
-                    findings={reviewData.findings}
-                    isFreePreview={isFreeReview}
-                  />
+                  <StudentWorkspace mm={mm} submissionId={submission?.id ?? ''} isFreePreview={isFreeReview} ticks={ticks} setTick={setTick} />
                 )}
+                {activeTab === 'progress' && <ProgressView mm={mm} ticks={ticks} />}
+                {activeTab === 'anncopy' && (isFreeReview
+                  ? <section className="ws"><p className="w-note">The annotated copy needs the full review.</p></section>
+                  : <AnnotatedCopy mm={mm} teacher={reviewSpace === 'teacher'} canToggle={reviewSpace === 'teacher'} />)}
 
                 {reviewSpace === 'teacher' && activeTab === 'annotated' && (
                   <>
@@ -8522,7 +8532,7 @@ function useMarkMapTotals(ids: string[]): Record<string, { mark: number; maximum
 }
 
 type CriterionMarkView = { mark: number; max: number; why: string; confidence: string };
-const FEEDBACK_CODE: Record<string, string> = { ResearchDesign: 'A', DataAnalysis: 'B', Conclusion: 'C', Evaluation: 'E' };
+const FEEDBACK_CODE: Record<string, string> = { ResearchDesign: 'RD', DataAnalysis: 'DA', Conclusion: 'CO', Evaluation: 'EV' };
 function useCriterionMarks(submissionId: string): Record<string, CriterionMarkView> {
   const [marks, setMarks] = useState<Record<string, CriterionMarkView>>({});
   useEffect(() => {

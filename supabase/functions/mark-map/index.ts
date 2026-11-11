@@ -6,7 +6,7 @@
  * The Ideal IA template is never an input to a mark. Requires the signed-in owner with full review access.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { MARK_SYSTEM, PLAN_SYSTEM, TRIM_SYSTEM, WORD_LIMIT, assembleCriterionPlan, appendixDigest, assembleMarking, assemblePlan, assembleTrim, buildDocument, buildMarkPrompt, buildPlanPrompt, splitDocument, totals, wordGuide, type Block } from './logic.ts';
+import { ANNOTATE_SYSTEM, MARK_SYSTEM, PLAN_SYSTEM, TRIM_SYSTEM, WORD_LIMIT, assembleAnnotations, assembleCriterionPlan, appendixDigest, assembleMarking, assembleTrim, buildAnnotatePrompt, buildDocument, buildMarkPrompt, buildPlanPrompt, splitDocument, totals, wordGuide, wordLimits, type Block } from './logic.ts';
 
 const VERSION = 'mark-map-v2';
 const MODEL = 'claude-sonnet-4-6';
@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return reply(400, { error: 'Invalid JSON' }); }
   const { submission_id } = body;
-  const action = body.action === 'generate' ? 'generate' : body.action === 'plan' ? 'plan' : body.action === 'trim' ? 'trim' : 'get';
+  const action = body.action === 'generate' ? 'generate' : body.action === 'plan' ? 'plan' : body.action === 'trim' ? 'trim' : body.action === 'annotate' ? 'annotate' : body.action === 'text' ? 'text' : 'get';
   if (!isUuid(submission_id)) return reply(400, { error: 'submission_id required' });
 
   const db = createClient(url, service, { auth: { persistSession: false } });
@@ -70,13 +70,33 @@ Deno.serve(async (req) => {
   if (stErr) return reply(500, { error: 'The mark map schema has not been installed on this environment' });
   if (action === 'get') return reply(200, { map: stored?.result ?? null, created_at: stored?.created_at ?? null });
   if (action === 'generate' && stored?.result) return reply(200, { map: stored.result, created_at: stored.created_at });
-  if ((action === 'plan' || action === 'trim') && !stored?.result) return reply(409, { error: 'Mark the IA first.' });
+  if ((action === 'plan' || action === 'trim' || action === 'annotate') && !stored?.result) return reply(409, { error: 'Mark the IA first.' });
   if (action === 'trim' && (stored!.result as { trim?: unknown }).trim) return reply(200, { map: stored!.result, created_at: stored!.created_at });
+  if (action === 'annotate' && (stored!.result as { annotations?: unknown }).annotations) return reply(200, { map: stored!.result, created_at: stored!.created_at });
   if (action === 'plan' && (stored!.result as { plan?: unknown }).plan) return reply(200, { map: stored!.result, created_at: stored!.created_at });
 
+  if (action === 'text') {
+    // The report body for the annotated copy. No AI call; appendices are left out.
+    if (submission.content_purged_at) return reply(409, { error: 'The IA text has expired.' });
+    const { data: tr, error: tErr } = await db.from('ia_document_blocks').select('block_index,block_type,page_number,section_title,text').eq('submission_id', submission_id).order('block_index').limit(5000);
+    if (tErr || !tr?.length) return reply(409, { error: 'The IA text is not available for this report.' });
+    return reply(200, { blocks: splitDocument(tr as Block[]).body });
+  }
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey) return reply(503, { error: 'AI provider key is not configured server-side' });
   if (submission.content_purged_at) return reply(409, { error: 'The IA text has expired, so it cannot be marked again.' });
+  if (action === 'annotate') {
+    deadline = Date.now() + 100_000;
+    try {
+      const raw = await callClaude(apiKey, ANNOTATE_SYSTEM, buildAnnotatePrompt(stored!.result as never), 3500);
+      const annotations = assembleAnnotations(raw);
+      if (!annotations) return reply(502, { error: 'The annotated copy could not be prepared. Please try again.' });
+      const next = { ...(stored!.result as Record<string, unknown>), annotations };
+      const { error: aErr } = await db.from('ia_mark_maps').upsert({ submission_id, student_id: user.id, map_version: VERSION, result: next, model_id: MODEL }, { onConflict: 'submission_id,map_version' });
+      if (aErr) return reply(500, { error: 'Could not save the annotated copy' });
+      return reply(200, { map: next, created_at: new Date().toISOString() });
+    } catch (e) { return reply(502, { error: e instanceof Error ? e.message : 'Annotation failed' }); }
+  }
   const { data: rows, error: bErr } = await db.from('ia_document_blocks').select('block_index,block_type,page_number,section_title,text').eq('submission_id', submission_id).order('block_index').limit(5000);
   if (bErr || !rows?.length) return reply(409, { error: 'The IA text is not available for this report.' });
   const split = splitDocument(rows as Block[]);
@@ -98,7 +118,7 @@ Deno.serve(async (req) => {
       const map = {
         version: VERSION, model: MODEL, source_complete: complete,
         word_count: { counted: split.totalCounted, limit: WORD_LIMIT, over_by: split.overBy, cut_at: split.cutAt, sections: split.sections },
-        over_word_limit: split.overLimit, ...totals(marking.criteria), ...marking, plan: null,
+        over_word_limit: split.overLimit, ...totals(marking.criteria), ...marking, limits: [...marking.limits, ...wordLimits(split.sections)], plan: null,
       };
       const { error: saveErr } = await db.from('ia_mark_maps').upsert({ submission_id, student_id: user.id, map_version: VERSION, result: map, model_id: MODEL }, { onConflict: 'submission_id,map_version' });
       if (saveErr) return reply(500, { error: 'Could not save the mark map' });
@@ -107,7 +127,7 @@ Deno.serve(async (req) => {
     const map = stored!.result as Record<string, unknown> & { criteria: never };
     deadline = Date.now() + 125_000;
     const guide = split.overLimit ? wordGuide(split.sections, split.totalCounted) : '';
-    const codes = ['A', 'B', 'C', 'E'];
+    const codes = ['RD', 'DA', 'CO', 'EV'];
     // Each criterion is its own short call, run in parallel, so the whole plan stays well inside the 150 s function limit.
     const planCall = async (code: string) => {
       for (let attempt = 0; attempt < 2; attempt++) {
