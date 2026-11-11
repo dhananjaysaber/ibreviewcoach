@@ -36,6 +36,7 @@ import {
   Sparkles,
   Target,
   ChevronRight,
+  Pencil,
   UserPlus,
   UploadCloud,
   X,
@@ -4283,6 +4284,37 @@ function ReportsDashboard({
 
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameBusy, setRenameBusy] = useState(false);
+  const [renameError, setRenameError] = useState('');
+
+  async function commitRename(report: ReportHistoryRow) {
+    const next = renameValue.trim();
+    if (!next || next === report.original_filename) {
+      setRenamingId(null);
+      return;
+    }
+    setRenameBusy(true);
+    setRenameError('');
+    const { data, error } = await supabase.rpc('rename_my_ia_report', {
+      p_submission_id: report.submission_id,
+      p_filename: next,
+    });
+    setRenameBusy(false);
+    if (error) {
+      setRenameError('Could not rename. Please try again.');
+      return;
+    }
+    const saved = typeof data === 'string' && data ? data : next;
+    setReports((rows) =>
+      rows.map((r) =>
+        r.submission_id === report.submission_id ? { ...r, original_filename: saved } : r
+      )
+    );
+    setRenamingId(null);
+  }
+
   const [sortMode, setSortMode] = useState<'latest' | 'oldest' | 'filename'>(
     'latest'
   );
@@ -4543,6 +4575,36 @@ function ReportsDashboard({
                 className="premium-report-row"
                 key={report.submission_id}
               >
+                {renamingId === report.submission_id ? (
+                  <div className="premium-report-file premium-report-renaming">
+                    <span>
+                      <FileText aria-hidden="true" />
+                    </span>
+                    <div>
+                      <input
+                        autoFocus
+                        maxLength={120}
+                        value={renameValue}
+                        disabled={renameBusy}
+                        aria-label="Report name"
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') void commitRename(report);
+                          if (e.key === 'Escape') setRenamingId(null);
+                        }}
+                      />
+                      <div className="premium-rename-actions">
+                        <button type="button" disabled={renameBusy} onClick={() => void commitRename(report)}>
+                          {renameBusy ? 'Saving…' : 'Save name'}
+                        </button>
+                        <button type="button" disabled={renameBusy} onClick={() => setRenamingId(null)}>
+                          Cancel
+                        </button>
+                        {renameError && <em>{renameError}</em>}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <button
                   className="premium-report-file"
                   type="button"
@@ -4573,6 +4635,7 @@ function ReportsDashboard({
                     </small>
                   </div>
                 </button>
+                )}
 
                 <div className="premium-report-features">
                   {report.annotated_html_ready && (
@@ -4608,19 +4671,34 @@ function ReportsDashboard({
                   </strong>
                 </div>
 
-                <button
-                  className="premium-report-open"
-                  type="button"
-                  onClick={() => void handleOpen(report.submission_id)}
-                  disabled={Boolean(openingSubmissionId)}
-                  aria-label={`Open ${report.original_filename}`}
-                >
-                  {isOpening ? (
-                    <LoaderCircle className="premium-spin" aria-hidden="true" />
-                  ) : (
-                    <ChevronRight aria-hidden="true" />
-                  )}
-                </button>
+                <div className="premium-report-actions">
+                  <button
+                    className="premium-report-rename"
+                    type="button"
+                    title="Rename report"
+                    aria-label={`Rename ${report.original_filename}`}
+                    onClick={() => {
+                      setRenameError('');
+                      setRenameValue(report.original_filename);
+                      setRenamingId(report.submission_id);
+                    }}
+                  >
+                    <Pencil aria-hidden="true" />
+                  </button>
+                  <button
+                    className="premium-report-open"
+                    type="button"
+                    onClick={() => void handleOpen(report.submission_id)}
+                    disabled={Boolean(openingSubmissionId)}
+                    aria-label={`Open ${report.original_filename}`}
+                  >
+                    {isOpening ? (
+                      <LoaderCircle className="premium-spin" aria-hidden="true" />
+                    ) : (
+                      <ChevronRight aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
               </article>
             );
           })}
