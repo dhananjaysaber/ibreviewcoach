@@ -6,7 +6,7 @@
  * The Ideal IA template is never an input to a mark. Requires the signed-in owner with full review access.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { ANNOTATE_SYSTEM, MARK_SYSTEM, PLAN_SYSTEM, TRIM_SYSTEM, WORD_LIMIT, assembleAnnotations, assembleCriterionPlan, appendixDigest, assembleMarking, assembleTrim, buildAnnotatePrompt, buildDocument, buildMarkPrompt, buildPlanPrompt, splitDocument, totals, wordGuide, wordLimits, type Block } from './logic.ts';
+import { ANNOTATE_SYSTEM, MARK_SYSTEM, PLAN_SYSTEM, TRIM_SYSTEM, WORD_LIMIT, assembleAnnotations, assembleCriterionPlan, appendixDigest, assembleMarking, assembleTrim, buildAnnotatePrompt, buildDocument, buildMarkPrompt, buildPlanPrompt, MARK_PARTS, mergeMarkParts, splitDocument, totals, wordGuide, wordLimits, type Block } from './logic.ts';
 
 const VERSION = 'mark-map-v2';
 const MODEL = 'claude-sonnet-4-6';
@@ -107,9 +107,16 @@ Deno.serve(async (req) => {
       let marking: ReturnType<typeof assembleMarking> = null;
       // A second pass only if some strand lost credit for lacking a verifiable quotation; keep the better of the two.
       const t0 = Date.now(); deadline = t0 + 125_000;
+      const partCall = async (part: (typeof MARK_PARTS)[number]) => {
+        for (let k = 0; k < 2; k++) {
+          if (k > 0 && Date.now() - t0 > 70_000) break; // a retry must still fit inside the function time limit
+          try { const r = await callClaude(apiKey, MARK_SYSTEM, buildMarkPrompt(doc, appendixDigest(split.appendix), split, part), 6500); if (r) return r; } catch (_e) { /* retry once */ }
+        }
+        return null;
+      };
       for (let attempt = 0; attempt < 2; attempt++) {
-        if (attempt > 0 && Date.now() - t0 > 40_000) break; // a second full pass would risk the 150 s function limit
-        const raw = await callClaude(apiKey, MARK_SYSTEM, buildMarkPrompt(doc, appendixDigest(split.appendix), split), 9000);
+        if (attempt > 0 && Date.now() - t0 > 50_000) break; // a second full pass would risk the function limit
+        const raw = mergeMarkParts(await Promise.all(MARK_PARTS.map(partCall)));
         const got = raw ? assembleMarking(raw, split.body) : null;
         if (got && (!marking || got.ungrounded_strands < marking.ungrounded_strands)) marking = got;
         if (marking && marking.ungrounded_strands === 0) break;

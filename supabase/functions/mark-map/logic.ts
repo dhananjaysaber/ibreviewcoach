@@ -71,7 +71,7 @@ export function appendixDigest(appendix: Block[], max = 14): string {
     .map((b) => `[b${b.block_index} ${b.section_title ?? ''}] ${b.text.replace(/\s+/g, ' ').slice(0, 240)}`).join('\n');
 }
 
-const strandSheet = () => CRITERIA.map((c) =>
+const strandSheet = (only?: readonly string[]) => CRITERIA.filter((c) => !only || only.includes(c.code)).map((c) =>
   `CRITERION ${c.code}: ${c.name} (0-6)\n` + STRANDS.filter((s) => s.criterion === c.code).map((s) =>
     `  ${s.id} ${s.name}\n    0: ${LEVEL0[c.code]}\n` +
     LEVELS.slice(1).map((l) => `    ${l}: ${s.levels[l]}`).join('\n') +
@@ -96,11 +96,22 @@ Method: for each strand give the level, one or two VERBATIM quotes from the IA (
 Also judge each appendix item supplied: is it relevant to the investigation (raw data, protocol, consent form, calculations) or irrelevant padding? The output must be valid JSON: inside any string value use single quotes for your own quotation marks, and write any double quote that is part of a copied report quote as \\\"; never leave a raw double quote inside a string. Return JSON ONLY:
 {"criteria":[{"code":"RD","mark":0,"why_mark":"3-5 analytical third-person sentences: which strands fixed the mark, the best-fit reasoning across them, and the single decisive gap to the next mark","strands":[{"id":"RD1","level":"0|1-2|3-4|5-6","reason":"...","evidence":[{"quote":"...","block_index":0}],"missing":"...","failed_checks":["check_id"]}],"confidence":"high|medium|low"}],"appendix_check":[{"label":"...","relevant":true,"reason":"..."}],"data_sufficiency":"one sentence","inconsistencies":[{"strand":"DA1","severity":"significant|minor","what":"which quantity or statement disagrees, in one sentence","quote_a":"...","quote_b":"..."}]}`;
 
-export function buildMarkPrompt(doc: string, appendix: string, meta: { overLimit: boolean; totalCounted: number }): string {
-  return `Strand sheet:\n${strandSheet()}\n\n` +
+/** The marking is split in two parallel calls (RD+DA and CO+EV) so each finishes well inside the function time limit. */
+export const MARK_PARTS: { codes: readonly string[]; first: boolean }[] = [{ codes: ['RD', 'DA'], first: true }, { codes: ['CO', 'EV'], first: false }];
+export function mergeMarkParts(parts: (Record<string, unknown> | null)[]): Record<string, unknown> | null {
+  if (parts.some((p) => !p)) return null;
+  const ps = parts as Record<string, unknown>[];
+  const arr = (v: unknown) => (Array.isArray(v) ? v : []);
+  return { criteria: ps.flatMap((p) => arr(p.criteria)), appendix_check: arr(ps[0].appendix_check), data_sufficiency: ps[0].data_sufficiency ?? '', inconsistencies: ps.flatMap((p) => arr(p.inconsistencies)) };
+}
+
+export function buildMarkPrompt(doc: string, appendix: string, meta: { overLimit: boolean; totalCounted: number }, part: { codes: readonly string[]; first: boolean } = { codes: ['RD', 'DA', 'CO', 'EV'], first: true }): string {
+  const all = part.codes.length === CRITERIA.length;
+  return `Strand sheet:\n${strandSheet(part.codes)}\n\n` +
+    (all ? '' : `IN THIS RESPONSE mark ONLY criteria ${part.codes.join(' and ')}: the "criteria" array must contain exactly those criteria. Still read the WHOLE report, and list any inconsistency you find that touches your strands. ${part.first ? '' : 'Return "appendix_check":[] and "data_sufficiency":"" because they are handled elsewhere. '}\n\n`) +
     (meta.overLimit ? `NOTE: the report is about ${meta.totalCounted} words, over the ${WORD_LIMIT}-word limit. The WHOLE report is supplied. Mark all of it on its merits; do not penalise length here, because a separate guide handles word count. Lines marked table_text are data tables.\n\n` : '') +
     `IA text (each line starts with [b<block_index> p<page> <section>]):\n${doc}\n\n` +
-    `Appendix items (not marked, check relevance only):\n${appendix || '(none)'}`;
+    (part.first ? `Appendix items (not marked, check relevance only):\n${appendix || '(none)'}` : 'Appendix items are not needed for this part.');
 }
 
 const squash = (s: string) => s.normalize('NFKC').replace(/[‘’‛]/g, "'").replace(/[“”]/g, '"').replace(/[‐-―−]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
