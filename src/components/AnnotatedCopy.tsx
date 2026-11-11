@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { allStrands, levelClass, type MarkMap, type ReportBlock } from '../lib/markMap';
+import { allStrands, hasAnnotations, levelClass, type MarkMap, type ReportBlock } from '../lib/markMap';
 import { MarkGate, type MM } from './WorkspaceParts';
 import { openAnnotatedEditor } from '../lib/annotatedEditor';
 import './workspace.css';
@@ -9,8 +9,9 @@ const norm = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
 const firstSentence = (s: string) => (s.match(/^.*?[.!?](\s|$)/)?.[0] ?? s).trim();
 
 /** Short comment for a strand: the prepared one if the teacher made it, otherwise the first sentence of the justification. */
-function strandText(map: MarkMap, id: string, level: string, reason: string) {
-  return map.annotations?.[id] ?? `${id} ${level}: ${firstSentence(reason)}`;
+function strandText(map: MarkMap, id: string, level: string, reason: string, i: number) {
+  const a = map.annotations?.[id];
+  return (Array.isArray(a) ? a[i] : '') || (i === 0 ? `${id} ${level}: ${firstSentence(reason)}` : '');
 }
 
 export function buildComments(map: MarkMap, blocks: ReportBlock[], mode: 'teacher' | 'student') {
@@ -21,9 +22,14 @@ export function buildComments(map: MarkMap, blocks: ReportBlock[], mode: 'teache
     at.set(idx, [...(at.get(idx) ?? []), c]);
   };
   for (const s of allStrands(map)) {
-    const base = strandText(map, s.id, s.level, s.reason);
-    const fix = mode === 'student' && s.level !== '5-6' && s.missing ? ` To move up: ${s.missing}` : '';
-    put(s.evidence[0]?.block_index, { code: s.id, level: s.level, text: base + fix, kind: 'strand', quote: s.evidence[0]?.quote });
+    const prepared = hasAnnotations(map);
+    const slots = prepared ? Math.max(1, Math.min(3, s.evidence.length)) : 1;
+    for (let i = 0; i < slots; i++) {
+      const base = strandText(map, s.id, s.level, s.reason, i);
+      if (!base) continue;
+      const fix = mode === 'student' && i === 0 && s.level !== '5-6' && s.missing ? ` To move up: ${s.missing}` : '';
+      put(s.evidence[i]?.block_index, { code: s.id, level: s.level, text: base + fix, kind: 'strand', quote: s.evidence[i]?.quote });
+    }
   }
   for (const l of map.limits ?? []) {
     if (!['inconsistency', 'inconsistency_minor'].includes(l.kind)) continue;
@@ -74,7 +80,7 @@ export function AnnotatedCopy({ mm, canToggle, teacher }: { mm: MM; canToggle?: 
   const built = useMemo(() => (map && blocks ? buildComments(map, blocks, mode) : null), [map, blocks, mode]);
   if (!map) return mm.checked ? <MarkGate mm={mm} teacher={teacher} /> : <section className="ws"><p className="w-note">Loading…</p></section>;
   const quotes = allStrands(map).flatMap((s) => s.evidence.map((e) => e.quote));
-  const needsPrep = teacher && mode === 'teacher' && !map.annotations;
+  const needsPrep = teacher && mode === 'teacher' && !hasAnnotations(map);
   // join consecutive table rows so a data table reads as one block
   const rows: { key: number; block: ReportBlock; extra?: string[] }[] = [];
   for (const b of blocks ?? []) {
@@ -90,7 +96,7 @@ export function AnnotatedCopy({ mm, canToggle, teacher }: { mm: MM; canToggle?: 
           <button type="button" aria-pressed={mode === 'teacher'} onClick={() => setMode('teacher')}>Teacher comments (for the IB)</button>
           <button type="button" aria-pressed={mode === 'student'} onClick={() => setMode('student')}>Student comments (detailed)</button>
         </div>}
-        {teacher && <button className="w-btn yellow" type="button" disabled={!!mm.busy || !!map.annotations} onClick={() => void mm.run('annotate')}>{mm.busy === 'annotate' ? 'Preparing…' : map.annotations ? 'Annotated copy prepared' : 'Prepare annotated copy'}</button>}
+        {teacher && <button className="w-btn yellow" type="button" disabled={!!mm.busy || !!hasAnnotations(map)} onClick={() => void mm.run('annotate')}>{mm.busy === 'annotate' ? 'Preparing…' : hasAnnotations(map) ? 'Annotated copy prepared' : 'Prepare annotated copy'}</button>}
         <button className="w-btn yellow" type="button" disabled={!built} onClick={() => { if (built) openEditor(rows, built); }}>Open editable annotated copy</button>
       </div>
       {needsPrep && <p className="w-note">These comments use the first sentence of each justification. Press Prepare annotated copy to shorten every comment to what was found and why the level is justified. It makes one extra call, only when you press it.</p>}

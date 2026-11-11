@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { STRAND_DESCRIPTORS, NOT_REACHED, STRAND_NAMES } from '../lib/strandSheet';
-import { allStrands, levelClass, planOf } from '../lib/markMap';
+import { allStrands, hasAnnotations, levelClass, planOf } from '../lib/markMap';
 import { buildMarkCopyHtml, type MarkCopyMap } from '../lib/teacherCopy';
 import { PolicyFlagsStrip } from './PolicyFlagsStrip';
 import { CRIT_NAMES, MarkGate, WsHero, type MM } from './WorkspaceParts';
@@ -85,7 +85,7 @@ export function TeacherWorkspace({ mm, submissionId, isFreePreview, openAnnotate
           <div className="w-card w-tcard"><h2>Outputs</h2>
             <div className="w-actions">
               <button className="w-btn" type="button" onClick={download}>Download teacher copy</button>
-              <button className="w-btn yellow" type="button" disabled={!!mm.busy} onClick={async () => { if (map.annotations || await mm.run('annotate')) openAnnotated(); }}>{mm.busy === 'annotate' ? 'Preparing…' : map.annotations ? 'Open annotated copy' : 'Prepare annotated copy'}</button>
+              <button className="w-btn yellow" type="button" disabled={!!mm.busy} onClick={async () => { if (hasAnnotations(map) || await mm.run('annotate')) openAnnotated(); }}>{mm.busy === 'annotate' ? 'Preparing…' : hasAnnotations(map) ? 'Open annotated copy' : 'Prepare annotated copy'}</button>
             </div>
             <p className="w-cost" style={{ margin: '10px 0 0' }}>Download uses the saved marking, no extra call. Prepare annotated copy makes <b>one</b> extra call that shortens every comment to what was found and why the level is justified. It runs only when you press it.</p>
           </div>

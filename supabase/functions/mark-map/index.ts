@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
   if (action === 'generate' && stored?.result) return reply(200, { map: stored.result, created_at: stored.created_at });
   if ((action === 'plan' || action === 'trim' || action === 'annotate') && !stored?.result) return reply(409, { error: 'Mark the IA first.' });
   if (action === 'trim' && (stored!.result as { trim?: unknown }).trim) return reply(200, { map: stored!.result, created_at: stored!.created_at });
-  if (action === 'annotate' && (stored!.result as { annotations?: unknown }).annotations) return reply(200, { map: stored!.result, created_at: stored!.created_at });
+  if (action === 'annotate' && Object.values((stored!.result as { annotations?: Record<string, unknown> }).annotations ?? {}).some(Array.isArray)) return reply(200, { map: stored!.result, created_at: stored!.created_at });
   if (action === 'plan' && (stored!.result as { plan?: unknown }).plan) return reply(200, { map: stored!.result, created_at: stored!.created_at });
 
   if (action === 'text') {
@@ -88,8 +88,8 @@ Deno.serve(async (req) => {
   if (action === 'annotate') {
     deadline = Date.now() + 100_000;
     try {
-      const raw = await callClaude(apiKey, ANNOTATE_SYSTEM, buildAnnotatePrompt(stored!.result as never), 3500);
-      const annotations = assembleAnnotations(raw);
+      const raw = await callClaude(apiKey, ANNOTATE_SYSTEM, buildAnnotatePrompt(stored!.result as never), 6000);
+      const annotations = assembleAnnotations(raw, stored!.result as never);
       if (!annotations) return reply(502, { error: 'The annotated copy could not be prepared. Please try again.' });
       const next = { ...(stored!.result as Record<string, unknown>), annotations };
       const { error: aErr } = await db.from('ia_mark_maps').upsert({ submission_id, student_id: user.id, map_version: VERSION, result: next, model_id: MODEL }, { onConflict: 'submission_id,map_version' });

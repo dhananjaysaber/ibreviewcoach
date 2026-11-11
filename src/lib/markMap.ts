@@ -17,7 +17,7 @@ export type MarkMap = {
   word_count: { counted: number; limit: number; over_by: number; sections: SectionWords[] };
   trim: Trim | null; criteria: Criterion[]; limits?: Limit[]; inconsistencies?: Inconsistency[];
   appendix_check: { label: string; relevant: boolean; reason: string }[]; data_sufficiency: string;
-  plan: CriterionPlan[] | null; annotations?: Record<string, string>;
+  plan: CriterionPlan[] | null; annotations?: Record<string, string[] | string>;
 };
 export type ReportBlock = { block_index: number; block_type?: string | null; page_number: number | null; section_title: string | null; text: string };
 
@@ -61,3 +61,6 @@ export function sectionView(m: MarkMap, secId: string) {
 const criterionHome = (code: string) => ({ RD: 'bg', DA: 'da', CO: 'co', EV: 'ev' } as Record<string, string>)[code];
 
 export { STRAND_NAMES };
+
+/** True once the passage-specific comments exist (older maps stored one text per strand and need preparing again). */
+export const hasAnnotations = (m: { annotations?: Record<string, string[] | string> }) => Object.values(m.annotations ?? {}).some(Array.isArray);

@@ -270,25 +270,42 @@ Rules: do not tell students to match decimals or to carry uncertainties forward;
 Also per criterion: summary (2 sentences on why they got this mark and the single biggest thing to fix) and quick_wins (up to 3 small fixes).
 Use single quotes inside strings. Return JSON ONLY for the ONE criterion you are asked about: {"code":"RD","summary":"...","quick_wins":["..."],"strands":[{"id":"RD1","plain_ask":"...","where_you_are":"...","steps":["..."],"done_when":"...","coach":{"need":"...","miss":"...","ask":["..."],"strong":"...","direction":"..."}}]}`;
 
-export const ANNOTATE_SYSTEM = `You are the internal assessor writing margin comments on an IB SEHS IA for the external moderator. Write one comment per strand you are given.
-Each comment says what you found in the report and why that level is justified, in at most 30 words, in the third person, naming the specific thing in the report (a variable, a table, a value, a missing item). The moderator knows the rubric, so do not repeat the descriptor wording. Do not give advice.
-Start each comment with the strand code and level, for example "RD2 3-4: controls named, confounders not mitigated." Use single quotes inside strings.
-Return JSON ONLY: {"comments":[{"id":"RD1","text":"RD1 3-4: ..."}]}`;
+export const ANNOTATE_SYSTEM = `You are the internal assessor writing margin comments on an IB SEHS IA for the external moderator. Each comment is attached to ONE highlighted passage of the report and must be about that passage only.
+For every numbered passage you are given, write one comment of 25 to 45 words in the third person ('The candidate...') with three parts in flowing prose, not labelled:
+1. EVIDENCE: what this passage actually contains, naming specifics from it (the variables, tool, sample, value, table, source or claim it makes).
+2. ANALYSIS: what that achieves against the strand, in positive terms, using the strand's own descriptor ideas (for example 'so the question is set in a specific context').
+3. GAP, only if the level is below 5-6: one diplomatic clause saying what would take this passage further, phrased as an opportunity ('would be stronger if...', 'could go further by...'). Keep the gap about THIS passage. If the passage fully meets the strand, say what makes it secure and add no gap.
+Start the comment with the strand code and level, for example 'RD1 3-4:'.
+Do NOT mention: word counts or word limits, the number of sources in the report, source verification, template checks, other sections of the report, marks, or what the student 'should' do. Do not repeat the descriptor wording word for word, and do not use 'unverifiable'. Use single quotes inside strings.
+Return JSON ONLY: {"comments":[{"id":"RD1","n":1,"text":"RD1 3-4: ..."}]}  where n is the passage number given for that strand (use n 0 for a strand with no passage).`;
 
+export type AnnotationSet = Record<string, string[]>;
+/** One prompt line group per strand, with its numbered passages. Only what each passage shows is supplied, so comments stay specific to it. */
 export function buildAnnotatePrompt(m: Marking): string {
-  return m.criteria.flatMap((c) => c.strands.map((s) => `${s.id} ${s.name}: level ${s.level}. Reason: ${s.reason} Failed template checks: ${s.failed_checks.join(', ') || 'none'}. Evidence: ${s.evidence.map((e) => `'${e.quote}'`).join(' ') || 'none'}`)).join('\n') +
-    ((m.limits ?? []).length ? '\n\nHolding marks down:\n' + m.limits.map((l) => `- ${l.strand ?? l.criterion}: ${l.detail}`).join('\n') : '');
+  return m.criteria.flatMap((c) => c.strands.map((s) => {
+    const def = STRANDS.find((x) => x.id === s.id);
+    const next = s.level === '0' ? def?.levels['1-2'] : s.level === '1-2' ? def?.levels['3-4'] : s.level === '3-4' ? def?.levels['5-6'] : '';
+    return `STRAND ${s.id} ${s.name}: level ${s.level}.\n` +
+      (s.level !== '0' && def?.levels[s.level] ? `  Level ${s.level} descriptor: ${def.levels[s.level]}\n` : '') +
+      (next ? `  Next level up: ${next}\n` : '') +
+      `  Assessor's reasoning: ${s.reason}\n  Missing for the next level: ${s.missing || 'n/a'}\n` +
+      (s.evidence.length ? s.evidence.map((e, i) => `  PASSAGE ${i + 1} (${e.section ?? 'report'}, page ${e.page ?? '?'}): '${e.quote}'`).join('\n') : '  No passage supports this strand (use n 0).');
+  })).join('\n\n');
 }
 
-export function assembleAnnotations(raw: Record<string, unknown> | null): Record<string, string> | null {
+/** Comments are kept per passage in order, so comment i belongs to evidence[i]. Strands with no passage get one comment at index 0. */
+export function assembleAnnotations(raw: Record<string, unknown> | null, m: Marking): AnnotationSet | null {
   if (!raw || !Array.isArray(raw.comments)) return null;
-  const out: Record<string, string> = {};
-  const ids = new Set(STRANDS.map((x) => x.id));
+  const out: AnnotationSet = {};
   for (const c of raw.comments as Record<string, unknown>[]) {
-    const id = clean(c?.id).toUpperCase(), text = clean(c?.text);
-    if (ids.has(id) && text && text.split(' ').length <= 60) out[id] = text;
+    const id = clean(c?.id).toUpperCase(), text = clean(c?.text), n = int(c?.n) ?? 1;
+    const st = m.criteria.flatMap((x) => x.strands).find((x) => x.id === id);
+    if (!st || !text || text.split(' ').length > 70) continue;
+    const slot = Math.max(0, Math.min(Math.max(0, st.evidence.length - 1), n - 1));
+    (out[id] ??= [])[slot] = text;
   }
-  return Object.keys(out).length >= STRANDS.length - 2 ? out : null;
+  for (const k of Object.keys(out)) out[k] = Array.from(out[k], (v) => v ?? '');
+  return STRANDS.every((x) => out[x.id]?.some(Boolean)) || Object.keys(out).length >= STRANDS.length - 2 ? out : null;
 }
 
 export const TRIM_SYSTEM = `You are an IB SEHS moderator helping a student bring an IA under the word limit. You are given the marking of the IA, the IA text and a word-count guide.
