@@ -123,7 +123,7 @@ export function AnnotatedCopy({ mm, canToggle, teacher }: { mm: MM; canToggle?: 
           )}
         </div>
       )}
-      <p className="w-printnote">The editable copy opens in a new tab: report text on the left, comment boxes in the right margin with a pointer to the statement each one is about. There you can edit, add and delete comments, add a header or footer, save your edits and print to PDF (A4 portrait).</p>
+      <p className="w-printnote">The editable copy opens in a new tab as one continuous report, with each comment in the right margin and a pointer to the statement it is about. There you can edit, add and delete comments, add a header or footer, save your edits and print to PDF (A4 portrait).</p>
     </section>
   );
 }
