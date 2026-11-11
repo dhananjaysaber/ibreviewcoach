@@ -35,7 +35,7 @@ type ReviewAccessModalProps = {
   summary: ReviewAccessSummary | null;
   packs: ReviewAccessPack[];
   onClose: () => void;
-  onUseFreeReview: () => void;
+  onOpenExemplars?: () => void;
   onChoosePack: (pack: ReviewAccessPack) => void;
 };
 
@@ -45,15 +45,13 @@ export function ReviewAccessModal({
   summary,
   packs,
   onClose,
-  onUseFreeReview,
+  onOpenExemplars,
   onChoosePack,
 }: ReviewAccessModalProps) {
   if (!open) {
     return null;
   }
 
-  const freeAvailable =
-    summary?.free_review_available === true;
 
   const fullCredits =
     summary?.total_paid_or_complimentary_credits ?? 0;
@@ -224,46 +222,26 @@ export function ReviewAccessModal({
               </div>
             </section>
 
-            <section
-              className={`premium-access-free ${
-                freeAvailable
-                  ? ''
-                  : 'premium-access-free-used'
-              }`}
-            >
-              <span className="premium-access-free-icon">
-                <LockKeyhole aria-hidden="true" />
-              </span>
-
-              <div>
-                <span>
-                  {freeAvailable
-                    ? 'One free limited preview'
-                    : 'Free preview already used'}
+            {onOpenExemplars && (
+              <section className="premium-access-free">
+                <span className="premium-access-free-icon">
+                  <LockKeyhole aria-hidden="true" />
                 </span>
 
-                <h3>
-                  {freeAvailable
-                    ? 'See how the review works before purchasing'
-                    : 'Purchase a full review credit to continue'}
-                </h3>
+                <div>
+                  <span>Not sure yet?</span>
+                  <h3>See a full review before you buy</h3>
+                  <p>
+                    Open worked examples of the Fix your IA plan and the
+                    annotated IA with marks.
+                  </p>
+                </div>
 
-                <p>
-                  {freeAvailable
-                    ? 'View the first detailed-review criterion and the overview plus first 20 lines of the annotated IA. The progress plan, complete review and downloads remain locked.'
-                    : 'A new IA draft now requires a complete review credit.'}
-                </p>
-              </div>
-
-              {freeAvailable && (
-                <button
-                  type="button"
-                  onClick={onUseFreeReview}
-                >
-                  Use free limited preview
+                <button type="button" onClick={onOpenExemplars}>
+                  See exemplars
                 </button>
-              )}
-            </section>
+              </section>
+            )}
           </div>
         )}
       </section>

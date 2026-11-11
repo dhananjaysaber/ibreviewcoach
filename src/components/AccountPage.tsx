@@ -642,29 +642,6 @@ function OverviewTab({
           }
         />
 
-        <MetricCard
-          icon={
-            <ShieldCheck
-              aria-hidden="true"
-            />
-          }
-          label="Free review"
-          value={
-            commerceLoading
-              ? '—'
-              : commerce.freeReviewAvailable
-              ? 'Available'
-              : commerce.freeReviewStatus ===
-                'reserved'
-              ? 'In use'
-              : 'Used'
-          }
-          helper="Limited preview access"
-          actionLabel="View access"
-          onClick={
-            onOpenCredits
-          }
-        />
 
         <MetricCard
           icon={

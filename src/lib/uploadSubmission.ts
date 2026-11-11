@@ -17,14 +17,15 @@ type ReservationResponse = {
 
 export async function uploadIaSubmission(
   validatedFile: ValidatedIaFile,
-  requestedSource: IaReviewAccessSource
+  requestedSource: IaReviewAccessSource,
+  subject: string
 ): Promise<IaSubmission> {
   await ensureAnonymousSession();
 
   const { data, error: createError } = await supabase.rpc(
     'create_ia_submission',
     {
-      p_subject: 'SEHS',
+      p_subject: subject,
       p_original_filename: validatedFile.filename,
       p_mime_type: validatedFile.mimeType,
       p_file_size_bytes: validatedFile.sizeBytes,

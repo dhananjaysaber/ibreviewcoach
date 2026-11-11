@@ -1,0 +1,4 @@
+-- Applied to the project via the Supabase connector on 2026-11-11 (rename_my_ia_report, subjects_exemplars_free_review_off, free_review_off_functions).
+-- Summary: rename_my_ia_report(uuid,text) RPC; ia_subjects (seeded SEHS) and ia_exemplars tables with admin-only writes;
+-- private ia-exemplars storage bucket (PDF, 30 MB); get_my_ia_credit_summary reports free_review_available=false and can_start_review
+-- true for admins or holders of credits; reserve_my_ia_review_access_strict rejects the free_review source for students.
