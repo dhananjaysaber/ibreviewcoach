@@ -4618,21 +4618,11 @@ function ReportsDashboard({
                   <div>
                     <strong>{report.original_filename}</strong>
                     <p>
-                      Version {report.version_number}
-                      {' · '}
-                      Completed{' '}
-                      {formatReportDate(
-                        report.report_generated_at ??
-                          report.saved_at ??
-                          report.uploaded_at
-                      )}
+                      Uploaded {formatReportDate(report.uploaded_at)}
                     </p>
-                    <small>
-                      {report.project_title}
-                      {report.research_question
-                        ? ` · ${report.research_question}`
-                        : ''}
-                    </small>
+                    {report.research_question && (
+                      <small>{report.research_question}</small>
+                    )}
                   </div>
                 </button>
                 )}
