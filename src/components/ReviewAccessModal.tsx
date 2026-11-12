@@ -35,6 +35,7 @@ type ReviewAccessModalProps = {
   summary: ReviewAccessSummary | null;
   packs: ReviewAccessPack[];
   onClose: () => void;
+  onUseFreeReview: () => void;
   onOpenExemplars?: () => void;
   onChoosePack: (pack: ReviewAccessPack) => void;
 };
@@ -45,6 +46,7 @@ export function ReviewAccessModal({
   summary,
   packs,
   onClose,
+  onUseFreeReview,
   onOpenExemplars,
   onChoosePack,
 }: ReviewAccessModalProps) {
@@ -52,6 +54,9 @@ export function ReviewAccessModal({
     return null;
   }
 
+
+  const freeAvailable =
+    summary?.free_review_available === true;
 
   const fullCredits =
     summary?.total_paid_or_complimentary_credits ?? 0;
@@ -126,6 +131,29 @@ export function ReviewAccessModal({
           </div>
         ) : (
           <div className="premium-access-body">
+            {freeAvailable && (
+              <section className="premium-access-free premium-access-free-hero">
+                <span className="premium-access-free-icon">
+                  <Sparkles aria-hidden="true" />
+                </span>
+
+                <div>
+                  <span>Your first review is free</span>
+                  <h3>Try it on your IA, no payment needed</h3>
+                  <p>
+                    See your marks overview, the first detailed criterion and
+                    the opening of the annotated IA. Like what you see? Unlock
+                    the complete review, progress plan and downloads with a
+                    credit.
+                  </p>
+                </div>
+
+                <button type="button" onClick={onUseFreeReview}>
+                  Try my free review
+                </button>
+              </section>
+            )}
+
             <section className="premium-access-pack-section">
               <div className="premium-access-section-heading">
                 <div>

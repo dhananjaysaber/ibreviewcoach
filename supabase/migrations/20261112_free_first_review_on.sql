@@ -1,0 +1,6 @@
+-- Applied to the project via the Supabase connector on 2026-11-12 (free_first_review_on).
+-- Restores the free limited first review for students:
+--  * get_my_ia_credit_summary: free_review_available = (free_review_status = 'available');
+--    can_start_review is also true while the free review is available.
+--  * reserve_my_ia_review_access_strict: the free_review source is accepted once per account
+--    (rejected with "already been used" afterwards).

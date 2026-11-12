@@ -39,12 +39,39 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsE
             Simple review-credit pricing
           </h2>
           <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-            One credit covers one full review of one draft. Purchased credits stay valid for 365 days, so you can revise at your own pace.
+            Your first review is free. After that, one credit covers one full review of one draft. Purchased credits stay valid for 365 days, so you can revise at your own pace.
           </p>
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 items-stretch mb-12">
+          <div className="rounded-3xl p-8 flex flex-col justify-between relative bg-gradient-to-b from-amber-300 to-amber-400 text-slate-950 border-2 border-amber-500 shadow-2xl shadow-amber-500/30">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+              <span className="bg-slate-950 text-amber-300 text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">Start here</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-serif font-bold mb-1">Free first review</h3>
+              <p className="text-xs min-h-[32px] text-slate-800">See how the review works on your own IA.</p>
+              <div className="mb-6 pb-6 border-b border-slate-950/15">
+                <span className="text-4xl sm:text-5xl font-serif font-bold tracking-tight">$0</span>
+                <div className="text-xs font-semibold mt-1">1 per verified account · no card needed</div>
+              </div>
+              <ul className="space-y-2.5 text-xs sm:text-sm mb-8">
+                {['Mark overview for your IA', 'First detailed-review criterion', 'Annotated IA overview and opening lines', 'Fix plan, downloads and full history unlock with a credit'].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <button
+              onClick={onStart}
+              className="w-full py-3 px-4 text-xs sm:text-sm font-semibold rounded-xl bg-slate-950 text-amber-300 hover:bg-slate-800 transition-all cursor-pointer"
+            >
+              Try my free review
+            </button>
+          </div>
           {packs.map((pack) => {
             const popular = pack.is_featured;
             return (

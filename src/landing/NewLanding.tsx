@@ -45,9 +45,9 @@ export function NewLanding({ packs, paymentsEnabled, onStart, onSignIn, onOpenEx
               <Sparkles className="w-3.5 h-3.5" /><span>Prioritize your revisions today</span>
             </span>
             <h2 className="text-3xl sm:text-5xl font-serif font-medium text-slate-900 dark:text-white tracking-tight mb-5">Ready to elevate your IB Internal Assessment?</h2>
-            <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-8 leading-relaxed">Upload your draft. Get a mark projection, margin annotations and an actionable fix plan before you submit.</p>
+            <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-8 leading-relaxed">Your first review is free. Upload your draft, see your mark projection and how the review works, then unlock the complete annotated copy and fix plan when you are ready.</p>
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <button onClick={onStart} className="inline-flex items-center gap-2 px-7 py-4 text-base font-semibold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 rounded-xl shadow-xl shadow-amber-500/20 cursor-pointer"><span>Start an IA Review</span><ArrowRight className="w-4 h-4" /></button>
+              <button onClick={onStart} className="inline-flex items-center gap-2 px-7 py-4 text-base font-semibold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 rounded-xl shadow-xl shadow-amber-500/20 cursor-pointer"><span>Try your first review free</span><ArrowRight className="w-4 h-4" /></button>
               <button onClick={onOpenExemplars} className="inline-flex items-center gap-2 px-6 py-4 text-base font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer">View exemplars</button>
             </div>
             <div className="mt-8 flex items-center justify-center gap-2 text-xs text-slate-600 dark:text-slate-400"><ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /><span>Your file stays private and is never submitted to similarity checkers</span></div>

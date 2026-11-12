@@ -1294,6 +1294,14 @@ function App() {
     });
   }
 
+  function startFreeLimitedReview() {
+    if (reviewAccessSummary?.free_review_available !== true) {
+      return;
+    }
+
+    prepareReviewWorkspace('free_review');
+  }
+
   function closeReviewAccessModal() {
     if (reviewAccessLoading) {
       return;
@@ -2264,6 +2272,7 @@ function App() {
           summary={reviewAccessSummary}
           packs={reviewAccessPacks}
           onClose={closeReviewAccessModal}
+          onUseFreeReview={startFreeLimitedReview}
           onOpenExemplars={() => { setReviewAccessModalOpen(false); openExemplars(); }}
           onChoosePack={choosePackFromReviewAccess}
         />
@@ -3034,7 +3043,7 @@ function LandingPage({
   const { packs, limits } = usePublicCommercialSettings(paymentsEnabled);
 
   const primaryActionLabel =
-    accountState === 'permanent' ? 'Start an IA review' : 'Start an IA review';
+    accountState === 'permanent' ? 'Start an IA review' : 'Preview one IA free';
 
   return (
     <main className="landing-main">
@@ -3398,7 +3407,7 @@ function LandingPage({
           <ProcessStep
             number="2"
             title="Upload a PDF or DOCX"
-            text="The file is checked before review so unsuitable or oversized documents do not use a paid credit."
+            text="The file is checked before review so unsuitable or oversized documents do not use a free review or paid credit."
           />
 
           <ProcessStep
@@ -3453,7 +3462,7 @@ function LandingPage({
           <div className="landing-limit-note">
             <AlertCircle aria-hidden="true" />
             <p>
-              A rejected document does not use a paid credit.
+              A rejected document does not use the free review or a paid credit.
               Students should remove unrelated supporting material or extensive
               appendices before uploading again.
             </p>
@@ -3536,8 +3545,8 @@ function LandingPage({
           />
 
           <FaqItem
-            question="Can I see an example before buying?"
-            answer="Yes. Create an account and open the Exemplar page to see full review examples: the Fix your IA plan and the annotated IA with marks."
+            question="Can a free user download the report?"
+            answer="No. The free review is a limited preview: the first detailed-review criterion and the overview plus first 20 lines of the annotated IA. The progress plan, complete review, permanent history, printing and downloads require a review credit."
           />
         </div>
       </section>
@@ -3545,10 +3554,10 @@ function LandingPage({
       <section className="landing-final-cta">
         <div>
           <span>Ready to improve your next draft?</span>
-          <h2>Choose a review credit and get your IA reviewed.</h2>
+          <h2>Start with a free limited IB SEHS IA preview.</h2>
           <p>
-            Create a verified account, look at the exemplar reviews, and buy a
-            review credit when you are ready.
+            Create a verified account, preview the review experience and unlock
+            the complete review when you are ready.
           </p>
         </div>
 
@@ -3667,6 +3676,8 @@ type PricingSectionProps = CommercialPageProps & {
 function PricingSection({
   packs,
   limits,
+  accountState,
+  onStartFreeReview,
   onChoosePack,
   standalone = false,
 }: PricingSectionProps) {
@@ -3688,6 +3699,51 @@ function PricingSection({
       </div>
 
       <div className="landing-pricing-grid">
+        <article className="landing-price-card landing-price-free">
+          <div>
+            <span className="landing-price-label">Free Limited Preview</span>
+            <h3>$0</h3>
+            <p>One limited preview per verified account.</p>
+          </div>
+
+          <ul>
+            <li>
+              <Check aria-hidden="true" />
+              First detailed-review criterion
+            </li>
+            <li>
+              <Check aria-hidden="true" />
+              Annotated IA overview + 20-line preview
+            </li>
+            <li className="locked">
+              <LockKeyhole aria-hidden="true" />
+              Progress plan remains locked
+            </li>
+            <li className="locked">
+              <LockKeyhole aria-hidden="true" />
+              Downloads remain locked
+            </li>
+            <li className="locked">
+              <LockKeyhole aria-hidden="true" />
+              No permanent version history
+            </li>
+          </ul>
+
+          <button
+            className="landing-price-button"
+            type="button"
+            onClick={onStartFreeReview}
+          >
+            {accountState === 'permanent'
+              ? 'Use free limited review'
+              : 'Create account for free preview'}
+          </button>
+
+          <small>
+            On-screen report available for approximately{' '}
+            {limits.free_report_retention_hours} hours.
+          </small>
+        </article>
 
         {packs.map((pack) => (
           <article
@@ -3772,6 +3828,7 @@ type MemberReviewAccessGateProps = {
 };
 
 function MemberReviewAccessGate({
+  freeReviewAvailable,
   paymentsEnabled,
   onChooseAccess,
   onOpenPricing,
@@ -3794,6 +3851,19 @@ function MemberReviewAccessGate({
           </p>
 
           <div className="member-review-gate-options">
+            <article>
+              <LockKeyhole aria-hidden="true" />
+              <strong>Free limited preview</strong>
+              <span>
+                The free preview can still be used when it remains available on
+                your verified account.
+              </span>
+              <small>
+                {freeReviewAvailable === false
+                  ? 'The free preview has already been used.'
+                  : 'Available once per verified account.'}
+              </small>
+            </article>
 
             <article>
               <ClipboardList aria-hidden="true" />
@@ -3807,6 +3877,16 @@ function MemberReviewAccessGate({
           </div>
 
           <div className="member-review-gate-actions">
+            {freeReviewAvailable !== false && (
+              <button
+                className="member-reports-primary"
+                type="button"
+                onClick={onChooseAccess}
+              >
+                <Sparkles aria-hidden="true" />
+                Use free limited preview
+              </button>
+            )}
 
             <button
               className="member-reports-secondary"
@@ -3832,9 +3912,9 @@ function MemberReviewAccessGate({
         <span>Review access required</span>
         <h1>Choose how to review your IA</h1>
         <p>
-          Buy a full review credit for complete access. The upload area opens
-          only after a review credit is available. Not sure yet? Look at the
-          Exemplar page first.
+          Select a full review credit for complete access, or use the one free
+          limited preview when it is still available. The upload area opens only
+          after a review option has been selected.
         </p>
 
         <div className="member-review-gate-options">
@@ -3848,6 +3928,19 @@ function MemberReviewAccessGate({
             <small>Credits start at $9.99.</small>
           </article>
 
+          <article>
+            <LockKeyhole aria-hidden="true" />
+            <strong>Free limited preview</strong>
+            <span>
+              First detailed-review criterion, annotated overview and the
+              opening 20 lines. Progress plan and downloads stay locked.
+            </span>
+            <small>
+              {freeReviewAvailable === false
+                ? 'The free preview has already been used.'
+                : 'Available once per verified account.'}
+            </small>
+          </article>
         </div>
 
         <div className="member-review-gate-actions">
@@ -3896,8 +3989,8 @@ function ReviewAccessGate({
         <h1>Create or sign in to your account</h1>
         <p>
           {paymentsEnabled
-            ? 'A verified account is required before using a paid review credit. This protects review ownership, allowances and private report history.'
-            : 'A verified account is required before using existing review access. New paid review-credit purchases are temporarily unavailable.'}
+            ? 'A verified account is required before using the free limited preview or a paid review credit. This protects review ownership, allowances and private report history.'
+            : 'A verified account is required before using the free limited preview or existing review access. New paid review-credit purchases are temporarily unavailable.'}
         </p>
 
         <div className="review-access-actions">
