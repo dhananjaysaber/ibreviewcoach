@@ -37,7 +37,7 @@ export const SAMPLE_SECTIONS: SampleSection[] = [
         id: 1,
         highlightText: 'The same tester started and stopped the timer for every trial',
         criterion: 'RD',
-        strandName: 'Strand 3: Control of Variables & Reliability',
+        strandName: 'RD3 · Reproducibility of methodology',
         issueType: 'Missing Detail',
         severity: 'Critical',
         scoreImpact: '+1 Mark in Research Design',
@@ -50,7 +50,7 @@ export const SAMPLE_SECTIONS: SampleSection[] = [
         id: 2,
         highlightText: 'Rest intervals between sprints were kept around two minutes',
         criterion: 'RD',
-        strandName: 'Strand 2: Methodological Rigour',
+        strandName: 'RD2 · Methodological consideration',
         issueType: 'Methodological Flaw',
         severity: 'Moderate',
         scoreImpact: '+1 Mark in Research Design',
@@ -63,7 +63,7 @@ export const SAMPLE_SECTIONS: SampleSection[] = [
   },
   {
     id: 'data-processing',
-    title: 'Data Processing & Error Propagation',
+    title: 'Data analysis',
     pageNumber: 7,
     criterionId: 'DA',
     currentScore: '3 / 6 Marks',
@@ -74,24 +74,24 @@ export const SAMPLE_SECTIONS: SampleSection[] = [
         id: 1,
         highlightText: 'The average speed was calculated by dividing distance (20 m) by the mean time',
         criterion: 'DA',
-        strandName: 'Strand 2: Uncertainty Propagation',
+        strandName: 'DA2 · Consideration of uncertainties',
         issueType: 'Uncertainty Gap',
         severity: 'Critical',
         scoreImpact: '+2 Marks in Data Analysis',
-        diagnostic: 'Division of measured quantities requires fractional uncertainty propagation.',
-        fixInstruction: 'Show the explicit percentage uncertainty calculation combining distance uncertainty (e.g. ±0.01 m) and timing uncertainty (±0.05 s) to derive the absolute uncertainty for velocity.',
+        diagnostic: 'The instrument uncertainty is not stated for the timing, so the reader cannot judge how precise the speeds are.',
+        fixInstruction: 'State the realistic timing uncertainty for how the stopwatch was used (hand-timing is far less precise than the display), and report speeds to a consistent number of decimal places that the timing allows.',
         beforeSnippet: 'The average speed was calculated by dividing distance (20 m) by the mean time.',
-        afterSnippet: 'Mean velocity was calculated as v = d / t. Absolute uncertainty was propagated by summing fractional uncertainties: Δv = v × [(Δd / d) + (Δt / t)] = 5.26 × [(0.02 / 20.00) + (0.05 / 3.80)] = ±0.07 m s⁻¹.'
+        afterSnippet: 'Mean speed was calculated as v = d / t = 20 m / 3.80 s = 5.3 m s⁻¹. Hand-timing reaction error makes the realistic timing uncertainty about ±0.2 s, so speeds are reported to one decimal place only.'
       },
       {
         id: 2,
         highlightText: 'Standard deviations were plotted on Figure 3',
         criterion: 'DA',
-        strandName: 'Strand 3: Graphical Precision',
+        strandName: 'DA1 · Communication of data',
         issueType: 'Missing Detail',
         severity: 'Minor',
         scoreImpact: '+1 Mark in Data Analysis',
-        diagnostic: 'Graph caption does not explain whether error bars indicate SD or propagated measurement uncertainty.',
+        diagnostic: 'The graph caption does not say what the error bars show.',
         fixInstruction: 'Add explicit caption definition specifying error bars denote ±1 Sample Standard Deviation (n=15), and clarify whether error bars overlap between conditions.',
         beforeSnippet: 'Standard deviations were plotted on Figure 3 to illustrate the dispersion.',
         afterSnippet: 'Figure 3: Mean velocity across conditions. Vertical error bars represent ±1 Standard Deviation from the mean (n = 15). Non-overlapping error bars between Condition A and D confirm statistical divergence.'
@@ -111,11 +111,11 @@ export const SAMPLE_SECTIONS: SampleSection[] = [
         id: 1,
         highlightText: 'Athletes tested under 80% relative humidity recorded sprint times 0.18 seconds slower than under 45% relative humidity',
         criterion: 'CO',
-        strandName: 'Strand 1: Justification with Statistical Rigour',
+        strandName: 'CO1 · Relevance and support',
         issueType: 'Unsubstantiated',
         severity: 'Moderate',
         scoreImpact: '+1 Mark in Conclusion',
-        diagnostic: 'Quoting an observed difference without comparing against experimental timing uncertainty is incomplete.',
+        diagnostic: 'The difference is quoted without saying whether it is bigger than the variation in the data or the timing uncertainty.',
         fixInstruction: 'Contrast the observed sprint time difference (0.18 s) against your combined experimental timing uncertainty (±0.05 s) and report whether a paired t-test confirmed significance at p < 0.05.',
         beforeSnippet: 'Athletes tested under 80% relative humidity recorded sprint times 0.18 seconds slower than under 45% relative humidity, supporting my experimental hypothesis.',
         afterSnippet: 'Athletes sprinting under 80% relative humidity exhibited a mean velocity decrement of 0.18 ± 0.05 s compared to 45% relative humidity. Because this 0.18 s margin exceeds cumulative experimental uncertainty, and a paired two-tailed t-test showed p = 0.021 (p < 0.05), the null hypothesis is rejected.'
@@ -124,7 +124,7 @@ export const SAMPLE_SECTIONS: SampleSection[] = [
         id: 2,
         highlightText: 'This outcome agrees with common knowledge in sports science',
         criterion: 'CO',
-        strandName: 'Strand 2: Comparison with Published Literature',
+        strandName: 'CO2 · Scientific context comparison',
         issueType: 'Missing Detail',
         severity: 'Critical',
         scoreImpact: '+1 Mark in Conclusion',
@@ -148,7 +148,7 @@ export const SAMPLE_SECTIONS: SampleSection[] = [
         id: 1,
         highlightText: 'In future trials, I would recruit more participants and take more time',
         criterion: 'EV',
-        strandName: 'Strand 3: Actionable Methodological Improvements',
+        strandName: 'EV2 · Improvement',
         issueType: 'Methodological Flaw',
         severity: 'Critical',
         scoreImpact: '+2 Marks in Evaluation',
@@ -161,7 +161,7 @@ export const SAMPLE_SECTIONS: SampleSection[] = [
         id: 2,
         highlightText: 'the room temperature varied slightly between test days',
         criterion: 'EV',
-        strandName: 'Strand 2: Direction of Impact on Data Validity',
+        strandName: 'EV1 · Weaknesses and limitations',
         issueType: 'Unsubstantiated',
         severity: 'Critical',
         scoreImpact: '+1 Mark in Evaluation',
@@ -204,7 +204,7 @@ export const IB_SUBJECTS: SubjectItem[] = [
     badgeColor: 'amber',
     description: 'IB Biology IA (Ecology, Physiology & Enzymes)',
     maxMarks: 24,
-    highlight: 'Uncertainties, enzyme kinetics, and chi-squared validation.'
+    highlight: 'Coming soon.'
   },
   {
     id: 'chemistry',
@@ -214,7 +214,7 @@ export const IB_SUBJECTS: SubjectItem[] = [
     badgeColor: 'amber',
     description: 'IB Chemistry IA (Titrations, Calorimetry & Kinetics)',
     maxMarks: 24,
-    highlight: 'Systematic uncertainty propagation and literature value comparison.'
+    highlight: 'Coming soon.'
   },
   {
     id: 'physics',
@@ -224,7 +224,7 @@ export const IB_SUBJECTS: SubjectItem[] = [
     badgeColor: 'amber',
     description: 'IB Physics IA (Mechanics, Optics & Electromagnetism)',
     maxMarks: 24,
-    highlight: 'Max/min gradient lines, linearized plots and error bounds.'
+    highlight: 'Coming soon.'
   },
   {
     id: 'psychology',
@@ -234,7 +234,7 @@ export const IB_SUBJECTS: SubjectItem[] = [
     badgeColor: 'amber',
     description: 'IB Psychology Experimental Study',
     maxMarks: 22,
-    highlight: 'Inferential statistics (Mann-Whitney U, Wilcoxon) & ethics review.'
+    highlight: 'Coming soon.'
   },
   {
     id: 'business',
@@ -244,7 +244,7 @@ export const IB_SUBJECTS: SubjectItem[] = [
     badgeColor: 'amber',
     description: 'IB Business Management IA',
     maxMarks: 25,
-    highlight: 'Application of business tools (SWOT, Ansoff, ratios, decision trees).'
+    highlight: 'Coming soon.'
   },
   {
     id: 'economics',
@@ -254,7 +254,7 @@ export const IB_SUBJECTS: SubjectItem[] = [
     badgeColor: 'amber',
     description: 'IB Economics Portfolio Commentary',
     maxMarks: 45,
-    highlight: 'Diagram evaluation, key concept synthesis and policy critique.'
+    highlight: 'Coming soon.'
   }
 ];
 

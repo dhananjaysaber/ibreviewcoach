@@ -47,7 +47,7 @@ export const AcademicIntegrity: React.FC = () => {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">✓</span>
-                  <span>Flags unpropagated uncertainties, uncontrolled variables, and weak conclusions.</span>
+                  <span>Flags missing uncertainties, uncontrolled variables, and weak conclusions.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">✓</span>

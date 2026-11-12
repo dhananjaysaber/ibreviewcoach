@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
               href="#criteria"
               className="hover:text-slate-950 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
             >
-              24-Mark Criteria
+              SEHS Criteria
             </a>
             <a
               href="#pricing"
@@ -155,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
               onClick={() => setMobileMenuOpen(false)}
               className="px-3 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
             >
-              24-Mark Criteria
+              SEHS Criteria
             </a>
             <a
               href="#pricing"
