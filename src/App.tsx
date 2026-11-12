@@ -136,6 +136,7 @@ import './admin-control-centre.css';
 import './share-review.css';
 import './theme-amber.css';
 import { NewLanding } from './landing/NewLanding';
+import { LogoMark } from './components/LogoMark';
 import './aurora.css';
 import './scholar.css';
 import './premium.css';
@@ -2160,7 +2161,7 @@ function App() {
                 }}
               >
                 <span className="brand-mark">
-                  <GraduationCap aria-hidden="true" />
+                  <LogoMark />
                 </span>
 
                 <span className="brand-copy">
@@ -2573,7 +2574,7 @@ function AuthPanel({
       >
         {mode !== 'account' && (
           <aside className="auth-aside" aria-hidden="true">
-            <span className="auth-aside-brand"><GraduationCap />IB IA Review Coach</span>
+            <span className="auth-aside-brand"><LogoMark />IB IA Review</span>
             <h2>{mode === 'sign-in' || mode === 'forgot-password' ? 'Welcome back. Your plan is where you left it.' : 'Your IA, marked and coached strand by strand.'}</h2>
             <p>Every report you upload is saved with its marks, your fix plan and your progress between drafts.</p>
             <ul>
@@ -2595,7 +2596,7 @@ function AuthPanel({
         )}
 
         <div className="auth-brand-mark">
-          <GraduationCap aria-hidden="true" />
+          <LogoMark />
         </div>
 
         <AuthPanelHeading mode={mode} />

@@ -1,17 +1,17 @@
 /* Aurora Glass theme layer. Imported LAST so it wins over earlier files.
-   Palette: ink #0E1726, violet #2347F5 -> magenta #2347F5 -> coral #ff7a59 on a soft lilac field. */
+   Palette: ink #0E1726, violet #D97706 -> magenta #D97706 -> coral #ff7a59 on a soft lilac field. */
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
 :root {
   --aurora-ink: #0E1726;
-  --aurora-violet: #2347F5;
-  --aurora-magenta: #2347F5;
+  --aurora-violet: #D97706;
+  --aurora-magenta: #D97706;
   --aurora-coral: #ff7a59;
   --aurora-field: #F2F4F7;
   --aurora-pane: rgba(255, 255, 255, 0.72);
-  --aurora-pane-border: rgba(35, 71, 245, 0.16);
-  --aurora-gradient: linear-gradient(120deg, #2347F5 0%, #2347F5 55%, #ff7a59 100%);
-  --aurora-shadow: 0 18px 50px -22px rgba(35, 71, 245, 0.35);
+  --aurora-pane-border: rgba(217,119,6, 0.16);
+  --aurora-gradient: linear-gradient(120deg, #D97706 0%, #D97706 55%, #ff7a59 100%);
+  --aurora-shadow: 0 18px 50px -22px rgba(217,119,6, 0.35);
   --aurora-mint-bg: #cff5e8; --aurora-mint-fg: #0f7a5e;
   --aurora-amber-bg: #ffefc9; --aurora-amber-fg: #8a5300;
   --aurora-coral-bg: #ffe3d9; --aurora-coral-fg: #b03a12;
@@ -22,8 +22,8 @@ html, body { background: var(--aurora-field); color: var(--aurora-ink); }
 body {
   font-family: 'Inter', Inter, ui-sans-serif, system-ui, sans-serif;
   background:
-    radial-gradient(60rem 40rem at 8% -10%, rgba(35, 71, 245, 0.16), transparent 60%),
-    radial-gradient(54rem 38rem at 100% 0%, rgba(35, 71, 245, 0.14), transparent 58%),
+    radial-gradient(60rem 40rem at 8% -10%, rgba(217,119,6, 0.16), transparent 60%),
+    radial-gradient(54rem 38rem at 100% 0%, rgba(217,119,6, 0.14), transparent 58%),
     radial-gradient(50rem 36rem at 70% 105%, rgba(255, 122, 89, 0.14), transparent 60%),
     var(--aurora-field);
   background-attachment: fixed;
@@ -45,7 +45,7 @@ button.primary, .primary-button, .wg2-audit {
   background: var(--aurora-gradient) !important;
   color: #fff !important;
   border: 0 !important;
-  box-shadow: 0 12px 28px -12px rgba(35, 71, 245, 0.7);
+  box-shadow: 0 12px 28px -12px rgba(217,119,6, 0.7);
 }
 .landing-primary-button:hover, button.primary:hover, .primary-button:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .landing-secondary-button { background: rgba(255, 255, 255, 0.7) !important; border: 1px solid var(--aurora-pane-border) !important; color: var(--aurora-ink) !important; }
@@ -78,7 +78,7 @@ button.primary, .primary-button, .wg2-audit {
 }
 .teacher-copy-panel button:disabled { opacity: 0.55; cursor: progress; }
 .pf-strip { border-radius: 14px; background: rgba(255, 244, 214, 0.75) !important; }
-.wg2-both-ib { background: rgba(242, 244, 247, 0.85); border-color: rgba(35, 71, 245, 0.2); }
+.wg2-both-ib { background: rgba(242, 244, 247, 0.85); border-color: rgba(217,119,6, 0.2); }
 .wg2-both-tpl { background: rgba(255, 233, 222, 0.85); border-color: rgba(255, 122, 89, 0.28); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -88,7 +88,7 @@ button.primary, .primary-button, .wg2-audit {
 .landing-main h1, .landing-section-heading h2 { font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif; }
 
 /* Coach hero keeps white text on an Aurora gradient (not a light pane) */
-.wg2-hero { background: linear-gradient(120deg, #1B2A44 0%, #2347F5 45%, #2347F5 100%) !important; color: #fff; border: 0 !important; box-shadow: var(--aurora-shadow); }
+.wg2-hero { background: linear-gradient(120deg, #1B2A44 0%, #D97706 45%, #D97706 100%) !important; color: #fff; border: 0 !important; box-shadow: var(--aurora-shadow); }
 .wg2-hero h2, .wg2-hero p, .wg2-hero .wg2-eyebrow { color: #fff !important; }
 .wg2-hero p { opacity: 0.88; }
 .wg2-document { background: rgba(255, 255, 255, 0.16) !important; color: #fff !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; box-shadow: none !important; }
@@ -117,11 +117,11 @@ button.primary, .primary-button, .wg2-audit {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #2347F5;
+  color: #D97706;
 }
 .review-tabgroup-teacher {
   padding-left: 22px;
-  border-left: 2px solid #E8EDFF;
+  border-left: 2px solid #FEF3C7;
 }
 .review-tabbar .review-tab { min-height: 52px; padding: 8px 12px; }
 .review-tabbar .review-tab > svg { width: 19px; height: 19px; }
@@ -175,7 +175,7 @@ button.primary, .primary-button, .wg2-audit {
 .report-bar-title svg{width:26px;height:26px;color:#2f9a5f;flex:0 0 auto}
 .report-bar-title strong{display:block;font-size:1.05rem;overflow-wrap:anywhere}.report-bar-title span{font-size:.82rem;color:#6a6590}
 .report-bar-stats{display:flex;gap:26px;flex-wrap:wrap}
-.report-bar-stats span{display:block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#2347F5;font-weight:800}
+.report-bar-stats span{display:block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#D97706;font-weight:800}
 .report-bar-stats strong{font-size:1.05rem}
 .completion-card-results{padding-block:20px}
 
@@ -186,7 +186,7 @@ button.primary, .primary-button, .wg2-audit {
 .detailed-review-panel .review-panel-heading {
   display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
   padding: 22px 24px; border-radius: 22px; color: #fff;
-  background: linear-gradient(120deg, #1B2A44 0%, #2347F5 50%, #2347F5 100%);
+  background: linear-gradient(120deg, #1B2A44 0%, #D97706 50%, #D97706 100%);
   box-shadow: var(--aurora-shadow); border: 0;
 }
 .detailed-review-panel .review-panel-heading h2 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; font-size: 1.35rem; margin: 4px 0 6px; color: #fff; letter-spacing: -0.01em; }
@@ -209,7 +209,7 @@ button.primary, .primary-button, .wg2-audit {
   display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
   background: var(--aurora-gradient); color: #fff; font-size: .72rem; font-weight: 800;
 }
-.criterion-jump-list a:hover { transform: translateY(-1px); border-color: rgba(35, 71, 245,.45); box-shadow: 0 8px 20px -12px rgba(35, 71, 245,.5); }
+.criterion-jump-list a:hover { transform: translateY(-1px); border-color: rgba(217,119,6,.45); box-shadow: 0 8px 20px -12px rgba(217,119,6,.5); }
 
 .criterion-review-list { display: grid; gap: 18px; }
 .criterion-review {
@@ -223,7 +223,7 @@ button.primary, .primary-button, .wg2-audit {
 .criterion-title-group { display: flex; align-items: center; gap: 14px; }
 .criterion-number {
   display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: #fff; font-weight: 800;
-  background: var(--aurora-gradient); box-shadow: 0 8px 18px -8px rgba(35, 71, 245,.6);
+  background: var(--aurora-gradient); box-shadow: 0 8px 18px -8px rgba(217,119,6,.6);
 }
 .criterion-label { font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--aurora-violet); }
 .criterion-review-header h2 { margin: 2px 0 0; font-family: 'Bricolage Grotesque', 'Inter', sans-serif; font-size: 1.12rem; color: var(--aurora-ink); }
@@ -237,7 +237,7 @@ button.primary, .primary-button, .wg2-audit {
 
 .criterion-range-rationale {
   display: flex; gap: 12px; margin: 16px 22px 0; padding: 12px 14px; border-radius: 14px;
-  background: var(--aurora-field); border: 1px dashed rgba(35, 71, 245,.3); color: var(--aurora-ink);
+  background: var(--aurora-field); border: 1px dashed rgba(217,119,6,.3); color: var(--aurora-ink);
 }
 .criterion-range-rationale svg { flex: none; width: 20px; height: 20px; color: var(--aurora-violet); margin-top: 2px; }
 .criterion-range-rationale p { margin: 2px 0 0; font-size: .88rem; line-height: 1.5; color: #1B2A44; }
@@ -252,7 +252,7 @@ button.primary, .primary-button, .wg2-audit {
 }
 .finding-card.finding-good { border-left-color: #1aa87f; background: linear-gradient(90deg, #f2fcf8 0%, #fff 40%); }
 .finding-card.finding-fix { background: linear-gradient(90deg, #fff7f4 0%, #fff 40%); }
-.finding-card[open] { box-shadow: 0 14px 30px -20px rgba(35, 71, 245,.45); border-color: rgba(35, 71, 245,.25); }
+.finding-card[open] { box-shadow: 0 14px 30px -20px rgba(217,119,6,.45); border-color: rgba(217,119,6,.25); }
 .finding-card[open].finding-fix { border-left-color: #ef6a4c; }
 .finding-card[open].finding-good { border-left-color: #1aa87f; }
 .finding-card-header {
@@ -289,7 +289,7 @@ button.primary, .primary-button, .wg2-audit {
 .finding-detail-block > span { display: block; margin-bottom: 4px; font-size: .68rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--aurora-violet); }
 .finding-detail-block p { margin: 0; font-size: .88rem; line-height: 1.55; color: #1B2A44; }
 .finding-detail-block ul { margin: 8px 0 0; padding-left: 18px; font-size: .84rem; color: #1B2A44; }
-.finding-action-block { background: #F2F4F7; border-color: rgba(35, 71, 245,.25); grid-column: 1 / -1; }
+.finding-action-block { background: #F2F4F7; border-color: rgba(217,119,6,.25); grid-column: 1 / -1; }
 .finding-check-block { background: #f2fcf8; border-color: rgba(26,168,127,.3); }
 .finding-check-block > span { color: var(--aurora-mint-fg); }
 .finding-why-block { background: #fffaf0; border-color: rgba(138,83,0,.2); }
@@ -314,16 +314,16 @@ button.primary, .primary-button, .wg2-audit {
 /* ---- Shared surfaces across the app ---- */
 body { background: radial-gradient(1200px 500px at 85% -10%, #F2F4F7 0%, transparent 60%), #F2F4F7; }
 .premium-workspace-content h1, .premium-workspace-content h2 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; letter-spacing: -0.01em; }
-.reports-hero { background: linear-gradient(120deg, #1B2A44 0%, #2347F5 50%, #2347F5 100%) !important; color: #fff; border: 0 !important; border-radius: 24px; box-shadow: var(--aurora-shadow); }
+.reports-hero { background: linear-gradient(120deg, #1B2A44 0%, #D97706 50%, #D97706 100%) !important; color: #fff; border: 0 !important; border-radius: 24px; box-shadow: var(--aurora-shadow); }
 .reports-hero h1, .reports-hero p, .reports-eyebrow { color: #fff !important; }
 .reports-primary-action { background: #fff !important; color: var(--aurora-violet) !important; border: 0 !important; font-weight: 800; border-radius: 999px; }
 .reports-secondary-action { border-radius: 999px; border: 1px solid rgba(255,255,255,.5) !important; color: #fff; background: rgba(255,255,255,.14) !important; }
 [class*="reports-version"], [class*="reports-project"] { border-radius: 18px; }
-button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid rgba(35, 71, 245,.45); outline-offset: 2px; }
+button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid rgba(217,119,6,.45); outline-offset: 2px; }
 .report-bar-stats small { display: block; font-size: .68rem; font-weight: 700; color: #8a84a8; margin-top: 2px; }
 
 /* ---- Separate Student and Teacher report pages ---- */
-.review-space { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 16px 20px; margin-bottom: 12px; border-radius: 20px; color: #fff; background: linear-gradient(120deg, #1B2A44, #2347F5 55%, #2347F5); box-shadow: var(--aurora-shadow); }
+.review-space { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 16px 20px; margin-bottom: 12px; border-radius: 20px; color: #fff; background: linear-gradient(120deg, #1B2A44, #D97706 55%, #D97706); box-shadow: var(--aurora-shadow); }
 .review-space-teacher { background: linear-gradient(120deg, #0d3b4f, #0f7a8a 55%, #1aa87f); }
 .review-space p { margin: 0; flex: 1 1 280px; font-size: .88rem; line-height: 1.45; opacity: .93; }
 .review-space-switch { display: inline-flex; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); }

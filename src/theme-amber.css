@@ -33,3 +33,7 @@ html.lenis, html.lenis body { height: auto; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .landing-marquee-track { animation: none; }
 }
+
+/* Logo mark sizing (pen nib) */
+.brand-mark svg, .tn-brand span svg, .premium-sidebar-brand > span svg, .auth-brand-mark svg { width: 78% !important; height: 78% !important; color: #0F172A !important; --logo-cut: #FBBF24; stroke: none; }
+.brand-mark, .tn-brand span, .premium-sidebar-brand > span, .auth-brand-mark { background: #FBBF24 !important; display: grid; place-items: center; }

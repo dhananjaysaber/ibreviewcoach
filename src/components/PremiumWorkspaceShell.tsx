@@ -7,7 +7,6 @@ import {
   ClipboardList,
   Layers3,
   CreditCard,
-  GraduationCap,
   LayoutDashboard,
   LoaderCircle,
   LogOut,
@@ -19,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 
+import { LogoMark } from './LogoMark';
 import {
   useEffect,
   useMemo,
@@ -253,7 +253,7 @@ export function PremiumWorkspaceShell({
       >
         <div className="premium-sidebar-brand">
           <span>
-            <GraduationCap aria-hidden="true" />
+            <LogoMark />
           </span>
 
           <div>
@@ -363,7 +363,7 @@ export function PremiumWorkspaceShell({
 
       <header className="tn-bar">
         <button className="tn-brand" type="button" onClick={accountAction} aria-label="IB IA Review home">
-          <span><GraduationCap aria-hidden="true" /></span>
+          <span><LogoMark /></span>
           <strong>IB IA Review</strong>
         </button>
         <nav className="tn-nav" aria-label={isAdmin ? 'Admin workspace' : 'Member workspace'}>

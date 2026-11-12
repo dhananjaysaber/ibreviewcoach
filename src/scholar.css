@@ -1,6 +1,6 @@
-/* Scholar design layer. Imported LAST. Ink #0E1726, cobalt #2347F5, yellow #FFE45C, soft grey ground, hairline borders, no gradients or glass. */
+/* Scholar design layer. Imported LAST. Ink #0E1726, cobalt #D97706, yellow #FFE45C, soft grey ground, hairline borders, no gradients or glass. */
 :root {
-  --s-ground: #F2F4F7; --s-ink: #0E1726; --s-cobalt: #2347F5; --s-cobalt-dark: #1A36C4; --s-cobalt-soft: #E8EDFF;
+  --s-ground: #F2F4F7; --s-ink: #0E1726; --s-cobalt: #D97706; --s-cobalt-dark: #92400E; --s-cobalt-soft: #FEF3C7;
   --s-yellow: #FFE45C; --s-red: #C73E1D; --s-red-soft: #FDECE6; --s-green: #12805C; --s-green-soft: #E3F4EC;
   --s-line: #E1E5EC; --s-muted: #4A5568; --s-card-shadow: 0 1px 2px rgba(14,23,38,.04), 0 10px 28px rgba(14,23,38,.07);
   --s-mono: 'JetBrains Mono', ui-monospace, monospace; --s-head: 'Bricolage Grotesque', Inter, system-ui, sans-serif;
@@ -202,7 +202,7 @@ a { color: var(--s-cobalt); }
   border: 0 !important;
 }
 .review-space.review-space-teacher {
-  background-color: #1A36C4 !important;
+  background-color: #92400E !important;
 }
 .mm-hero h2,
 .mm-hero h3 {

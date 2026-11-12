@@ -24,7 +24,7 @@
   border: 1px solid rgba(14, 23, 38, 0.11);
   border-radius: 16px;
   background:
-    linear-gradient(135deg, rgba(35, 71, 245, 0.08), rgba(35, 71, 245, 0.04)),
+    linear-gradient(135deg, rgba(217,119,6, 0.08), rgba(217,119,6, 0.04)),
     #fff;
 }
 
@@ -33,7 +33,7 @@
   align-items: center;
   gap: 7px;
   margin-bottom: 7px;
-  color: #1A36C4;
+  color: #92400E;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -89,8 +89,8 @@
 
 .admin-primary-button {
   color: #fff;
-  border: 1px solid #2347F5;
-  background: #2347F5;
+  border: 1px solid #D97706;
+  background: #D97706;
 }
 
 .admin-danger-button {
@@ -186,8 +186,8 @@
 }
 
 .admin-tab-active {
-  color: #1A36C4;
-  border-color: rgba(35, 71, 245, 0.16);
+  color: #92400E;
+  border-color: rgba(217,119,6, 0.16);
   background: #F2F4F7;
 }
 
@@ -222,7 +222,7 @@
 }
 
 .admin-stat-card-button:hover {
-  border-color: rgba(35, 71, 245, 0.3);
+  border-color: rgba(217,119,6, 0.3);
   box-shadow: 0 7px 20px rgba(14, 23, 38, 0.05);
 }
 
@@ -232,7 +232,7 @@
   display: grid;
   place-items: center;
   border-radius: 10px;
-  color: #1A36C4;
+  color: #92400E;
   background: #F2F4F7;
 }
 
@@ -307,7 +307,7 @@
   margin-top: 9px;
   padding: 0;
   border: 0;
-  color: #1A36C4;
+  color: #92400E;
   background: transparent;
   font-size: 0.74rem;
   font-weight: 750;
@@ -379,7 +379,7 @@
   padding: 0 11px;
   border: 0;
   border-left: 1px solid rgba(14, 23, 38, 0.1);
-  color: #1A36C4;
+  color: #92400E;
   background: #F2F4F7;
   font-size: 0.72rem;
   font-weight: 750;
@@ -467,9 +467,9 @@
 .admin-table-action button {
   min-height: 32px;
   padding: 5px 9px;
-  border: 1px solid rgba(35, 71, 245, 0.2);
+  border: 1px solid rgba(217,119,6, 0.2);
   border-radius: 7px;
-  color: #1A36C4;
+  color: #92400E;
   background: #F2F4F7;
   font-size: 0.68rem;
   font-weight: 750;
@@ -634,7 +634,7 @@
 .admin-pack-badges span {
   padding: 3px 6px;
   border-radius: 999px;
-  color: #1A36C4;
+  color: #92400E;
   background: #F2F4F7;
   font-size: 0.6rem;
   font-weight: 750;
@@ -810,8 +810,8 @@
 .admin-pack-form textarea:focus,
 .admin-inline-action input:focus,
 .admin-revoke-row input:focus {
-  border-color: rgba(35, 71, 245, 0.55);
-  box-shadow: 0 0 0 3px rgba(35, 71, 245, 0.09);
+  border-color: rgba(217,119,6, 0.55);
+  box-shadow: 0 0 0 3px rgba(217,119,6, 0.09);
 }
 
 .admin-form-wide {

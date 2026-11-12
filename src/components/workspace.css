@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=JetBrains+Mono:wght@500;600&display=swap');
 /* Scholar workspace: student working screen, teacher view, annotated copy. */
-.ws{--w-ground:#F2F4F7;--w-ink:#0E1726;--w-cobalt:#2347F5;--w-cobalt-dark:#1A36C4;--w-cobalt-soft:#E8EDFF;--w-yellow:#FFE45C;--w-red:#C73E1D;--w-red-soft:#FDECE6;--w-green:#12805C;--w-green-soft:#E3F4EC;--w-amber:#B7791F;--w-amber-soft:#FFF4DC;--w-line:#E1E5EC;--w-muted:#4A5568;
+.ws{--w-ground:#F2F4F7;--w-ink:#0E1726;--w-cobalt:#D97706;--w-cobalt-dark:#92400E;--w-cobalt-soft:#FEF3C7;--w-yellow:#FFE45C;--w-red:#C73E1D;--w-red-soft:#FDECE6;--w-green:#12805C;--w-green-soft:#E3F4EC;--w-amber:#B7791F;--w-amber-soft:#FFF4DC;--w-line:#E1E5EC;--w-muted:#4A5568;
   --w-head:'Bricolage Grotesque',Inter,system-ui,sans-serif;--w-mono:'JetBrains Mono',ui-monospace,monospace;--w-shadow:0 1px 2px rgba(14,23,38,.04),0 10px 28px rgba(14,23,38,.07);color:var(--w-ink);font:15px/1.55 Inter,system-ui,sans-serif}
 .ws *{box-sizing:border-box}
 .ws h2,.ws h3,.ws h4{font-family:var(--w-head);margin:0;letter-spacing:-.01em;color:var(--w-ink);-webkit-text-fill-color:currentColor;background:none}
