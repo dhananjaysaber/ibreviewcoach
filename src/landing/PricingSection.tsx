@@ -45,7 +45,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsE
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className={`grid grid-cols-1 gap-6 lg:gap-8 items-stretch mb-12 ${paymentsEnabled ? 'md:grid-cols-2 lg:grid-cols-4' : 'max-w-md mx-auto'}`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 items-stretch mb-12">
           <div className="rounded-3xl p-8 flex flex-col justify-between relative bg-gradient-to-b from-amber-300 to-amber-400 text-slate-950 border-2 border-amber-500 shadow-2xl shadow-amber-500/30">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="bg-slate-950 text-amber-300 text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">Start here</span>
@@ -58,7 +58,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsE
                 <div className="text-xs font-semibold mt-1">1 per verified account · no card needed</div>
               </div>
               <ul className="space-y-2.5 text-xs sm:text-sm mb-8">
-                {['Research Design reviewed with written feedback', 'No marks shown on the free review', 'Other 3 criteria, marks and annotated copy locked', paymentsEnabled ? 'Fix plan and Word download unlock with a credit' : 'Fix plan and Word download come with the full review'].map((f) => (
+                {['Research Design reviewed with written feedback', 'No marks shown on the free review', 'Other 3 criteria, marks and annotated copy locked', 'Fix plan and Word download unlock with a credit'].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 shrink-0 mt-0.5" />
                     <span className="leading-relaxed">{f}</span>
@@ -73,7 +73,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsE
               Try my free review
             </button>
           </div>
-          {(paymentsEnabled ? packs : []).map((pack) => {
+          {packs.map((pack) => {
             const popular = pack.is_featured;
             return (
               <div
