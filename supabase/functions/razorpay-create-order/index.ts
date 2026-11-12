@@ -1,7 +1,8 @@
 // Supabase Edge Function: razorpay-create-order (verify_jwt = true)
 // The browser sends only a pack_code. Price and credits come from ia_credit_packs.
 // Secrets: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, optional RAZORPAY_USD_INR_RATE (fallback only, default 94).
-// The USD to INR rate is looked up live for each order (ECB reference rate via frankfurter.dev).
+// USD to INR rate, in order: the admin's saved rate (ia_app_settings.usd_inr_rate), else the live ECB rate
+// (frankfurter.dev), else the fallback secret/default.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 type Json = Record<string, unknown>;
@@ -22,7 +23,6 @@ Deno.serve(async (request: Request): Promise<Response> => {
     const keySecret = need("RAZORPAY_KEY_SECRET");
     const fallbackRate = Number(Deno.env.get("RAZORPAY_USD_INR_RATE") ?? "94");
     if (!Number.isFinite(fallbackRate) || fallbackRate <= 0) throw new Error("RAZORPAY_USD_INR_RATE is invalid");
-    const { rate, source: rateSource } = await getUsdInrRate(fallbackRate);
 
     const auth = request.headers.get("Authorization");
     if (!auth?.startsWith("Bearer ")) return reply({ ok: false, message: "Please sign in before purchasing review credits." }, 401, cors);
@@ -30,6 +30,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
     const opts = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
     const userClient = createClient(url, publicKey, { global: { headers: { Authorization: auth } }, ...opts });
     const admin = createClient(url, serviceKey, opts);
+    const { rate, source: rateSource } = await resolveUsdInrRate(admin, fallbackRate);
 
     const { data: ud, error: ue } = await userClient.auth.getUser(token);
     const user = ud.user;
@@ -130,6 +131,16 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
 });
 
+async function resolveUsdInrRate(admin: ReturnType<typeof createClient>, fallback: number): Promise<{ rate: number; source: string }> {
+  try {
+    const { data } = await admin.from("ia_app_settings").select("value").eq("key", "usd_inr_rate").maybeSingle();
+    const saved = Number(data?.value);
+    if (data?.value !== null && data?.value !== undefined && Number.isFinite(saved) && saved >= 50 && saved <= 150) {
+      return { rate: Math.round(saved * 100) / 100, source: "admin" };
+    }
+  } catch { /* use live rate */ }
+  return await getUsdInrRate(fallback);
+}
 /** Live USD to INR rate (rounded to 2 decimals). Falls back to the fixed rate if the lookup fails or looks wrong. */
 async function getUsdInrRate(fallback: number): Promise<{ rate: number; source: string }> {
   try {
