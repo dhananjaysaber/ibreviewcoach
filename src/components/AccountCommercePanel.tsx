@@ -915,7 +915,7 @@ function InvoiceModal({
         </button>
 
         <div className="account-invoice-brand">
-          <span>PE Freak</span>
+          <span>IB IA Review</span>
           <strong>SEHS IA Review Coach</strong>
         </div>
 
@@ -960,7 +960,7 @@ function InvoiceModal({
             label="Merchant"
             value={
               purchase.merchant_name ||
-              'PE Freak'
+              'IB IA Review'
             }
           />
         </div>
@@ -1196,7 +1196,7 @@ function normalizePurchase(
       normalizeText(
         value.merchant_name
       ) ||
-      'PE Freak',
+      'IB IA Review',
     customer_email:
       normalizeText(
         value.customer_email
@@ -1406,7 +1406,7 @@ function buildPrintableInvoiceHtml(
       <div>
         <strong>${escapeHtml(
           purchase.merchant_name ||
-          'PE Freak'
+          'IB IA Review'
         )}</strong>
         <span>SEHS IA Review Coach</span>
       </div>
