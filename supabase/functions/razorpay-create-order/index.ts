@@ -1,6 +1,7 @@
 // Supabase Edge Function: razorpay-create-order (verify_jwt = true)
 // The browser sends only a pack_code. Price and credits come from ia_credit_packs.
-// Secrets: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, optional RAZORPAY_USD_INR_RATE (default 88).
+// Secrets: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, optional RAZORPAY_USD_INR_RATE (fallback only, default 88).
+// The USD to INR rate is looked up live for each order (ECB reference rate via frankfurter.dev).
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 type Json = Record<string, unknown>;
@@ -19,8 +20,9 @@ Deno.serve(async (request: Request): Promise<Response> => {
     if (!publicKey || !serviceKey) throw new Error("Supabase keys missing");
     const keyId = need("RAZORPAY_KEY_ID");
     const keySecret = need("RAZORPAY_KEY_SECRET");
-    const rate = Number(Deno.env.get("RAZORPAY_USD_INR_RATE") ?? "88");
-    if (!Number.isFinite(rate) || rate <= 0) throw new Error("RAZORPAY_USD_INR_RATE is invalid");
+    const fallbackRate = Number(Deno.env.get("RAZORPAY_USD_INR_RATE") ?? "88");
+    if (!Number.isFinite(fallbackRate) || fallbackRate <= 0) throw new Error("RAZORPAY_USD_INR_RATE is invalid");
+    const { rate, source: rateSource } = await getUsdInrRate(fallbackRate);
 
     const auth = request.headers.get("Authorization");
     if (!auth?.startsWith("Bearer ")) return reply({ ok: false, message: "Please sign in before purchasing review credits." }, 401, cors);
@@ -75,7 +77,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
       payment_provider: "razorpay",
       status: "created",
       checkout_expires_at: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
-      metadata: { price_usd: priceUsd, usd_inr_rate: rate, created_by_function: FN, request_origin: request.headers.get("Origin") },
+      metadata: { price_usd: priceUsd, usd_inr_rate: rate, usd_inr_rate_source: rateSource, created_by_function: FN, request_origin: request.headers.get("Origin") },
     });
     if (insErr) {
       console.error(`[${FN}] insert failed`, insErr);
@@ -128,6 +130,18 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
 });
 
+/** Live USD to INR rate (rounded to 2 decimals). Falls back to the fixed rate if the lookup fails or looks wrong. */
+async function getUsdInrRate(fallback: number): Promise<{ rate: number; source: string }> {
+  try {
+    const res = await fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=INR", { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json();
+      const live = Number(data?.rates?.INR);
+      if (Number.isFinite(live) && live >= 60 && live <= 130) return { rate: Math.round(live * 100) / 100, source: "live" };
+    }
+  } catch { /* use fallback */ }
+  return { rate: fallback, source: "fallback" };
+}
 function need(name: string): string {
   const v = Deno.env.get(name)?.trim();
   if (!v) throw new Error(`${name} is not configured.`);
