@@ -1,3 +1,4 @@
+import { PolicyLinks } from './PolicyPages';
 import {
   AlertCircle,
   ArrowLeft,
@@ -2223,6 +2224,7 @@ function App() {
               Indicative guidance only. Final assessment decisions remain with
               your teacher and the IB assessment process.
             </p>
+            <PolicyLinks />
           </footer>
           )}
         </>
