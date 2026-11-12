@@ -676,24 +676,6 @@ export function PremiumWorkspaceShell({
           icon={<Layers3 aria-hidden="true" />}
           onClick={onOpenCompare}
         />
-
-        <MobileNavButton
-          active={
-            isAdmin
-              ? activeView === 'admin'
-              : activeView === 'credits' ||
-                activeView === 'billing'
-          }
-          label={isAdmin ? 'Control' : 'Account'}
-          icon={
-            isAdmin ? (
-              <ShieldCheck aria-hidden="true" />
-            ) : (
-              <UserRound aria-hidden="true" />
-            )
-          }
-          onClick={accountAction}
-        />
       </nav>
     </div>
   );
