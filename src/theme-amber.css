@@ -76,3 +76,16 @@ html.lenis, html.lenis body { height: auto; }
 .pay-opt-primary span { color: #3B2A06; }
 .pay-opt-primary:hover { background: var(--p-gold-grad); border-color: transparent; filter: brightness(1.05); }
 .pay-choose-note { margin: 16px 0 0; text-align: center; font-size: .75rem; color: #94A3B8; }
+
+/* Mobile: the six review stages scroll sideways inside their card (no overlap, no page overflow). */
+@media (max-width: 900px) {
+  .app-shell-premium .review-process-v7 { overflow: hidden !important; max-width: 100%; }
+  .app-shell-premium .review-process-v7 > .review-process-grid-v7,
+  .app-shell-premium .review-process-v7 > .process-steps.review-process-grid-v7 {
+    grid-template-columns: repeat(6, 176px) !important;
+    overflow-x: auto !important; overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; padding-bottom: 10px !important;
+  }
+  .app-shell-premium .review-process-v7 > .review-process-grid-v7 > .review-process-step-v7 { min-width: 176px !important; width: 176px !important; scroll-snap-align: start; }
+  .app-shell-premium main.review-upload-page-v7, .app-shell-premium .premium-workspace-stage { max-width: 100%; min-width: 0; overflow-x: clip; }
+}
