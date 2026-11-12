@@ -1,5 +1,6 @@
 import { CreditCard, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { loadAppSettings } from '../lib/rightClick';
 import { PayPalCheckoutModal, type PayPalCreditPack } from './PayPalCheckoutModal';
 import { RazorpayCheckoutModal } from './RazorpayCheckoutModal';
 
@@ -8,6 +9,10 @@ type Props = { pack: PayPalCreditPack; onClose: () => void; onStartReview: () =>
 /** Lets the student pick Razorpay (UPI, cards, netbanking in rupees) or PayPal (USD). */
 export function CheckoutRouter(props: Props) {
   const [method, setMethod] = useState<'razorpay' | 'paypal' | null>(null);
+  const [paypalOn, setPaypalOn] = useState<boolean | null>(null);
+  useEffect(() => { let alive = true; void loadAppSettings().then((v) => { if (alive) setPaypalOn(v.paypal_enabled !== false); }); return () => { alive = false; }; }, []);
+  if (paypalOn === null) return null;
+  if (!paypalOn) return <RazorpayCheckoutModal {...props} />;
   if (method === 'paypal') return <PayPalCheckoutModal {...props} />;
   if (method === 'razorpay') return <RazorpayCheckoutModal {...props} onBack={() => setMethod(null)} />;
   const { pack, onClose } = props;

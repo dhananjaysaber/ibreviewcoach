@@ -29,6 +29,8 @@ import {
 
 import { supabase } from '../lib/supabase';
 import { SettingsAdmin } from './SettingsAdmin';
+import { loadAppSettings, saveAppSetting } from '../lib/rightClick';
+import { useEffect as useEffectPP, useState as useStatePP } from 'react';
 
 type JsonRecord = Record<string, unknown>;
 type LoadState = 'loading' | 'ready' | 'error';
@@ -1222,6 +1224,8 @@ function Overview({
         onChange={onSetPaymentsEnabled}
       />
 
+      <PayPalMethodControl />
+
       <div className="admin-stat-grid">
         <Stat
           label="Students"
@@ -1446,6 +1450,37 @@ function PaymentCollectionControl({
           />
         </div>
       )}
+    </Panel>
+  );
+}
+
+function PayPalMethodControl() {
+  const [on, setOn] = useStatePP<boolean | null>(null);
+  const [busy, setBusy] = useStatePP(false);
+  const [err, setErr] = useStatePP(false);
+  useEffectPP(() => { void loadAppSettings().then((v) => setOn(v.paypal_enabled !== false)); }, []);
+  async function change(next: boolean) {
+    setBusy(true); setErr(false);
+    const ok = await saveAppSetting('paypal_enabled', next);
+    if (ok) setOn(next); else setErr(true);
+    setBusy(false);
+  }
+  return (
+    <Panel title="PayPal payment method">
+      <div className="admin-detail-list">
+        <article className="admin-detail-list-item">
+          <div>
+            <strong>{on === null ? 'Checking…' : on ? 'PayPal is offered at checkout' : 'PayPal is hidden at checkout'}</strong>
+            <span>{on === false ? 'Students go straight to Razorpay (UPI, cards, netbanking in rupees).' : 'Students choose between Razorpay (rupees) and PayPal (US dollars).'}</span>
+          </div>
+          <StatusPill value={on ? 'active' : 'disabled'} />
+        </article>
+        <label className="admin-toggle-row">
+          <input type="checkbox" checked={on === true} disabled={busy || on === null} onChange={(e) => void change(e.target.checked)} />
+          <span>{busy ? 'Saving…' : on ? 'PayPal on: switch off to use Razorpay only' : 'PayPal off: switch on to offer it again'}</span>
+        </label>
+        {err && <SafeNote warning title="Could not save" text="The setting was not changed. Try again." />}
+      </div>
     </Panel>
   );
 }
