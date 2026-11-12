@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { driveEmbedUrl, toExemplar, type Exemplar } from '../lib/exemplars';
+import { loadAppSettings, saveAppSetting } from '../lib/rightClick';
 import { subjectLabel, useAcademicYears, useSubjects } from '../lib/subjects';
 
 type Draft = { id: string; title: string; subject: string; fix_url: string; annotated_url: string; sort_order: number; is_active: boolean; fix_file: File | null; annotated_file: File | null; fix_path: string | null; annotated_path: string | null; isNew: boolean };
@@ -17,6 +18,14 @@ export function SettingsAdmin() {
   const [items, setItems] = useState<Exemplar[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
+  const [blockRightClick, setBlockRightClick] = useState<boolean | null>(null);
+  useEffect(() => { void loadAppSettings().then((v) => setBlockRightClick(v.block_right_click !== false)); }, []);
+  async function toggleRightClick() {
+    const next = !blockRightClick;
+    const ok = await saveAppSetting('block_right_click', next);
+    if (ok) setBlockRightClick(next);
+    say(ok, ok ? (next ? 'Right-click is now blocked for signed-in students.' : 'Right-click is now allowed for everyone.') : 'Could not save the setting.');
+  }
 
   const loadItems = useCallback(async () => {
     const { data } = await supabase.from('ia_exemplars').select('*').order('sort_order').order('created_at');
@@ -88,6 +97,16 @@ export function SettingsAdmin() {
   return (
     <div className="set-wrap">
       {msg && <p className={`set-msg ${msg.ok ? 'ok' : 'bad'}`} role="status">{msg.text}</p>}
+
+      <section className="set-card">
+        <h3>Right-click protection</h3>
+        <p>When on, signed-in students cannot open the browser right-click menu on the site (text boxes keep it so people can paste). Admins are never blocked. This discourages casual copying but cannot stop screenshots or determined users.</p>
+        <div className="set-row">
+          <button type="button" className="set-primary" disabled={blockRightClick === null} onClick={() => void toggleRightClick()}>
+            {blockRightClick === null ? 'Loading…' : blockRightClick ? 'Right-click blocked: switch off' : 'Right-click allowed: switch on'}
+          </button>
+        </div>
+      </section>
 
       <section className="set-card">
         <h3>Subjects</h3>
