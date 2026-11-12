@@ -135,6 +135,7 @@ import './premium-workspace.css';
 import './admin-control-centre.css';
 import './share-review.css';
 import './theme-amber.css';
+import { NewLanding } from './landing/NewLanding';
 import './aurora.css';
 import './scholar.css';
 import './premium.css';
@@ -2027,12 +2028,10 @@ function App() {
         />
       )
     ) : mainView === 'landing' ? (
-      <LandingPage
-        accountState={accountState}
-        onStartFreeReview={openReviewWorkspace}
-        onOpenPricing={openPricingPage}
+      <LandingShell
+        onStart={openReviewWorkspace}
         onSignIn={() => openAccountPanel('sign-in')}
-        onOpenReports={openReportsDashboard}
+        onOpenExemplars={openExemplars}
         onChoosePack={(pack) => void chooseCreditPack(pack)}
         paymentsEnabled={paymentsEnabled}
       />
@@ -2148,6 +2147,7 @@ function App() {
         </PremiumWorkspaceShell>
       ) : (
         <>
+          {mainView !== 'landing' && (
           <header className="site-header">
             <div className="header-inner">
               <a
@@ -2215,15 +2215,18 @@ function App() {
               </div>
             </div>
           </header>
+          )}
 
           {pageContent}
 
+          {mainView !== 'landing' && (
           <footer className="site-footer">
             <p>
               Indicative guidance only. Final assessment decisions remain with
               your teacher and the IB assessment process.
             </p>
           </footer>
+          )}
         </>
       )}
 
@@ -2996,6 +2999,32 @@ type LandingPageProps = CommercialPageProps & {
   onOpenReports: () => void;
   paymentsEnabled: boolean;
 };
+
+function LandingShell({
+  onStart,
+  onSignIn,
+  onOpenExemplars,
+  onChoosePack,
+  paymentsEnabled,
+}: {
+  onStart: () => void;
+  onSignIn: () => void;
+  onOpenExemplars: () => void;
+  onChoosePack: (pack: CreditPack) => void;
+  paymentsEnabled: boolean;
+}) {
+  const { packs } = usePublicCommercialSettings(paymentsEnabled);
+  return (
+    <NewLanding
+      packs={packs}
+      paymentsEnabled={paymentsEnabled}
+      onStart={onStart}
+      onSignIn={onSignIn}
+      onOpenExemplars={onOpenExemplars}
+      onChoosePack={onChoosePack}
+    />
+  );
+}
 
 function LandingPage({
   accountState,
