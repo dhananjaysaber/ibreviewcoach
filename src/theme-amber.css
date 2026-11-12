@@ -34,6 +34,16 @@ html.lenis, html.lenis body { height: auto; }
   .landing-marquee-track { animation: none; }
 }
 
-/* Logo mark sizing (pen nib) */
-.brand-mark svg, .tn-brand span svg, .premium-sidebar-brand > span svg, .auth-brand-mark svg { width: 78% !important; height: 78% !important; color: #0F172A !important; --logo-cut: #FBBF24; stroke: none; }
-.brand-mark, .tn-brand span, .premium-sidebar-brand > span, .auth-brand-mark { background: #FBBF24 !important; display: grid; place-items: center; }
+/* Logo (pen nib): amber nib, white bar, no tile. --logo-cut = background behind the mark. */
+.ibia-lockup { display: inline-flex; align-items: center; gap: 12px; color: #F8FAFC; --logo-cut: #090E1A; }
+.ibia-lockup-mark { width: 42px; height: 42px; flex: none; }
+.ibia-lockup-text { display: grid; line-height: 1.1; text-align: left; }
+.ibia-lockup-text strong { font: 600 1.28rem var(--p-serif); letter-spacing: -.005em; color: inherit; }
+.ibia-lockup-text small { margin-top: 3px; font: 600 .62rem var(--p-sans); letter-spacing: .2em; text-transform: uppercase; color: #FBBF24; }
+.ibia-landing:not(.dark) header .ibia-lockup, .ibia-landing:not(.dark) footer .ibia-lockup { color: #0F172A; --logo-cut: #fff; }
+.ibia-landing:not(.dark) footer .ibia-lockup { --logo-cut: #FAF8F5; }
+.ibia-landing:not(.dark) .ibia-lockup-text small { color: #B45309; }
+.brand-mark svg, .tn-brand span svg, .premium-sidebar-brand > span svg { width: 100% !important; height: 100% !important; color: #F8FAFC !important; --logo-cut: #090E1A; stroke: none; }
+.brand-mark, .tn-brand span, .premium-sidebar-brand > span { background: transparent !important; box-shadow: none !important; display: grid; place-items: center; }
+.auth-brand-mark { background: #090E1A !important; display: grid; place-items: center; box-shadow: none !important; }
+.auth-brand-mark svg { width: 74% !important; height: 74% !important; color: #F8FAFC !important; --logo-cut: #090E1A; stroke: none; }

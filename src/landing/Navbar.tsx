@@ -1,4 +1,4 @@
-import { LogoMark } from '../components/LogoMark';
+import { LogoLockup } from '../components/LogoMark';
 import React, { useState } from 'react';
 import { ArrowUpRight, Menu, X, Sun, Moon } from 'lucide-react';
 
@@ -20,14 +20,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
           {/* Zone 1: Brand Wordmark (Single text element in display face, no subtext pill) */}
           <a
             href="#"
-            className="flex items-center gap-2.5 text-xl font-bold tracking-tight text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 transition-colors whitespace-nowrap shrink-0"
+            className="flex items-center text-slate-900 dark:text-white whitespace-nowrap shrink-0"
           >
-            <span className="w-9 h-9 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center shadow-md shadow-amber-500/20">
-              <LogoMark className="w-7 h-7" />
-            </span>
-            <span className="font-serif tracking-normal text-lg sm:text-xl font-semibold">
-              IB IA Review
-            </span>
+            <LogoLockup />
           </a>
 
           {/* Zone 2: 4-5 Clean single-line text navigation links */}

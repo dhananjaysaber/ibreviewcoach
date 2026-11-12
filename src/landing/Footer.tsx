@@ -1,4 +1,4 @@
-import { LogoMark } from '../components/LogoMark';
+import { LogoLockup } from '../components/LogoMark';
 import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 
@@ -15,10 +15,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpload, onOpenExemplar }) 
           {/* Brand Col */}
           <div className="space-y-3 md:col-span-1">
             <a href="#" className="flex items-center gap-2.5 text-slate-900 dark:text-white font-serif font-bold text-lg">
-              <span className="w-8 h-8 rounded-lg bg-amber-400 text-slate-900 flex items-center justify-center">
-                <LogoMark className="w-6 h-6" />
-              </span>
-              <span>IB IA Review</span>
+              <LogoLockup />
             </a>
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-xs">
               Examiner-grade Internal Assessment criteria feedback, annotated manuscripts, and actionable fix plans for IB Diploma students worldwide.

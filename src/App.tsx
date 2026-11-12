@@ -136,7 +136,7 @@ import './admin-control-centre.css';
 import './share-review.css';
 import './theme-amber.css';
 import { NewLanding } from './landing/NewLanding';
-import { LogoMark } from './components/LogoMark';
+import { LogoMark, LogoLockup } from './components/LogoMark';
 import './aurora.css';
 import './scholar.css';
 import './premium.css';
@@ -2160,14 +2160,7 @@ function App() {
                   openLandingPage();
                 }}
               >
-                <span className="brand-mark">
-                  <LogoMark />
-                </span>
-
-                <span className="brand-copy">
-                  <strong>IB IA Review</strong>
-                  <span>Reflect. Improve. Take ownership.</span>
-                </span>
+                <LogoLockup />
               </a>
 
               <nav className="public-header-nav" aria-label="Main navigation">
