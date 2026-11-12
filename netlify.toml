@@ -1,5 +1,4 @@
 # IB Review Coach — standalone Netlify site
-# The current iareview.netlify.app site is not changed by this configuration.
 [build]
   command = "npm run build"
   publish = "dist"
@@ -20,5 +19,4 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "DENY"
 
-# Staging website: prevent search engines from indexing this test site.
-    X-Robots-Tag = "noindex, nofollow"
+# Public pages are indexable. Private pages are marked noindex in public/_headers.

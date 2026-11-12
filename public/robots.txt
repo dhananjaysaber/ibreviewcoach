@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://iareview.netlify.app/sitemap.xml
+Sitemap: https://ibiareview.netlify.app/sitemap.xml
