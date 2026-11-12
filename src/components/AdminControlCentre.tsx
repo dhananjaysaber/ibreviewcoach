@@ -62,6 +62,7 @@ type DashboardData = {
     refunded: number;
     partially_refunded: number;
     gross_paid_usd: number;
+    gross_paid_by_currency: Record<string, number>;
   };
   credits: {
     purchase_credits_granted: number;
@@ -100,6 +101,7 @@ type StudentRow = {
   complimentary_credits_remaining: number;
   paid_order_count: number;
   paid_total_usd: number;
+  paid_by_currency: Record<string, number>;
   review_count: number;
   completed_review_count: number;
   last_payment_at: string | null;
@@ -214,6 +216,7 @@ const EMPTY_DASHBOARD: DashboardData = {
     refunded: 0,
     partially_refunded: 0,
     gross_paid_usd: 0,
+    gross_paid_by_currency: {},
   },
   credits: {
     purchase_credits_granted: 0,
@@ -682,7 +685,7 @@ export function AdminControlCentre() {
       !window.confirm(
         `Turn off payment collection?
 
-New pricing and PayPal checkout will be hidden and blocked immediately. Existing credits, reports, purchases and invoices are not affected.`
+New pricing and checkout will be hidden and blocked immediately. Existing credits, reports, purchases and invoices are not affected.`
       )
     ) {
       return;
@@ -714,8 +717,8 @@ New pricing and PayPal checkout will be hidden and blocked immediately. Existing
       setNotice({
         tone: 'success',
         text: confirmedEnabled
-          ? 'Payment collection is enabled. Pricing and PayPal checkout are available again.'
-          : 'Payment collection is disabled. New pricing and PayPal checkout are hidden and blocked.',
+          ? 'Payment collection is enabled. Pricing and checkout are available again.'
+          : 'Payment collection is disabled. New pricing and checkout are hidden and blocked.',
       });
 
       window.dispatchEvent(
@@ -1236,10 +1239,11 @@ function Overview({
         />
         <Stat
           label="Paid revenue"
-          value={formatMoney(
-            data.payments.gross_paid_usd,
-            'USD'
-          )}
+          value={
+            Object.entries(data.payments.gross_paid_by_currency)
+              .map(([code, total]) => formatMoney(total, code))
+              .join(' + ') || formatMoney(0, 'USD')
+          }
           helper={`${data.payments.paid} successful payments`}
           icon={<CircleDollarSign aria-hidden="true" />}
           onClick={onPayments}
@@ -1391,7 +1395,7 @@ function PaymentCollectionControl({
             <div>
               <strong>Checking payment collection…</strong>
               <span>
-                Reading the app-wide pricing and PayPal setting.
+                Reading the app-wide pricing and checkout setting.
               </span>
             </div>
             <LoaderCircle
@@ -1417,8 +1421,8 @@ function PaymentCollectionControl({
               </strong>
               <span>
                 {enabled
-                  ? 'Pricing and PayPal checkout are available to eligible users.'
-                  : 'New pricing and PayPal checkout are hidden and blocked. Existing credits, reports, purchases and invoices remain available.'}
+                  ? 'Pricing and checkout are available to eligible users.'
+                  : 'New pricing and checkout are hidden and blocked. Existing credits, reports, purchases and invoices remain available.'}
               </span>
             </div>
             <StatusPill
@@ -1559,10 +1563,11 @@ function Students({
                 <td>
                   <Primary
                     title={`${row.paid_order_count} paid`}
-                    subtitle={formatMoney(
-                      row.paid_total_usd,
-                      'USD'
-                    )}
+                    subtitle={
+                      Object.entries(row.paid_by_currency)
+                        .map(([code, total]) => formatMoney(total, code))
+                        .join(' + ') || formatMoney(0, 'USD')
+                    }
                   />
                 </td>
                 <td>
@@ -1648,14 +1653,14 @@ function Payments({
         <SearchBox
           value={search}
           setValue={setSearch}
-          placeholder="Search customer, invoice or PayPal ID"
+          placeholder="Search customer, invoice or payment ID"
           submit={() => void refresh()}
         />
       </Toolbar>
 
       <SafeNote
         title="Verified payment state only"
-        text="There is no manual Mark Paid control. Paid status and purchase credits continue to come only from verified PayPal capture and reconciliation."
+        text="There is no manual Mark Paid control. Paid status and purchase credits continue to come only from verified Razorpay or PayPal payments and reconciliation."
       />
 
       <TableFrame state={state}>
@@ -3323,6 +3328,11 @@ function normalizeDashboard(
       gross_paid_usd: asNumber(
         payments.gross_paid_usd
       ),
+      gross_paid_by_currency: Object.fromEntries(
+        Object.entries(
+          (payments.gross_paid_by_currency ?? {}) as Record<string, unknown>
+        ).map(([code, total]) => [code, asNumber(total)])
+      ),
     },
     credits: {
       purchase_credits_granted:
@@ -3438,6 +3448,11 @@ function normalizeStudent(
       asInteger(value.paid_order_count),
     paid_total_usd:
       asNumber(value.paid_total_usd),
+    paid_by_currency: Object.fromEntries(
+      Object.entries(
+        ((value as Record<string, unknown>).paid_by_currency ?? {}) as Record<string, unknown>
+      ).map(([code, total]) => [code, asNumber(total)])
+    ),
     review_count:
       asInteger(value.review_count),
     completed_review_count:
