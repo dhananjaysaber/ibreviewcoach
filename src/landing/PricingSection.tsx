@@ -20,10 +20,11 @@ interface PricingSectionProps {
 }
 
 const FEATURES = [
-  'Marked against the 24-mark SEHS criteria',
-  'Interactive annotated IA with evidence-linked findings',
+  'All four criteria reviewed, marked out of 24',
+  'Detailed findings for every criterion',
+  'Annotated copy of your IA with Word download',
   'Step-by-step fix plan with completion checks',
-  'Permanent saved report in My IA Reports',
+  'Report saved in My IA Reports',
 ];
 
 export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsEnabled, onChoosePack, onStart }) => {
@@ -39,7 +40,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsE
             Simple review-credit pricing
           </h2>
           <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-            Your first review is free. After that, one credit covers one full review of one draft. Purchased credits stay valid for 365 days, so you can revise at your own pace.
+            Your first review is free and covers Research Design only. One credit unlocks a full four-criterion review of one draft, with marks. Purchased credits stay valid for 365 days, so you can revise at your own pace.
           </p>
         </div>
 
@@ -50,14 +51,14 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsE
               <span className="bg-slate-950 text-amber-300 text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">Start here</span>
             </div>
             <div>
-              <h3 className="text-xl font-serif font-bold mb-1">Free first review</h3>
-              <p className="text-xs min-h-[32px] text-slate-800">See how the review works on your own IA.</p>
+              <h3 className="text-xl font-serif font-bold mb-1">Free review</h3>
+              <p className="text-xs min-h-[32px] text-slate-800">Try the review on your own IA.</p>
               <div className="mb-6 pb-6 border-b border-slate-950/15">
                 <span className="text-4xl sm:text-5xl font-serif font-bold tracking-tight">$0</span>
                 <div className="text-xs font-semibold mt-1">1 per verified account · no card needed</div>
               </div>
               <ul className="space-y-2.5 text-xs sm:text-sm mb-8">
-                {['Mark overview for your IA', 'First detailed-review criterion', 'Annotated IA overview and opening lines', 'Fix plan, downloads and full history unlock with a credit'].map((f) => (
+                {['Research Design reviewed with written feedback', 'No marks shown on the free review', 'Other 3 criteria, marks and annotated copy locked', 'Fix plan and Word download unlock with a credit'].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 shrink-0 mt-0.5" />
                     <span className="leading-relaxed">{f}</span>

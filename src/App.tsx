@@ -1467,6 +1467,17 @@ function App() {
 
       window.dispatchEvent(new CustomEvent('ia-credit-balance-changed'));
 
+      if (submission) {
+        // Resume: the free run only did Research Design. Run the missing criteria,
+        // the annotated copy and the progress plan now that the review is paid.
+        void startPipeline({
+          ...submission,
+          commercial_access: upgradedAccess,
+          access_expires_at: null,
+          retention_policy: 'account',
+        });
+      }
+
       window.dispatchEvent(new CustomEvent('ia-report-history-changed'));
 
       window.scrollTo({
@@ -6175,12 +6186,10 @@ function CompletionWorkspace({
           </div>
           <div className="report-bar-stats">
             <div>
-              <span>Indicative range</span>
+              <span>{isFreeReview ? 'Marks' : 'Indicative range'}</span>
               <strong>
                 {isFreeReview
-                  ? reviewData?.totalMarks != null
-                    ? `${reviewData.unlockedMarks ?? 6} out of ${reviewData.totalMarks} marked`
-                    : 'Research Design only'
+                  ? 'Locked'
                   : markMapScore
                   ? `${markMapScore.mark} / ${markMapScore.maximum}`
                   : completion?.overallMarkRange
@@ -7306,16 +7315,16 @@ function ReviewResultAccessBanner({
   return null;
 }
 
-function FreeMarksStrip({ unlocked, total }: { unlocked: number; total: number }) {
+function FreeMarksStrip() {
   return (
     <div className="free-marks-strip" role="status">
       <div>
-        <span>Marked in this free review</span>
-        <strong>{unlocked} out of {total}</strong>
+        <span>Your free review</span>
+        <strong>Research Design feedback</strong>
       </div>
       <div className="free-marks-locked">
         <LockKeyhole aria-hidden="true" />
-        <span>{total - unlocked} marks locked</span>
+        <span>Marks and the other 3 criteria are locked</span>
       </div>
     </div>
   );
@@ -7353,8 +7362,8 @@ function LockedCriteriaCards({
               </div>
             </div>
             <div className="criterion-score-group">
-              <span>Not marked</span>
-              <strong>– / {item.maxMarks}</strong>
+              <span>Locked</span>
+              <strong>{item.maxMarks} marks</strong>
             </div>
           </header>
 
@@ -7540,12 +7549,7 @@ function DetailedReviewTab({
         </span>
       </div>
 
-      {isFreePreview && data.totalMarks !== null && (
-        <FreeMarksStrip
-          unlocked={data.unlockedMarks ?? 6}
-          total={data.totalMarks}
-        />
-      )}
+      {isFreePreview && <FreeMarksStrip />}
 
       <nav className="criterion-jump-list" aria-label="Jump to criterion">
         {criterionSections.map((section, index) => (
@@ -7562,7 +7566,8 @@ function DetailedReviewTab({
             key={section.code}
             section={section}
             number={index + 1}
-            marked={criterionMarks[FEEDBACK_CODE[section.code] ?? '']}
+            marked={isFreePreview ? undefined : criterionMarks[FEEDBACK_CODE[section.code] ?? '']}
+            feedbackOnly={isFreePreview}
           />
         ))}
       </div>
@@ -7590,12 +7595,14 @@ type CriterionReviewSectionProps = {
   section: CriterionSection;
   number: number;
   marked?: CriterionMarkView;
+  feedbackOnly?: boolean;
 };
 
 function CriterionReviewSection({
   section,
   number,
   marked,
+  feedbackOnly = false,
 }: CriterionReviewSectionProps) {
   const scoreRange = section.coaching?.indicative_mark_range;
   const maximumMark = section.coaching?.criterion_max_marks;
@@ -7618,19 +7625,21 @@ function CriterionReviewSection({
         </div>
 
         <div className="criterion-score-group">
-          <span>{marked ? 'Marked' : 'Indicative range'}</span>
+          <span>{feedbackOnly ? 'Free review' : marked ? 'Marked' : 'Indicative range'}</span>
           <strong>
-            {marked
+            {feedbackOnly
+              ? 'Feedback only'
+              : marked
               ? `${marked.mark} / ${marked.max}`
               : `${scoreRange ? `${scoreRange[0]}–${scoreRange[1]}` : 'Review ready'}${maximumMark ? ` / ${maximumMark}` : ''}`}
           </strong>
-          {(marked?.confidence || section.coaching?.confidence) && (
+          {!feedbackOnly && (marked?.confidence || section.coaching?.confidence) && (
             <small>{capitalize(marked?.confidence || section.coaching?.confidence || '')} confidence</small>
           )}
         </div>
       </header>
 
-      {(marked?.why || section.coaching?.why_this_range) && (
+      {!feedbackOnly && (marked?.why || section.coaching?.why_this_range) && (
         <div className="criterion-range-rationale">
           <SearchCheck aria-hidden="true" />
           <div>
@@ -7897,7 +7906,7 @@ function AnnotatedIaTab({
 
           <p>
             {isFreePreview
-              ? 'The free preview marks Research Design and shows the first 20 lines of the annotated IA. The other criteria, the remaining document and connected comments stay locked.'
+              ? 'The free preview gives Research Design feedback and shows the first 20 lines of your IA. Marks, the other criteria, the rest of the document and connected comments stay locked.'
               : 'The annotated view follows the order of your draft. Highlighted passages and numbered markers connect directly to the relevant criterion finding, specific action and completion check.'}
           </p>
         </div>
@@ -8014,11 +8023,11 @@ function AnnotatedIaTab({
         <div className="annotated-feature-card">
           <SearchCheck aria-hidden="true" />
           <strong>
-            {isFreePreview ? 'Research Design marked' : 'Exact evidence'}
+            {isFreePreview ? 'Research Design feedback' : 'Exact evidence'}
           </strong>
           <span>
             {isFreePreview
-              ? 'Your Research Design mark is shown, with the other three criteria locked.'
+              ? 'Research Design feedback is included. Marks and the other three criteria are locked.'
               : 'Highlights are calculated from saved sentence and paragraph locations.'}
           </span>
         </div>

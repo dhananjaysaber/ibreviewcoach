@@ -2,9 +2,9 @@
 //
 // Strict free annotated-IA preview.
 // A free student receives ONLY:
-//   - the Research Design criterion and its indicative range (out of its max)
+//   - the Research Design criterion name only (feedback is in the review tab; NO marks)
 //   - locked placeholders for the other criteria (name + max marks, no marks)
-//   - "N of TOTAL marked, M locked" (no overall range, no finding counts)
+//   - no overall range, no finding counts
 //   - the first 20 document blocks
 // Nothing about the other criteria's marks or feedback is ever sent.
 // JWT verification must remain enabled.
@@ -12,7 +12,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const FUNCTION_NAME = "get-annotated-ia-preview";
-const FUNCTION_VERSION = "2026-11-13-v2.0-strict-free";
+const FUNCTION_VERSION = "2026-11-13-v2.1-no-marks";
 const PREVIEW_BLOCK_LIMIT = 20;
 const UNLOCKED_CRITERION = "ResearchDesign";
 const CRITERION_ORDER = ["ResearchDesign", "DataAnalysis", "Conclusion", "Evaluation"];
@@ -191,18 +191,15 @@ function renderPreviewHtml(o: {
   const generatedAt = readText(o.submission.completed_at) ?? readText(o.submission.uploaded_at) ?? new Date().toISOString();
   const expiresAt = readText(o.submission.access_expires_at);
 
-  const rdRange = o.unlocked?.range
-    ? `${o.unlocked.range[0]}–${o.unlocked.range[1]} / ${o.unlockedMax}` : "Reviewed";
-
   const unlockedCard = `
     <article class="criterion-card criterion-open">
       <span>${escapeHtml(o.unlocked?.name ?? "Research Design")}</span>
-      <strong>${escapeHtml(rdRange)}</strong>
+      <strong>Feedback included</strong>
     </article>`;
   const lockedCards = o.locked.map((c) => `
     <article class="criterion-card criterion-locked" aria-label="${escapeHtml(c.name)} locked">
       <span>${escapeHtml(c.name)}</span>
-      <strong class="blur">0–0 / ${c.maximum}</strong>
+      <strong class="blur">${c.maximum} marks</strong>
       <em>Locked</em>
     </article>`).join("");
 
@@ -272,7 +269,7 @@ h1{margin:0;color:var(--navy);font-family:Georgia,serif;font-size:clamp(28px,5vw
     <div>
       <p class="eyebrow">Annotated IA Preview</p>
       <h1>Detailed annotated review</h1>
-      <p>This free preview marks one criterion, Research Design, and shows the opening ${o.previewBlockLimit} lines of your IA. The other criteria and their connected comments are locked until you unlock a full review.</p>
+      <p>This free preview gives Research Design feedback and shows the opening ${o.previewBlockLimit} lines of your IA. The other criteria and their connected comments are locked until you unlock a full review.</p>
     </div>
     <div class="hero-meta">
       <div class="meta-row"><span>Subject</span><span>${escapeHtml(subject)}</span></div>
@@ -283,8 +280,8 @@ h1{margin:0;color:var(--navy);font-family:Georgia,serif;font-size:clamp(28px,5vw
   </section>
 
   <section class="overview-card" aria-label="Review overview">
-    <article><span>Marked in this preview</span><strong>${o.unlockedMax} out of ${o.totalMarks}</strong></article>
-    <article class="locked-total"><span>Locked</span><strong>${o.lockedMarks} marks</strong></article>
+    <article><span>Included</span><strong>Research Design feedback</strong></article>
+    <article class="locked-total"><span>Marks</span><strong>Locked</strong></article>
     <article><span>Criteria unlocked</span><strong>1 of ${o.locked.length + 1}</strong></article>
   </section>
 

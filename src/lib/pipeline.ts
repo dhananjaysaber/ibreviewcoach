@@ -319,7 +319,9 @@ export async function runIaPipelineToCompletion({
 
       message:
         data.completed
-          ? 'Your detailed review, annotated IA and progress plan are ready.'
+          ? data.commercial_access === 'free_review'
+            ? 'Your free Research Design review is ready.'
+            : 'Your detailed review, annotated IA and progress plan are ready.'
           : data.message ??
             buildProgressMessage(
               data.next_stage,
