@@ -3016,12 +3016,12 @@ function LandingPage({
         <div className="landing-hero-inner">
           <div className="landing-hero-copy">
             <span className="landing-kicker">
-              IB SEHS · Internal assessment · 24 marks
+              IB IA Review · SEHS · Internal assessment · 24 marks
             </span>
 
             <h1>
-              Know <mark>exactly what to fix</mark> in your IA before it is
-              marked.
+              IB IA Review: know <mark>exactly what to fix</mark> in your
+              Internal Assessment before it is marked.
             </h1>
 
             <p className="landing-hero-lead">
@@ -3105,6 +3105,39 @@ function LandingPage({
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="landing-section landing-subjects-section" id="subjects">
+        <div className="landing-section-heading">
+          <span>Subjects</span>
+          <h2>IB IA review for your subject.</h2>
+          <p>
+            Reviews are live for IB SEHS today. More IB subjects are coming
+            soon, each marked against its own official criteria.
+          </p>
+        </div>
+
+        <ul className="landing-subject-grid">
+          <li className="landing-subject-live">
+            <strong>SEHS</strong>
+            <span>Sports, Exercise and Health Science IA</span>
+            <em>Available now</em>
+          </li>
+          {[
+            'Biology',
+            'Chemistry',
+            'Physics',
+            'Psychology',
+            'Business Management',
+            'Economics',
+          ].map((name) => (
+            <li key={name} className="landing-subject-soon">
+              <strong>{name}</strong>
+              <span>IB {name} IA</span>
+              <em>Coming soon</em>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="landing-proof-strip" aria-label="Review outcomes">

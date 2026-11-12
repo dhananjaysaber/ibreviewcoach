@@ -438,3 +438,13 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .premium-orig-gone { margin-right: 6px; font-style: normal; font-size: .72rem; font-weight: 600; color: #8a5a00; background: #fff5de; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
 .premium-rename-year { margin-top: 6px; padding: 7px 10px; border: 1.5px solid var(--p-hair); border-radius: 10px; font: 600 .85rem var(--p-sans); background: #fff; max-width: 220px; }
 .premium-report-toolbar { flex-wrap: wrap; }
+
+.landing-subject-grid { list-style: none; margin: 28px auto 0; padding: 0; max-width: 1040px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.landing-subject-grid li { display: grid; gap: 6px; padding: 20px; border-radius: 18px; border: 1px solid rgba(16,38,74,.12); background: #fff; box-shadow: 0 8px 24px rgba(16,38,74,.06); }
+.landing-subject-grid strong { font-size: 1.15rem; }
+.landing-subject-grid span { color: #5a6577; font-size: .88rem; }
+.landing-subject-grid em { justify-self: start; margin-top: 4px; padding: 3px 11px; border-radius: 999px; font-style: normal; font-weight: 700; font-size: .72rem; }
+.landing-subject-live { border-color: rgba(91,95,239,.45) !important; background: linear-gradient(180deg, rgba(91,95,239,.08), #fff) !important; }
+.landing-subject-live em { color: #fff; background: #5b5fef; }
+.landing-subject-soon { opacity: .8; }
+.landing-subject-soon em { color: #8a5a00; background: #fff5de; }
