@@ -109,6 +109,7 @@ import {
 } from './lib/pipeline';
 
 import { uploadIaSubmission } from './lib/uploadSubmission';
+import { useRightClickGuard } from './lib/rightClick';
 import { loadReportYears, subjectLabel, useAcademicYears, useSubjects } from './lib/subjects';
 import { ExemplarsPage } from './components/ExemplarsPage';
 
@@ -1012,6 +1013,7 @@ function App() {
   }
 
   const accountState = getAccountSessionState(session);
+  useRightClickGuard(accountState === 'permanent', isAdmin);
   const signedInEmail = getSignedInEmail(session);
 
   async function refreshCurrentRole(

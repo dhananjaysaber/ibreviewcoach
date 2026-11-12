@@ -1,0 +1,3 @@
+-- Applied to the project via the Supabase connector on 2026-11-12 (app_settings_right_click).
+-- ia_app_settings (key/value, RLS on, no direct table access), get_ia_app_settings() for signed-in users,
+-- set_ia_app_setting(key, value) for admins only. Seeds block_right_click = true.
