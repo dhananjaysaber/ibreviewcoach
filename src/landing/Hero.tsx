@@ -42,7 +42,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenUpload, onOpenExemplar }) => {
                 onClick={onOpenUpload}
                 className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-base font-semibold text-slate-950 bg-gradient-to-r from-amber-400 via-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl shadow-xl shadow-amber-500/20 hover:shadow-amber-500/30 transition-all active:scale-[0.98] cursor-pointer"
               >
-                <span>Start an IA Review</span>
+                <span>Try your first review free</span>
                 <ArrowRight className="w-4 h-4 text-slate-950" />
               </button>
 
@@ -54,6 +54,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenUpload, onOpenExemplar }) => {
                 <span>See Worked Example</span>
               </button>
             </div>
+
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-300 -mt-2">
+              Your first review is free. No card needed. Upgrade only if you want the complete review.
+            </p>
 
             {/* Proof & Trust Indicators - clean unboxed metadata */}
             <div className="pt-4 border-t border-slate-200 dark:border-slate-700/80 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-slate-600 dark:text-slate-200">

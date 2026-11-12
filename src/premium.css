@@ -448,3 +448,9 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .landing-subject-live em { color: #fff; background: #D97706; }
 .landing-subject-soon { opacity: .8; }
 .landing-subject-soon em { color: #8a5a00; background: #fff5de; }
+
+.premium-access-free-hero { background: linear-gradient(135deg, #fbbf24, #f59e0b) !important; border: 0 !important; color: #1a1205 !important; box-shadow: 0 10px 28px rgba(245, 158, 11, .35); }
+.premium-access-free-hero > div > span, .premium-access-free-hero h3, .premium-access-free-hero p { color: #1a1205 !important; }
+.premium-access-free-hero .premium-access-free-icon { background: rgba(255,255,255,.55) !important; color: #1a1205 !important; }
+.premium-access-free-hero > button { background: #0b1120 !important; color: #fbbf24 !important; border: 0 !important; font-weight: 700; }
+.landing-price-free { border: 2px solid #f59e0b; box-shadow: 0 12px 32px rgba(245, 158, 11, .25); }

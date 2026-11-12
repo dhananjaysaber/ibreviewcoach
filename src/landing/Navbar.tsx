@@ -90,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
               onClick={onOpenUpload}
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-lg shadow-lg shadow-amber-500/15 transition-all active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <span>Start an IA Review</span>
+              <span>Try free review</span>
               <ArrowUpRight className="w-4 h-4 text-slate-950" />
             </button>
           </div>
@@ -176,7 +176,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
               }}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm"
             >
-              <span>Start an IA Review</span>
+              <span>Try free review</span>
               <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
