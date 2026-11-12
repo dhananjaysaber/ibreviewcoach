@@ -125,7 +125,7 @@ const clean = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').tr
 const int = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : null);
 const levelRange = (l: string) => (l === '0' ? [0, 0] : l.split('-').map(Number));
 
-export type StrandMark = { id: string; name: string; criterion: string; level: string; reason: string; missing: string; evidence: { quote: string; block_index: number; page: number | null; section: string | null }[]; no_evidence?: boolean; failed_checks: string[] };
+export type StrandMark = { id: string; name: string; criterion: string; level: string; reason: string; missing: string; evidence: { quote: string; block_index: number; page: number | null; section: string | null }[]; no_evidence?: boolean; failed_checks?: string[] };
 export type CriterionMark = { code: string; criterion: string; max: number; mark: number; why_mark: string; strands: StrandMark[]; confidence: string };
 export type Inconsistency = { strand: string; severity: 'significant' | 'minor'; what: string; quote_a: string; quote_b: string; page_a: number | null; page_b: number | null };
 export type Limit = { kind: 'no_evidence' | 'inconsistency' | 'inconsistency_minor' | 'average' | 'template' | 'words'; criterion: string; strand: string | null; detail: string; action: string };
@@ -194,7 +194,7 @@ export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): 
       if (level !== '0' && evidence.length === 0) {
         ungrounded++;
         limits.push({ kind: 'no_evidence', criterion: c.code, strand: s.id, detail: `${s.id} ${s.name}: no text in the report body shows this, so it earns no credit.`, action: clean(rs.missing) || `Show ${s.name.toLowerCase()} in the body of the report, not only in an appendix.` });
-        strands.push({ id: s.id, name: s.name, criterion: c.code, level: '0', reason: 'No verified quotation from the report supports this strand, so no credit is given. ' + clean(rs.reason), missing: clean(rs.missing), evidence, no_evidence: true, failed_checks: [] });
+        strands.push({ id: s.id, name: s.name, criterion: c.code, level: '0', reason: 'No verified quotation from the report supports this strand, so no credit is given. ' + clean(rs.reason), missing: clean(rs.missing), evidence, no_evidence: true, failed_checks: TEMPLATE_CHECKS.filter((t) => t.strand === s.id).map((t) => t.id) });
         continue;
       }
       // Mandatory moderator-template checks. The model lists the ones not met; two are counted in code. Any miss holds the strand at 3-4.
@@ -208,7 +208,7 @@ export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): 
         limits.push({ kind: 'template', criterion: c.code, strand: s.id, detail: `Moderator template: ${t.text}.${extra}`, action: t.fix });
       }
       if (level === '5-6' && failed.size) { lv = '3-4'; why = `Held at 3-4 because moderator template checks are missing (${mine.filter((t) => failed.has(t.id)).map((t) => t.id).join(', ')}). ` + why; }
-      strands.push({ id: s.id, name: s.name, criterion: c.code, level: lv, reason: why, missing: clean(rs.missing), evidence, failed_checks: level === '0' ? [] : [...failed] });
+      strands.push({ id: s.id, name: s.name, criterion: c.code, level: lv, reason: why, missing: clean(rs.missing), evidence, failed_checks: level === '0' ? mine.map((t) => t.id) : [...failed] });
     }
     for (const inc of inconsistencies.filter((i) => i.severity === 'significant' && i.strand.startsWith(c.code))) {
       const st = strands.find((x) => x.id === inc.strand);
@@ -234,7 +234,7 @@ export function assembleMarking(raw: Record<string, unknown>, blocks: Block[]): 
       const cap = Math.max(lo, same ? levelRange(strands[0].level).slice(-1)[0] : Math.ceil(avg - 0.5));
       if (mark > cap) {
         const weak = strands.filter((x) => mid(x.level) < avg).map((x) => x.id);
-        limits.push({ kind: 'average', criterion: c.code, strand: null, detail: `${c.criterion} is held at ${cap}/${c.max} because its strands average about ${avg.toFixed(1)}; the weaker strands (${weak.join(', ') || 'none'}) limit it.`, action: `Raise ${weak.join(', ') || 'the weaker strands'} first: ${strands.filter((x) => weak.includes(x.id)).map((x) => x.missing).filter(Boolean).join(' ')}`.trim() });
+        limits.push({ kind: 'average', criterion: c.code, strand: null, detail: `${c.name} is held at ${cap}/${c.max} because its strands average about ${avg.toFixed(1)}; the weaker strands (${weak.join(', ') || 'none'}) limit it.`, action: `Raise ${weak.join(', ') || 'the weaker strands'} first: ${strands.filter((x) => weak.includes(x.id)).map((x) => x.missing).filter(Boolean).join(' ')}`.trim() });
         mark = cap;
       }
     }
@@ -291,7 +291,7 @@ export function buildAnnotatePrompt(m: Marking): string {
       (s.level !== '0' && def?.levels[s.level] ? `  Level ${s.level} descriptor: ${def.levels[s.level]}\n` : '') +
       (next ? `  Next level up: ${next}\n` : '') +
       `  Assessor's reasoning: ${s.reason}\n  Missing for the next level: ${s.missing || 'n/a'}\n` +
-      (tpl.length ? `  Template expectations:\n${tpl.map((t) => `    - ${t.text} [${s.failed_checks.includes(t.id) ? 'NOT SHOWN' : 'SHOWN'}]`).join('\n')}\n` : '') +
+      (tpl.length && Array.isArray(s.failed_checks) ? `  Template expectations:\n${tpl.map((t) => `    - ${t.text} [${s.failed_checks!.includes(t.id) ? 'NOT SHOWN' : 'SHOWN'}]`).join('\n')}\n` : '') +
       (s.evidence.length ? s.evidence.map((e, i) => `  PASSAGE ${i + 1} (${e.section ?? 'report'}, page ${e.page ?? '?'}): '${e.quote}'`).join('\n') : '  No passage supports this strand (use n 0).');
   })).join('\n\n');
 }
@@ -422,4 +422,12 @@ export function assembleTrim(raw: Record<string, unknown>, body: Block[], markin
     run += p.words_saved; items.push({ ...p, running_total: run });
   }
   return { over_by: overBy, items, enough: run >= overBy, total_saved: run };
+}
+
+/** A map saved under the old A/B/C/E strand identifiers cannot be shown by the strand workspace; it has to be marked again. */
+export function isCurrentMap(result: unknown): boolean {
+  const crit = (result as { criteria?: { strands?: { id?: string }[] }[] } | null)?.criteria;
+  if (!Array.isArray(crit) || !crit.length) return false;
+  const known = new Set(STRANDS.map((x) => x.id));
+  return crit.every((c) => Array.isArray(c.strands) && c.strands.length > 0 && c.strands.every((x) => typeof x.id === 'string' && known.has(x.id)));
 }

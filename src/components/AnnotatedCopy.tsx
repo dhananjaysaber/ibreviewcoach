@@ -52,14 +52,18 @@ function Highlighted({ text, quotes }: { text: string; quotes: string[] }) {
 }
 
 
-function openEditor(rows: { key: number; block: ReportBlock; extra?: string[] }[], built: ReturnType<typeof buildComments>) {
+type Row = { key: number; block: ReportBlock; extra?: string[]; indices: number[] };
+/** Comments for every block merged into one table row, so none are lost when consecutive table blocks are joined. */
+const rowComments = (row: Row, built: ReturnType<typeof buildComments>) => row.indices.flatMap((i) => built.at.get(i) ?? []);
+
+function openEditor(rows: Row[], built: ReturnType<typeof buildComments>) {
   const split = (c: Comment) => { const k = c.text.indexOf(':'); return { label: k > 0 ? c.text.slice(0, k) : c.code, text: (k > 0 ? c.text.slice(k + 1) : c.text).trim(), quote: c.quote }; };
   const ok = openAnnotatedEditor({
-    rows: rows.map(({ block, extra }) => ({
+    rows: rows.map((row) => { const { block, extra } = row; return {
       kind: block.block_type === 'heading' && block.text.length <= 120 ? 'heading' as const : block.block_type === 'table_text' ? 'table' as const : 'text' as const,
       text: block.block_type === 'table_text' ? [block.text, ...(extra ?? [])].join('  ·  ') : block.text,
-      comments: (built.at.get(block.block_index) ?? []).map(split),
-    })),
+      comments: rowComments(row, built).map(split),
+    }; }),
     unplaced: built.unplaced.map(split),
   });
   if (!ok) alert('Allow pop-ups for this site, then press the button again.');
@@ -82,11 +86,11 @@ export function AnnotatedCopy({ mm, canToggle, teacher }: { mm: MM; canToggle?: 
   const quotes = allStrands(map).flatMap((s) => s.evidence.map((e) => e.quote));
   const needsPrep = teacher && mode === 'teacher' && !hasAnnotations(map);
   // join consecutive table rows so a data table reads as one block
-  const rows: { key: number; block: ReportBlock; extra?: string[] }[] = [];
+  const rows: Row[] = [];
   for (const b of blocks ?? []) {
     const last = rows[rows.length - 1];
-    if (b.block_type === 'table_text' && last?.block.block_type === 'table_text') { (last.extra ??= []).push(b.text); continue; }
-    rows.push({ key: b.block_index, block: b });
+    if (b.block_type === 'table_text' && last?.block.block_type === 'table_text') { (last.extra ??= []).push(b.text); last.indices.push(b.block_index); continue; }
+    rows.push({ key: b.block_index, block: b, indices: [b.block_index] });
   }
   return (
     <section className="ws" aria-label="Annotated copy">
@@ -108,8 +112,9 @@ export function AnnotatedCopy({ mm, canToggle, teacher }: { mm: MM; canToggle?: 
           <div className="title"><div className="w-mono">SEHS IA · {mode === 'teacher' ? 'Internal assessor comments' : 'Comments for the student'}</div>
             <h2 style={{ fontSize: '1.5rem' }}>Annotated copy</h2>
             <div className="w-mono" style={{ marginTop: 6 }}>Recommended {map.mark} / {map.maximum} · {map.criteria.map((c) => `${c.code} ${c.mark}`).join(' · ')}</div></div>
-          {rows.map(({ key, block, extra }) => {
-            const cm = built.at.get(block.block_index) ?? [];
+          {rows.map((row) => {
+            const { key, block, extra } = row;
+            const cm = rowComments(row, built);
             const isHead = block.block_type === 'heading' && block.text.length <= 120;
             const tab = block.block_type === 'table_text';
             return (

@@ -6,7 +6,7 @@
  * The Ideal IA template is never an input to a mark. Requires the signed-in owner with full review access.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { ANNOTATE_SYSTEM, MARK_SYSTEM, PLAN_SYSTEM, TRIM_SYSTEM, WORD_LIMIT, assembleAnnotations, assembleCriterionPlan, appendixDigest, assembleMarking, assembleTrim, buildAnnotatePrompt, buildDocument, buildMarkPrompt, buildPlanPrompt, MARK_PARTS, mergeMarkParts, splitDocument, totals, wordGuide, wordLimits, type Block } from './logic.ts';
+import { ANNOTATE_SYSTEM, MARK_SYSTEM, PLAN_SYSTEM, TRIM_SYSTEM, WORD_LIMIT, assembleAnnotations, assembleCriterionPlan, appendixDigest, assembleMarking, assembleTrim, buildAnnotatePrompt, buildDocument, buildMarkPrompt, buildPlanPrompt, isCurrentMap, MARK_PARTS, mergeMarkParts, splitDocument, totals, wordGuide, wordLimits, type Block } from './logic.ts';
 
 const VERSION = 'mark-map-v2';
 const MODEL = 'claude-sonnet-4-6';
@@ -66,8 +66,11 @@ Deno.serve(async (req) => {
   const { data: hasAccess, error: accessError } = await owner.rpc('has_full_ia_review_access', { p_submission_id: submission_id });
   if (accessError || hasAccess !== true) return reply(403, { error: 'Full-review entitlement is required' });
 
-  const { data: stored, error: stErr } = await db.from('ia_mark_maps').select('result,created_at').eq('submission_id', submission_id).eq('map_version', VERSION).maybeSingle();
+  const { data: storedRow, error: stErr } = await db.from('ia_mark_maps').select('result,created_at').eq('submission_id', submission_id).eq('map_version', VERSION).maybeSingle();
   if (stErr) return reply(500, { error: 'The mark map schema has not been installed on this environment' });
+  // A map saved under the old A/B/C/E strand identifiers cannot be read by the strand workspace. Treat it as not marked yet,
+  // so the student marks again and the new result replaces it (upsert on the same version).
+  const stored = storedRow && isCurrentMap(storedRow.result) ? storedRow : null;
   if (action === 'get') return reply(200, { map: stored?.result ?? null, created_at: stored?.created_at ?? null });
   if (action === 'generate' && stored?.result) return reply(200, { map: stored.result, created_at: stored.created_at });
   if ((action === 'plan' || action === 'trim' || action === 'annotate') && !stored?.result) return reply(409, { error: 'Mark the IA first.' });

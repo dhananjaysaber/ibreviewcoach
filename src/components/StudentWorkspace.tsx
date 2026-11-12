@@ -53,7 +53,7 @@ export function StudentWorkspace({ mm, submissionId, isFreePreview, ticks, setTi
           {v.limits.length > 0
             ? <div className="w-limit" role="note"><h4>What is limiting your mark</h4><ul>{v.limits.map((l, k) => <li key={k}>{l.detail}<br /><em>What to do:</em> {l.action}</li>)}</ul></div>
             : <div className="w-limit ok"><h4>Nothing is holding this section down</h4>Keep what you have and check it against the list below.</div>}
-          {v.checks.length > 0 && <div className="w-checks" aria-label="Moderator template checks">{v.checks.map((c) => <span key={c.id} className={'w-chk ' + (c.met ? 'y' : 'n')}>{c.met ? 'Met: ' : 'Missing: '}{c.text}</span>)}</div>}
+          {v.checks.length > 0 && <div className="w-checks" aria-label="Moderator template checks">{v.checks.map((c) => <span key={c.id} className={'w-chk ' + (c.met === null ? '' : c.met ? 'y' : 'n')}>{c.met === null ? 'Not checked: ' : c.met ? 'Met: ' : 'Missing: '}{c.text}</span>)}</div>}
           <div className="w-blocks">
             <div className="w-blk"><h3><b>1</b>What you did</h3>
               {v.did.length ? v.did.map((d, k) => <blockquote key={k}><span className="w-code">{d.id}</span> {d.quote}{d.where && <small>{d.where}</small>}</blockquote>) : <p style={{ margin: 0 }}>The marking found no text in the report body that shows this yet.</p>}</div>

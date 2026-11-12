@@ -36,6 +36,14 @@ export const SECTIONS: { id: string; name: string; strands: string[]; match: Reg
   { id: 'ev', name: 'Evaluation', strands: ['EV1', 'EV2'], match: /evaluat|limitation|improv/i },
 ];
 
+/** true = met, false = missing, null = not assessed (zero-level strand, or a map saved before template checks existed). */
+export function checkMet(s: Strand | undefined, checkId: string): boolean | null {
+  if (!s) return null;
+  if (s.level === '0') return false;
+  if (!Array.isArray(s.failed_checks)) return null;
+  return !s.failed_checks.includes(checkId);
+}
+
 export const allStrands = (m: MarkMap) => m.criteria.flatMap((c) => c.strands);
 export const strandOf = (m: MarkMap, id: string) => allStrands(m).find((s) => s.id === id);
 export const planOf = (m: MarkMap, id: string) => m.plan?.flatMap((p) => p.strands).find((s) => s.id === id);
@@ -44,7 +52,9 @@ export const planOf = (m: MarkMap, id: string) => m.plan?.flatMap((p) => p.stran
 export function sectionView(m: MarkMap, secId: string) {
   const sec = SECTIONS.find((s) => s.id === secId)!;
   const strands = sec.strands.map((id) => strandOf(m, id)).filter(Boolean) as Strand[];
-  const checks: (TemplateCheck & { met: boolean })[] = TEMPLATE_CHECKS.filter((t) => t.section === secId).map((t) => ({ ...t, met: !(strandOf(m, t.strand)?.failed_checks ?? []).includes(t.id) }));
+  // A check is only "met" when the strand was actually assessed: a strand with no credited evidence (level 0) meets nothing,
+  // and a map saved before template checks existed has no failed_checks, so its checks are "not assessed" (null), never "met".
+  const checks: (TemplateCheck & { met: boolean | null })[] = TEMPLATE_CHECKS.filter((t) => t.section === secId).map((t) => ({ ...t, met: checkMet(strandOf(m, t.strand), t.id) }));
   const limits = (m.limits ?? []).filter((l) => l.strand && sec.strands.includes(l.strand) && (l.kind !== 'template' || TEMPLATE_CHECKS.some((t) => t.section === secId && l.detail.includes(t.text))) && (l.kind !== 'words' || secId === 'bg'));
   const avg = (m.limits ?? []).filter((l) => l.kind === 'average' && l.criterion && sec.strands.some((id) => id.startsWith(l.criterion)) && secId === criterionHome(l.criterion));
   // A strand can span several sections (RD1 covers the question, background and hypothesis). Its evidence and rubric steps are shown where they belong, not repeated in each.
@@ -53,16 +63,16 @@ export function sectionView(m: MarkMap, secId: string) {
     const here = s.evidence.filter((e) => !!e.section && sec.match.test(e.section));
     return (here.length ? here : home(s.id) ? s.evidence : []).slice(0, 2).map((e) => ({ id: s.id, quote: e.quote, where: [e.section, e.page ? 'page ' + e.page : ''].filter(Boolean).join(', ') }));
   });
-  const lacking = [...strands.filter((s) => home(s.id) && s.level !== '5-6' && s.missing).map((s) => ({ id: s.id, text: s.missing })), ...checks.filter((c) => !c.met).map((c) => ({ id: c.strand, text: c.text }))];
-  const tplFixes = checks.filter((c) => !c.met).map((c) => ({ key: `tpl-${c.id}`, id: c.strand, text: c.fix, tpl: true }));
+  const lacking = [...strands.filter((s) => home(s.id) && s.level !== '5-6' && s.missing).map((s) => ({ id: s.id, text: s.missing })), ...checks.filter((c) => c.met === false).map((c) => ({ id: c.strand, text: c.text }))];
+  const tplFixes = checks.filter((c) => c.met === false).map((c) => ({ key: `tpl-${c.id}`, id: c.strand, text: c.fix, tpl: true }));
   const ruleFixes = strands.filter((s) => home(s.id)).flatMap((s) => {
     const p = planOf(m, s.id);
     return (p?.steps ?? (s.level === '5-6' ? [] : [s.missing])).filter(Boolean).map((t, i) => ({ key: `${s.id}-${i}`, id: s.id, text: t, tpl: false }));
   });
   const fixes = [...tplFixes, ...ruleFixes];
   const done = strands.filter((s) => home(s.id)).map((s) => planOf(m, s.id)?.done_when).filter(Boolean) as string[];
-  const worst = strands.some((s) => s.level === '0' || s.level === '1-2') || checks.filter((c) => !c.met).length >= 2;
-  const status: 'red' | 'amber' | 'green' = worst ? 'red' : strands.every((s) => s.level === '5-6') && checks.every((c) => c.met) ? 'green' : 'amber';
+  const worst = strands.some((s) => s.level === '0' || s.level === '1-2') || checks.filter((c) => c.met === false).length >= 2;
+  const status: 'red' | 'amber' | 'green' = worst ? 'red' : strands.every((s) => s.level === '5-6') && checks.every((c) => c.met === true) ? 'green' : 'amber';
   return { sec, strands, checks, limits: [...limits, ...avg], did, lacking, fixes, done, status };
 }
 /** The section where each strand's rubric steps are shown. */
