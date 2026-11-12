@@ -268,7 +268,7 @@ export function AccountCommercePanel({
           eyebrow: 'Free limited review available',
           title: 'Preview the review before purchasing',
           description:
-            'See the first detailed-review criterion and the overview plus first 20 lines of the annotated IA. The progress plan and downloads remain locked.',
+            'See Research Design feedback and the first 20 lines of the annotated IA. Marks, the other criteria, the progress plan and downloads stay locked.',
           actionLabel: 'Choose review option',
           actionIcon: <Sparkles aria-hidden="true" />,
           action: onStartReview,
@@ -545,7 +545,7 @@ export function AccountCommercePanel({
                 : 'Used'}
             </strong>
             <small>
-              First criterion and annotated preview only
+              Research Design feedback only
             </small>
           </div>
         </article>

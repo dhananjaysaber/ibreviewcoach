@@ -389,7 +389,7 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .exm-page { display: grid; gap: 22px; }
 .exm-hero { padding: 28px; border-radius: 18px; color: var(--p-ivory); background: radial-gradient(70% 160% at 100% 0%, rgba(245,158,11,.4), transparent 60%), var(--p-night); box-shadow: var(--p-shadow-lg); }
 .exm-hero span { color: var(--p-gold-2); font-weight: 700; font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; }
-.exm-hero h2 { margin: 6px 0; font: 500 clamp(1.7rem, 3vw, 2.4rem) var(--p-serif); }
+.exm-hero h2 { margin: 6px 0; color: var(--p-ivory); font: 500 clamp(1.7rem, 3vw, 2.4rem) var(--p-serif); }
 .exm-hero p { margin: 0; max-width: 60ch; color: rgba(246,243,236,.75); }
 .exm-note { color: var(--p-muted); }
 .exm-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }

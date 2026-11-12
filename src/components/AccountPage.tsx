@@ -333,9 +333,9 @@ export function AccountPage({
   const greeting = useMemo(
     () =>
       getGreeting(
-        session?.user.email ?? null
+        getRealName(session?.user.user_metadata)
       ),
-    [session?.user.email]
+    [session?.user.user_metadata]
   );
 
   const nextAction = useMemo(
@@ -522,7 +522,7 @@ export function AccountPage({
           <TabPageHeader
             eyebrow="Billing & receipts"
             title="Purchases and invoices"
-            description="Your PayPal payment records, invoices and printable receipts are kept together in one place."
+            description="Your payment records, invoices and printable receipts are kept together in one place."
           />
 
           <div className="student-dashboard-commerce student-dashboard-commerce-billing">
@@ -1184,7 +1184,7 @@ function getNextActionPresentation(
       title:
         'Your free limited review is available',
       description:
-        'Preview the first detailed-review criterion and annotated IA overview before choosing full access.',
+        'Get Research Design feedback and a preview of the annotated IA before choosing full access.',
       actionLabel:
         'Review an IA',
       action: 'review',
@@ -1361,8 +1361,20 @@ function normalizeCommerceSnapshot(
   };
 }
 
+/** A real first name only if the student gave one; never guessed from the email address. */
+function getRealName(
+  metadata: Record<string, unknown> | undefined
+): string {
+  const raw =
+    (typeof metadata?.full_name === 'string' && metadata.full_name) ||
+    (typeof metadata?.name === 'string' && metadata.name) ||
+    '';
+  const first = raw.trim().split(/\s+/u)[0] ?? '';
+  return first.toLowerCase() === 'student' ? '' : first;
+}
+
 function getGreeting(
-  email: string | null
+  displayName: string
 ): {
   title: string;
   subtitle: string;
@@ -1376,11 +1388,6 @@ function getGreeting(
       : hour < 17
       ? 'Good afternoon'
       : 'Good evening';
-
-  const displayName =
-    getDisplayNameFromEmail(
-      email
-    );
 
   return {
     title: displayName

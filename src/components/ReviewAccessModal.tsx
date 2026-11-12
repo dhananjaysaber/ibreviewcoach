@@ -141,10 +141,10 @@ export function ReviewAccessModal({
                   <span>Your first review is free</span>
                   <h3>Try it on your IA, no payment needed</h3>
                   <p>
-                    See your marks overview, the first detailed criterion and
-                    the opening of the annotated IA. Like what you see? Unlock
-                    the complete review, progress plan and downloads with a
-                    credit.
+                    See Research Design feedback and the opening of the
+                    annotated IA. No marks are shown on the free review. Like
+                    what you see? Unlock the other three criteria, marks,
+                    progress plan and downloads with a credit.
                   </p>
                 </div>
 
