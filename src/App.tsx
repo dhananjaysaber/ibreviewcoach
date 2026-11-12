@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ClipboardList,
   Download,
+  Trash2,
   ExternalLink,
   Eye,
   FileCheck2,
@@ -4238,10 +4239,48 @@ function ReportsDashboard({
   const [searchQuery, setSearchQuery] = useState('');
 
   const { subjects: subjectList } = useSubjects(false);
+  const [originals, setOriginals] = useState<
+    Record<string, { bucket: string; path: string }>
+  >({});
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [renameBusy, setRenameBusy] = useState(false);
   const [renameError, setRenameError] = useState('');
+
+  async function downloadOriginal(report: ReportHistoryRow) {
+    const file = originals[report.submission_id];
+    if (!file) return;
+    const { data, error } = await supabase.storage
+      .from(file.bucket)
+      .createSignedUrl(file.path, 120, {
+        download: report.original_filename,
+      });
+    if (error || !data?.signedUrl) {
+      setDeleteError('The original file could not be downloaded right now.');
+      return;
+    }
+    window.location.assign(data.signedUrl);
+  }
+
+  async function confirmDelete(report: ReportHistoryRow) {
+    setDeleteBusy(true);
+    setDeleteError('');
+    const { error } = await supabase.functions.invoke('delete-ia-report', {
+      body: { submission_id: report.submission_id },
+    });
+    setDeleteBusy(false);
+    if (error) {
+      setDeleteError('Could not delete this IA. Please try again.');
+      return;
+    }
+    setReports((rows) =>
+      rows.filter((r) => r.submission_id !== report.submission_id)
+    );
+    setConfirmDeleteId(null);
+  }
 
   async function commitRename(report: ReportHistoryRow) {
     const next = renameValue.trim();
@@ -4306,6 +4345,26 @@ function ReportsDashboard({
         }
 
         setReports(normalizeReportHistoryRows(data));
+
+        const originalRows = await supabase.rpc('get_my_ia_originals');
+        if (!originalRows.error && Array.isArray(originalRows.data)) {
+          const map: Record<string, { bucket: string; path: string }> = {};
+          for (const row of originalRows.data as Record<string, unknown>[]) {
+            if (
+              typeof row.submission_id === 'string' &&
+              typeof row.raw_file_path === 'string'
+            ) {
+              map[row.submission_id] = {
+                bucket:
+                  typeof row.raw_file_bucket === 'string'
+                    ? row.raw_file_bucket
+                    : 'ia-uploads',
+                path: row.raw_file_path,
+              };
+            }
+          }
+          if (active) setOriginals(map);
+        }
 
         setLoadState('ready');
       } catch (error) {
@@ -4621,6 +4680,17 @@ function ReportsDashboard({
                 </div>
 
                 <div className="premium-report-actions">
+                  {originals[report.submission_id] && (
+                    <button
+                      className="premium-report-rename"
+                      type="button"
+                      title="Download the original file"
+                      aria-label={`Download original of ${report.original_filename}`}
+                      onClick={() => void downloadOriginal(report)}
+                    >
+                      <Download aria-hidden="true" />
+                    </button>
+                  )}
                   <button
                     className="premium-report-rename"
                     type="button"
@@ -4633,6 +4703,18 @@ function ReportsDashboard({
                     }}
                   >
                     <Pencil aria-hidden="true" />
+                  </button>
+                  <button
+                    className="premium-report-rename premium-report-delete"
+                    type="button"
+                    title="Delete this IA"
+                    aria-label={`Delete ${report.original_filename}`}
+                    onClick={() => {
+                      setDeleteError('');
+                      setConfirmDeleteId(report.submission_id);
+                    }}
+                  >
+                    <Trash2 aria-hidden="true" />
                   </button>
                   <button
                     className="premium-report-open"
@@ -4648,6 +4730,35 @@ function ReportsDashboard({
                     )}
                   </button>
                 </div>
+
+                {confirmDeleteId === report.submission_id && (
+                  <div className="premium-delete-confirm" role="alertdialog">
+                    <p>
+                      <strong>Delete this IA permanently?</strong> The original
+                      file, saved annotated copies, review, marks and plan for
+                      “{report.original_filename}” will be removed and cannot be
+                      recovered. Credits already used are not refunded.
+                    </p>
+                    <div>
+                      <button
+                        type="button"
+                        className="danger"
+                        disabled={deleteBusy}
+                        onClick={() => void confirmDelete(report)}
+                      >
+                        {deleteBusy ? 'Deleting…' : 'Yes, delete everything'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deleteBusy}
+                        onClick={() => setConfirmDeleteId(null)}
+                      >
+                        Cancel
+                      </button>
+                      {deleteError && <em>{deleteError}</em>}
+                    </div>
+                  </div>
+                )}
               </article>
             );
           })}
@@ -4974,8 +5085,8 @@ function PrivacyCard() {
             copy: 'Your document is not placed in a public folder.',
           },
           {
-            title: 'Original file removed',
-            copy: 'The uploaded PDF or DOCX is scheduled for deletion after approximately one hour.',
+            title: 'Original file kept for 6 months',
+            copy: 'Your saved report keeps its original PDF or DOCX privately for 6 months so you can download it again. You can delete an IA and everything linked to it at any time from My IA Reports.',
           },
           {
             title: 'Secure account connection',

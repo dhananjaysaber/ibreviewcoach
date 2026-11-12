@@ -311,7 +311,7 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .premium-reports-page .premium-report-row {
   position: relative; min-height: 0; padding: 18px 20px 18px 24px; border: 1px solid var(--p-hair); border-radius: 16px;
   background: var(--p-paper); box-shadow: var(--p-shadow);
-  grid-template-columns: minmax(0, 1.5fr) minmax(190px, .8fr) 130px 84px; gap: 18px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(190px, .8fr) 130px 160px; gap: 18px;
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
 }
 .premium-reports-page .premium-report-row::before {
@@ -425,3 +425,12 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .exm-modal-box .exm-note { padding: 20px; }
 @keyframes exmFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes exmSlide { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.premium-reports-page .premium-report-delete:hover { color: #fff; border-color: transparent; background: #c45749; }
+.premium-reports-page .premium-report-row .premium-delete-confirm { grid-column: 1 / -1; display: grid; gap: 10px; padding: 14px 16px; border-radius: 12px; background: #fff1ee; border: 1px solid #f1c4bb; color: #7a2f22; }
+.premium-delete-confirm p { margin: 0; font-size: .88rem; }
+.premium-delete-confirm div { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.premium-delete-confirm button { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--p-hair); background: #fff; font: 600 .8rem var(--p-sans); cursor: pointer; }
+.premium-delete-confirm button.danger { color: #fff; border-color: transparent; background: #c45749; }
+.premium-delete-confirm em { font-style: normal; font-size: .8rem; }
+.premium-reports-page .premium-report-actions { flex-wrap: wrap; max-width: 168px; }
