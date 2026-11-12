@@ -47,3 +47,7 @@ html.lenis, html.lenis body { height: auto; }
 .brand-mark, .tn-brand span, .premium-sidebar-brand > span { background: transparent !important; box-shadow: none !important; display: grid; place-items: center; }
 .auth-brand-mark { background: #090E1A !important; display: grid; place-items: center; box-shadow: none !important; }
 .auth-brand-mark svg { width: 74% !important; height: 74% !important; color: #F8FAFC !important; --logo-cut: #090E1A; stroke: none; }
+
+.upload-subject-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.upload-subject-row .upload-subject-field { min-width: 0; }
+@media (max-width: 560px) { .upload-subject-row { grid-template-columns: 1fr; gap: 0; } }

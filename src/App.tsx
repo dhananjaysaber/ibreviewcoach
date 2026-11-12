@@ -5088,10 +5088,11 @@ function UploadWorkspace({
             </span>
             <span>
               <Clock3 aria-hidden="true" />
-              Source removed after processing window
+              Original kept 6 months
             </span>
           </div>
 
+          <div className="upload-subject-row">
           <label className="upload-subject-field">
             <span>Subject <b aria-hidden="true">*</b></span>
             <select
@@ -5121,6 +5122,7 @@ function UploadWorkspace({
               ))}
             </select>
           </label>
+          </div>
 
           <input
             ref={fileInputRef}
