@@ -1890,7 +1890,9 @@ function App() {
     }
   }
 
-  if (status === 'starting') {
+  // The public landing page needs no session, so it renders immediately
+  // instead of waiting behind the secure-session loading screen.
+  if (status === 'starting' && mainView !== 'landing') {
     return (
       <main className="app-loading">
         <div className="loading-mark">
