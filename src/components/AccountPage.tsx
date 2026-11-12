@@ -1381,52 +1381,6 @@ function getGreeting(): {
   };
 }
 
-function getDisplayNameFromEmail(
-  email: string | null
-): string {
-  const localPart =
-    email?.split('@')[0]?.trim() ??
-    '';
-
-  if (!localPart) {
-    return '';
-  }
-
-  const chunks =
-    localPart
-      .split(/[._-]+/u)
-      .map((chunk) =>
-        chunk
-          .replace(
-            /\d+$/u,
-            ''
-          )
-          .trim()
-      )
-      .filter(Boolean);
-
-  if (chunks.length === 0) {
-    return '';
-  }
-
-  const first =
-    chunks[0]
-      .replace(
-        /mail$/iu,
-        ''
-      )
-      .trim();
-
-  const name =
-    first || chunks[0];
-
-  return `${name
-    .charAt(0)
-    .toUpperCase()}${name
-    .slice(1)
-    .toLowerCase()}`;
-}
-
 function deriveMarkSummary(
   value: unknown
 ): string | null {
