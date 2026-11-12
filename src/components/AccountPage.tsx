@@ -332,10 +332,8 @@ export function AccountPage({
 
   const greeting = useMemo(
     () =>
-      getGreeting(
-        getRealName(session?.user.user_metadata)
-      ),
-    [session?.user.user_metadata]
+      getGreeting(),
+    []
   );
 
   const nextAction = useMemo(
@@ -1361,21 +1359,7 @@ function normalizeCommerceSnapshot(
   };
 }
 
-/** A real first name only if the student gave one; never guessed from the email address. */
-function getRealName(
-  metadata: Record<string, unknown> | undefined
-): string {
-  const raw =
-    (typeof metadata?.full_name === 'string' && metadata.full_name) ||
-    (typeof metadata?.name === 'string' && metadata.name) ||
-    '';
-  const first = raw.trim().split(/\s+/u)[0] ?? '';
-  return first.toLowerCase() === 'student' ? '' : first;
-}
-
-function getGreeting(
-  displayName: string
-): {
+function getGreeting(): {
   title: string;
   subtitle: string;
 } {
@@ -1390,9 +1374,7 @@ function getGreeting(
       : 'Good evening';
 
   return {
-    title: displayName
-      ? `${period}, ${displayName}`
-      : period,
+    title: period,
 
     subtitle:
       'Review your progress, manage access and keep every IA version organised in one focused workspace.',
