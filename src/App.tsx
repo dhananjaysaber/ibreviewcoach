@@ -1,4 +1,5 @@
 import { PolicyLinks } from './PolicyPages';
+import { CheckoutRouter } from './components/CheckoutRouter';
 import {
   AlertCircle,
   ArrowLeft,
@@ -82,7 +83,6 @@ import { CompareIas } from './components/CompareIas';
 import { DraftComparison, type DraftSnapshot } from './components/DraftComparison';
 
 import {
-  PayPalCheckoutModal,
   type PayPalCreditPack,
 } from './components/PayPalCheckoutModal';
 
@@ -2283,7 +2283,7 @@ function App() {
       )}
 
       {paymentsEnabled && !isAdmin && selectedCreditPack && (
-        <PayPalCheckoutModal
+        <CheckoutRouter
           pack={selectedCreditPack}
           onClose={closePayPalCheckout}
           onStartReview={() => {
