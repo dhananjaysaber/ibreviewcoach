@@ -14,7 +14,7 @@
   position: relative;
   width: min(590px, 100%);
   padding: clamp(24px, 5vw, 36px);
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 25px;
   color: #0E1726;
   background: radial-gradient(
@@ -34,7 +34,7 @@
   height: 39px;
   display: grid;
   place-items: center;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 12px;
   color: #5a6980;
   background: #ffffff;
@@ -70,7 +70,7 @@
   display: grid;
   place-items: center;
   border-radius: 15px;
-  color: #1A36C4;
+  color: #92400E;
   background: linear-gradient(145deg, #F2F4F7, #F2F4F7);
 }
 
@@ -80,7 +80,7 @@
 }
 
 .paypal-checkout-heading span {
-  color: #2347F5;
+  color: #D97706;
   font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 0.09em;
@@ -108,7 +108,7 @@
   display: grid;
   align-content: center;
   gap: 5px;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 14px;
   background: #ffffff;
 }
@@ -240,9 +240,9 @@
 }
 
 .paypal-primary-action {
-  border: 1px solid #1A36C4;
+  border: 1px solid #92400E;
   color: #ffffff;
-  background: #1A36C4;
+  background: #92400E;
 }
 
 .paypal-primary-action:hover {
@@ -250,8 +250,8 @@
 }
 
 .paypal-secondary-action {
-  border: 1px solid #E8EDFF;
-  color: #1A36C4;
+  border: 1px solid #FEF3C7;
+  color: #92400E;
   background: #ffffff;
 }
 
@@ -277,7 +277,7 @@
 }
 
 .paypal-security-note {
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   background: #F2F4F7;
 }
 
@@ -295,7 +295,7 @@
 }
 
 .paypal-security-note svg {
-  color: #2347F5;
+  color: #D97706;
 }
 
 .paypal-integrity-note svg {

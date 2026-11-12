@@ -7,7 +7,6 @@ import {
   ClipboardList,
   Layers3,
   CreditCard,
-  GraduationCap,
   LayoutDashboard,
   LoaderCircle,
   LogOut,
@@ -19,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 
+import { LogoMark } from './LogoMark';
 import {
   useEffect,
   useMemo,
@@ -30,6 +30,7 @@ export type PremiumWorkspaceView =
   | 'dashboard'
   | 'reports'
   | 'compare'
+  | 'exemplars'
   | 'review'
   | 'credits'
   | 'billing'
@@ -54,6 +55,7 @@ type PremiumWorkspaceShellProps = {
   onOpenDashboard: () => void;
   onOpenReports: () => void;
   onOpenCompare: () => void;
+  onOpenExemplars: () => void;
   onStartReview: () => void;
   onOpenCredits: () => void;
   onOpenBilling: () => void;
@@ -81,6 +83,7 @@ export function PremiumWorkspaceShell({
   onOpenDashboard,
   onOpenReports,
   onOpenCompare,
+  onOpenExemplars,
   onStartReview,
   onOpenCredits,
   onOpenBilling,
@@ -131,6 +134,13 @@ export function PremiumWorkspaceShell({
               icon: <Layers3 aria-hidden="true" />,
               action: onOpenCompare,
             },
+            {
+              key: 'exemplars',
+              label: 'Exemplar',
+              description: 'See full review examples',
+              icon: <BookOpenCheck aria-hidden="true" />,
+              action: onOpenExemplars,
+            },
           ]
         : [
             {
@@ -161,6 +171,13 @@ export function PremiumWorkspaceShell({
               icon: <Layers3 aria-hidden="true" />,
               action: onOpenCompare,
             },
+            {
+              key: 'exemplars',
+              label: 'Exemplar',
+              description: 'See full review examples',
+              icon: <BookOpenCheck aria-hidden="true" />,
+              action: onOpenExemplars,
+            },
             ...(paymentsEnabled
               ? [
                   {
@@ -189,6 +206,7 @@ export function PremiumWorkspaceShell({
       onOpenDashboard,
       onOpenReports,
       onOpenCompare,
+      onOpenExemplars,
       onStartReview,
     ]
   );
@@ -235,7 +253,7 @@ export function PremiumWorkspaceShell({
       >
         <div className="premium-sidebar-brand">
           <span>
-            <GraduationCap aria-hidden="true" />
+            <LogoMark />
           </span>
 
           <div>
@@ -345,7 +363,7 @@ export function PremiumWorkspaceShell({
 
       <header className="tn-bar">
         <button className="tn-brand" type="button" onClick={accountAction} aria-label="IB IA Review home">
-          <span><GraduationCap aria-hidden="true" /></span>
+          <span><LogoMark /></span>
           <strong>IB IA Review</strong>
         </button>
         <nav className="tn-nav" aria-label={isAdmin ? 'Admin workspace' : 'Member workspace'}>
@@ -700,6 +718,12 @@ function getPageHeading(view: PremiumWorkspaceView): {
       return {
         eyebrow: 'Report library',
         title: 'My IA Reports',
+      };
+
+    case 'exemplars':
+      return {
+        eyebrow: 'Examples',
+        title: 'Exemplar reviews',
       };
 
     case 'compare':

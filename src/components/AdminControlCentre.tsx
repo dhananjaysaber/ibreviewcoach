@@ -28,6 +28,7 @@ import {
 } from 'react';
 
 import { supabase } from '../lib/supabase';
+import { SettingsAdmin } from './SettingsAdmin';
 
 type JsonRecord = Record<string, unknown>;
 type LoadState = 'loading' | 'ready' | 'error';
@@ -38,6 +39,7 @@ type AdminTab =
   | 'reviews'
   | 'health'
   | 'pricing'
+  | 'settings'
   | 'audit';
 
 type Notice = {
@@ -271,6 +273,11 @@ const TABS: Array<{
     key: 'pricing',
     label: 'Pricing & Packs',
     icon: <PackageOpen aria-hidden="true" />,
+  },
+  {
+    key: 'settings',
+    label: 'Settings',
+    icon: <Settings2 aria-hidden="true" />,
   },
   {
     key: 'audit',
@@ -1108,6 +1115,8 @@ New pricing and PayPal checkout will be hidden and blocked immediately. Existing
           edit={setEditingPack}
         />
       )}
+
+      {activeTab === 'settings' && <SettingsAdmin />}
 
       {activeTab === 'audit' && (
         <Audit

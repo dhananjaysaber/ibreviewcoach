@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ClipboardList,
   Download,
+  Trash2,
   ExternalLink,
   Eye,
   FileCheck2,
@@ -36,6 +37,7 @@ import {
   Sparkles,
   Target,
   ChevronRight,
+  Pencil,
   UserPlus,
   UploadCloud,
   X,
@@ -70,7 +72,10 @@ import {
 } from './lib/anonymousSession';
 
 import { supabase } from './lib/supabase';
-import { MarkMapTab } from './components/MarkMapTab';
+import { StudentWorkspace, ProgressView, useTicks } from './components/StudentWorkspace';
+import { TeacherWorkspace } from './components/TeacherWorkspace';
+import { AnnotatedCopy } from './components/AnnotatedCopy';
+import { useMarkMap } from './lib/useMarkMap';
 import { WorkshopGuidedReview } from './components/WorkshopGuidedReview';
 import { CompareIas } from './components/CompareIas';
 import { DraftComparison, type DraftSnapshot } from './components/DraftComparison';
@@ -104,6 +109,8 @@ import {
 } from './lib/pipeline';
 
 import { uploadIaSubmission } from './lib/uploadSubmission';
+import { loadReportYears, subjectLabel, useAcademicYears, useSubjects } from './lib/subjects';
+import { ExemplarsPage } from './components/ExemplarsPage';
 
 import { DOCX_MIME_TYPE, PDF_MIME_TYPE } from './types/ia';
 
@@ -127,6 +134,9 @@ import './member-experience.css';
 import './premium-workspace.css';
 import './admin-control-centre.css';
 import './share-review.css';
+import './theme-amber.css';
+import { NewLanding } from './landing/NewLanding';
+import { LogoMark, LogoLockup } from './components/LogoMark';
 import './aurora.css';
 import './scholar.css';
 import './premium.css';
@@ -167,6 +177,7 @@ type MainWorkspaceView =
   | 'workspace'
   | 'reports'
   | 'compare'
+  | 'exemplars'
   | 'account'
   | 'admin';
 
@@ -316,6 +327,10 @@ function App() {
       return 'compare';
     }
 
+    if (currentPath === '/exemplars') {
+      return 'exemplars';
+    }
+
     if (currentPath.startsWith('/my-reports')) {
       return 'reports';
     }
@@ -344,6 +359,8 @@ function App() {
   const [reviewAccessSummary, setReviewAccessSummary] =
     useState<ReviewAccessSummary | null>(null);
 
+  const [reviewSubject, setReviewSubject] = useState('');
+  const [reviewYear, setReviewYear] = useState('');
   const [reviewAccessSource, setReviewAccessSource] =
     useState<IaReviewAccessSource | null>(() => loadSavedReviewAccessSource());
 
@@ -564,6 +581,12 @@ function App() {
           accountState === 'permanent'
         ) {
           setMainView('compare');
+          setStatus('ready');
+        } else if (
+          currentPath === '/exemplars' &&
+          accountState === 'permanent'
+        ) {
+          setMainView('exemplars');
           setStatus('ready');
         } else if (
           currentPath.startsWith('/my-reports') &&
@@ -870,6 +893,13 @@ function App() {
       return;
     }
 
+    if (!reviewSubject || !reviewYear) {
+      setMessage('Please choose the subject and academic year of this IA.');
+      setErrorContext('file');
+      setStatus('error');
+      return;
+    }
+
     try {
       setStatus('uploading');
       setMessage('');
@@ -877,7 +907,9 @@ function App() {
 
       const createdSubmission = await uploadIaSubmission(
         selectedFile,
-        reviewAccessSource
+        reviewAccessSource,
+        reviewSubject,
+        reviewYear
       );
 
       setSubmission(createdSubmission);
@@ -1262,14 +1294,6 @@ function App() {
     });
   }
 
-  function startFreeLimitedReview() {
-    if (reviewAccessSummary?.free_review_available !== true) {
-      return;
-    }
-
-    prepareReviewWorkspace('free_review');
-  }
-
   function closeReviewAccessModal() {
     if (reviewAccessLoading) {
       return;
@@ -1467,6 +1491,18 @@ function App() {
       top: 0,
       behavior: 'smooth',
     });
+  }
+
+  function openExemplars() {
+    setAuthPanelMode('closed');
+    setAuthError('');
+    setAuthMessage('');
+    setMainView('exemplars');
+    setAccountSection('dashboard');
+    setIsViewingSavedReport(false);
+    window.sessionStorage.removeItem(OPEN_SAVED_REPORT_KEY);
+    replaceAppRoute('/exemplars');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function openCompareIas() {
@@ -1854,7 +1890,9 @@ function App() {
     }
   }
 
-  if (status === 'starting') {
+  // The public landing page needs no session, so it renders immediately
+  // instead of waiting behind the secure-session loading screen.
+  if (status === 'starting' && mainView !== 'landing') {
     return (
       <main className="app-loading">
         <div className="loading-mark">
@@ -1883,6 +1921,8 @@ function App() {
       ? 'reports'
       : mainView === 'compare'
       ? 'compare'
+      : mainView === 'exemplars'
+      ? 'exemplars'
       : mainView === 'workspace'
       ? isViewingSavedReport ? 'reports' : 'review'
       : mainView === 'pricing'
@@ -1918,6 +1958,10 @@ function App() {
         <AdminControlCentre />
       ) : mainView === 'compare' ? (
         <CompareIas />
+      ) : mainView === 'exemplars' ? (
+        <ExemplarsPage
+          onOpenPricing={isAdmin || !paymentsEnabled ? undefined : () => void openBuyCredits()}
+        />
       ) : mainView === 'reports' ? (
         <ReportsDashboard
           onOpenReport={openSavedReport}
@@ -1969,6 +2013,10 @@ function App() {
           onClearFile={clearSelectedFile}
           onUpload={handleUploadAndReview}
           onRetrySession={retrySecureSession}
+          subject={reviewSubject}
+          onSubjectChange={setReviewSubject}
+          year={reviewYear}
+          onYearChange={setReviewYear}
         />
       ) : (
         <AccountPage
@@ -1983,12 +2031,10 @@ function App() {
         />
       )
     ) : mainView === 'landing' ? (
-      <LandingPage
-        accountState={accountState}
-        onStartFreeReview={openReviewWorkspace}
-        onOpenPricing={openPricingPage}
+      <LandingShell
+        onStart={openReviewWorkspace}
         onSignIn={() => openAccountPanel('sign-in')}
-        onOpenReports={openReportsDashboard}
+        onOpenExemplars={openExemplars}
         onChoosePack={(pack) => void chooseCreditPack(pack)}
         paymentsEnabled={paymentsEnabled}
       />
@@ -2047,6 +2093,10 @@ function App() {
         onClearFile={clearSelectedFile}
         onUpload={handleUploadAndReview}
         onRetrySession={retrySecureSession}
+        subject={reviewSubject}
+        onSubjectChange={setReviewSubject}
+        year={reviewYear}
+        onYearChange={setReviewYear}
       />
     );
 
@@ -2089,6 +2139,7 @@ function App() {
           onOpenAdmin={openAdminControlCentre}
           onOpenReports={openReportsDashboard}
           onOpenCompare={openCompareIas}
+          onOpenExemplars={openExemplars}
           onStartReview={() => void openReviewWorkspace()}
           onOpenCredits={() => void openBuyCredits()}
           onOpenBilling={openBillingDashboard}
@@ -2099,6 +2150,7 @@ function App() {
         </PremiumWorkspaceShell>
       ) : (
         <>
+          {mainView !== 'landing' && (
           <header className="site-header">
             <div className="header-inner">
               <a
@@ -2110,14 +2162,7 @@ function App() {
                   openLandingPage();
                 }}
               >
-                <span className="brand-mark">
-                  <GraduationCap aria-hidden="true" />
-                </span>
-
-                <span className="brand-copy">
-                  <strong>IB IA Review</strong>
-                  <span>Reflect. Improve. Take ownership.</span>
-                </span>
+                <LogoLockup />
               </a>
 
               <nav className="public-header-nav" aria-label="Main navigation">
@@ -2166,15 +2211,18 @@ function App() {
               </div>
             </div>
           </header>
+          )}
 
           {pageContent}
 
+          {mainView !== 'landing' && (
           <footer className="site-footer">
             <p>
               Indicative guidance only. Final assessment decisions remain with
               your teacher and the IB assessment process.
             </p>
           </footer>
+          )}
         </>
       )}
 
@@ -2216,7 +2264,7 @@ function App() {
           summary={reviewAccessSummary}
           packs={reviewAccessPacks}
           onClose={closeReviewAccessModal}
-          onUseFreeReview={startFreeLimitedReview}
+          onOpenExemplars={() => { setReviewAccessModalOpen(false); openExemplars(); }}
           onChoosePack={choosePackFromReviewAccess}
         />
       )}
@@ -2521,7 +2569,7 @@ function AuthPanel({
       >
         {mode !== 'account' && (
           <aside className="auth-aside" aria-hidden="true">
-            <span className="auth-aside-brand"><GraduationCap />IB IA Review Coach</span>
+            <span className="auth-aside-brand"><LogoMark />IB IA Review</span>
             <h2>{mode === 'sign-in' || mode === 'forgot-password' ? 'Welcome back. Your plan is where you left it.' : 'Your IA, marked and coached strand by strand.'}</h2>
             <p>Every report you upload is saved with its marks, your fix plan and your progress between drafts.</p>
             <ul>
@@ -2543,7 +2591,7 @@ function AuthPanel({
         )}
 
         <div className="auth-brand-mark">
-          <GraduationCap aria-hidden="true" />
+          <LogoMark />
         </div>
 
         <AuthPanelHeading mode={mode} />
@@ -2948,6 +2996,32 @@ type LandingPageProps = CommercialPageProps & {
   paymentsEnabled: boolean;
 };
 
+function LandingShell({
+  onStart,
+  onSignIn,
+  onOpenExemplars,
+  onChoosePack,
+  paymentsEnabled,
+}: {
+  onStart: () => void;
+  onSignIn: () => void;
+  onOpenExemplars: () => void;
+  onChoosePack: (pack: CreditPack) => void;
+  paymentsEnabled: boolean;
+}) {
+  const { packs } = usePublicCommercialSettings(paymentsEnabled);
+  return (
+    <NewLanding
+      packs={packs}
+      paymentsEnabled={paymentsEnabled}
+      onStart={onStart}
+      onSignIn={onSignIn}
+      onOpenExemplars={onOpenExemplars}
+      onChoosePack={onChoosePack}
+    />
+  );
+}
+
 function LandingPage({
   accountState,
   onStartFreeReview,
@@ -2960,7 +3034,7 @@ function LandingPage({
   const { packs, limits } = usePublicCommercialSettings(paymentsEnabled);
 
   const primaryActionLabel =
-    accountState === 'permanent' ? 'Start an IA review' : 'Preview one IA free';
+    accountState === 'permanent' ? 'Start an IA review' : 'Start an IA review';
 
   return (
     <main className="landing-main">
@@ -2968,12 +3042,12 @@ function LandingPage({
         <div className="landing-hero-inner">
           <div className="landing-hero-copy">
             <span className="landing-kicker">
-              IB SEHS · Internal assessment · 24 marks
+              IB IA Review · SEHS · Internal assessment · 24 marks
             </span>
 
             <h1>
-              Know <mark>exactly what to fix</mark> in your IA before it is
-              marked.
+              IB IA Review: know <mark>exactly what to fix</mark> in your
+              Internal Assessment before it is marked.
             </h1>
 
             <p className="landing-hero-lead">
@@ -3057,6 +3131,60 @@ function LandingPage({
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="landing-marquee" aria-hidden="true">
+        <div className="landing-marquee-track">
+          <span>Official 24-mark IB rubric</span>
+          <span>SEHS live now</span>
+          <span>Sciences coming soon</span>
+          <span>Annotated copy</span>
+          <span>Step-by-step fix plan</span>
+          <span>Exemplar IAs</span>
+          <span>Private by design</span>
+          <span>Coaching, never ghostwriting</span>
+          <span>Official 24-mark IB rubric</span>
+          <span>SEHS live now</span>
+          <span>Sciences coming soon</span>
+          <span>Annotated copy</span>
+          <span>Step-by-step fix plan</span>
+          <span>Exemplar IAs</span>
+          <span>Private by design</span>
+          <span>Coaching, never ghostwriting</span>
+        </div>
+      </section>
+
+      <section className="landing-section landing-subjects-section" id="subjects">
+        <div className="landing-section-heading">
+          <span>Subjects</span>
+          <h2>IB IA review for your subject.</h2>
+          <p>
+            Reviews are live for IB SEHS today. More IB subjects are coming
+            soon, each marked against its own official criteria.
+          </p>
+        </div>
+
+        <ul className="landing-subject-grid">
+          <li className="landing-subject-live">
+            <strong>SEHS</strong>
+            <span>Sports, Exercise and Health Science IA</span>
+            <em>Available now</em>
+          </li>
+          {[
+            'Biology',
+            'Chemistry',
+            'Physics',
+            'Psychology',
+            'Business Management',
+            'Economics',
+          ].map((name) => (
+            <li key={name} className="landing-subject-soon">
+              <strong>{name}</strong>
+              <span>IB {name} IA</span>
+              <em>Coming soon</em>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="landing-proof-strip" aria-label="Review outcomes">
@@ -3270,7 +3398,7 @@ function LandingPage({
           <ProcessStep
             number="2"
             title="Upload a PDF or DOCX"
-            text="The file is checked before review so unsuitable or oversized documents do not use a free review or paid credit."
+            text="The file is checked before review so unsuitable or oversized documents do not use a paid credit."
           />
 
           <ProcessStep
@@ -3325,7 +3453,7 @@ function LandingPage({
           <div className="landing-limit-note">
             <AlertCircle aria-hidden="true" />
             <p>
-              A rejected document does not use the free review or a paid credit.
+              A rejected document does not use a paid credit.
               Students should remove unrelated supporting material or extensive
               appendices before uploading again.
             </p>
@@ -3408,8 +3536,8 @@ function LandingPage({
           />
 
           <FaqItem
-            question="Can a free user download the report?"
-            answer="No. The free review is a limited preview: the first detailed-review criterion and the overview plus first 20 lines of the annotated IA. The progress plan, complete review, permanent history, printing and downloads require a review credit."
+            question="Can I see an example before buying?"
+            answer="Yes. Create an account and open the Exemplar page to see full review examples: the Fix your IA plan and the annotated IA with marks."
           />
         </div>
       </section>
@@ -3417,10 +3545,10 @@ function LandingPage({
       <section className="landing-final-cta">
         <div>
           <span>Ready to improve your next draft?</span>
-          <h2>Start with a free limited IB SEHS IA preview.</h2>
+          <h2>Choose a review credit and get your IA reviewed.</h2>
           <p>
-            Create a verified account, preview the review experience and unlock
-            the complete review when you are ready.
+            Create a verified account, look at the exemplar reviews, and buy a
+            review credit when you are ready.
           </p>
         </div>
 
@@ -3539,8 +3667,6 @@ type PricingSectionProps = CommercialPageProps & {
 function PricingSection({
   packs,
   limits,
-  accountState,
-  onStartFreeReview,
   onChoosePack,
   standalone = false,
 }: PricingSectionProps) {
@@ -3562,51 +3688,6 @@ function PricingSection({
       </div>
 
       <div className="landing-pricing-grid">
-        <article className="landing-price-card landing-price-free">
-          <div>
-            <span className="landing-price-label">Free Limited Preview</span>
-            <h3>$0</h3>
-            <p>One limited preview per verified account.</p>
-          </div>
-
-          <ul>
-            <li>
-              <Check aria-hidden="true" />
-              First detailed-review criterion
-            </li>
-            <li>
-              <Check aria-hidden="true" />
-              Annotated IA overview + 20-line preview
-            </li>
-            <li className="locked">
-              <LockKeyhole aria-hidden="true" />
-              Progress plan remains locked
-            </li>
-            <li className="locked">
-              <LockKeyhole aria-hidden="true" />
-              Downloads remain locked
-            </li>
-            <li className="locked">
-              <LockKeyhole aria-hidden="true" />
-              No permanent version history
-            </li>
-          </ul>
-
-          <button
-            className="landing-price-button"
-            type="button"
-            onClick={onStartFreeReview}
-          >
-            {accountState === 'permanent'
-              ? 'Use free limited review'
-              : 'Create account for free preview'}
-          </button>
-
-          <small>
-            On-screen report available for approximately{' '}
-            {limits.free_report_retention_hours} hours.
-          </small>
-        </article>
 
         {packs.map((pack) => (
           <article
@@ -3691,7 +3772,6 @@ type MemberReviewAccessGateProps = {
 };
 
 function MemberReviewAccessGate({
-  freeReviewAvailable,
   paymentsEnabled,
   onChooseAccess,
   onOpenPricing,
@@ -3714,19 +3794,6 @@ function MemberReviewAccessGate({
           </p>
 
           <div className="member-review-gate-options">
-            <article>
-              <LockKeyhole aria-hidden="true" />
-              <strong>Free limited preview</strong>
-              <span>
-                The free preview can still be used when it remains available on
-                your verified account.
-              </span>
-              <small>
-                {freeReviewAvailable === false
-                  ? 'The free preview has already been used.'
-                  : 'Available once per verified account.'}
-              </small>
-            </article>
 
             <article>
               <ClipboardList aria-hidden="true" />
@@ -3740,16 +3807,6 @@ function MemberReviewAccessGate({
           </div>
 
           <div className="member-review-gate-actions">
-            {freeReviewAvailable !== false && (
-              <button
-                className="member-reports-primary"
-                type="button"
-                onClick={onChooseAccess}
-              >
-                <Sparkles aria-hidden="true" />
-                Use free limited preview
-              </button>
-            )}
 
             <button
               className="member-reports-secondary"
@@ -3775,9 +3832,9 @@ function MemberReviewAccessGate({
         <span>Review access required</span>
         <h1>Choose how to review your IA</h1>
         <p>
-          Select a full review credit for complete access, or use the one free
-          limited preview when it is still available. The upload area opens only
-          after a review option has been selected.
+          Buy a full review credit for complete access. The upload area opens
+          only after a review credit is available. Not sure yet? Look at the
+          Exemplar page first.
         </p>
 
         <div className="member-review-gate-options">
@@ -3791,19 +3848,6 @@ function MemberReviewAccessGate({
             <small>Credits start at $9.99.</small>
           </article>
 
-          <article>
-            <LockKeyhole aria-hidden="true" />
-            <strong>Free limited preview</strong>
-            <span>
-              First detailed-review criterion, annotated overview and the
-              opening 20 lines. Progress plan and downloads stay locked.
-            </span>
-            <small>
-              {freeReviewAvailable === false
-                ? 'The free preview has already been used.'
-                : 'Available once per verified account.'}
-            </small>
-          </article>
         </div>
 
         <div className="member-review-gate-actions">
@@ -3852,8 +3896,8 @@ function ReviewAccessGate({
         <h1>Create or sign in to your account</h1>
         <p>
           {paymentsEnabled
-            ? 'A verified account is required before using the free limited preview or a paid review credit. This protects review ownership, allowances and private report history.'
-            : 'A verified account is required before using the free limited preview or existing review access. New paid review-credit purchases are temporarily unavailable.'}
+            ? 'A verified account is required before using a paid review credit. This protects review ownership, allowances and private report history.'
+            : 'A verified account is required before using existing review access. New paid review-credit purchases are temporarily unavailable.'}
         </p>
 
         <div className="review-access-actions">
@@ -4280,6 +4324,109 @@ function ReportsDashboard({
 
   const [searchQuery, setSearchQuery] = useState('');
 
+  const { subjects: subjectList } = useSubjects(false);
+  const { years: yearList } = useAcademicYears(false);
+  const [reportYears, setReportYears] = useState<Record<string, string>>({});
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterYear, setFilterYear] = useState('');
+  const [renameYear, setRenameYear] = useState('');
+  const [originals, setOriginals] = useState<
+    Record<string, { bucket: string; path: string }>
+  >({});
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameBusy, setRenameBusy] = useState(false);
+  const [renameError, setRenameError] = useState('');
+
+  async function downloadOriginal(report: ReportHistoryRow) {
+    const file = originals[report.submission_id];
+    if (!file) return;
+    const { data, error } = await supabase.storage
+      .from(file.bucket)
+      .createSignedUrl(file.path, 120, {
+        download: report.original_filename,
+      });
+    if (error || !data?.signedUrl) {
+      setDeleteError('The original file could not be downloaded right now.');
+      return;
+    }
+    window.location.assign(data.signedUrl);
+  }
+
+  async function confirmDelete(report: ReportHistoryRow) {
+    setDeleteBusy(true);
+    setDeleteError('');
+    const { error } = await supabase.functions.invoke('delete-ia-report', {
+      body: { submission_id: report.submission_id },
+    });
+    setDeleteBusy(false);
+    if (error) {
+      setDeleteError('Could not delete the original. Please try again.');
+      return;
+    }
+    setOriginals((m) => {
+      const copy = { ...m };
+      delete copy[report.submission_id];
+      return copy;
+    });
+    setConfirmDeleteId(null);
+  }
+
+  async function commitRename(report: ReportHistoryRow) {
+    const next = renameValue.trim();
+    const nameChanged = Boolean(next) && next !== report.original_filename;
+    const yearChanged =
+      renameYear !== (reportYears[report.submission_id] ?? '');
+    if (!nameChanged && !yearChanged) {
+      setRenamingId(null);
+      return;
+    }
+    setRenameBusy(true);
+    setRenameError('');
+    let savedName = report.original_filename;
+    if (nameChanged) {
+      const { data, error } = await supabase.rpc('rename_my_ia_report', {
+        p_submission_id: report.submission_id,
+        p_filename: next,
+      });
+      if (error) {
+        setRenameBusy(false);
+        setRenameError('Could not rename. Please try again.');
+        return;
+      }
+      savedName = typeof data === 'string' && data ? data : next;
+    }
+    if (yearChanged) {
+      const { error } = await supabase.rpc('set_my_ia_academic_year', {
+        p_submission_id: report.submission_id,
+        p_year: renameYear,
+      });
+      if (error) {
+        setRenameBusy(false);
+        setRenameError('Could not save the academic year. Please try again.');
+        return;
+      }
+      setReportYears((m) => {
+        const copy = { ...m };
+        if (renameYear) copy[report.submission_id] = renameYear;
+        else delete copy[report.submission_id];
+        return copy;
+      });
+    }
+    setRenameBusy(false);
+    setReports((rows) =>
+      rows.map((r) =>
+        r.submission_id === report.submission_id
+          ? { ...r, original_filename: savedName }
+          : r
+      )
+    );
+    setRenamingId(null);
+  }
+
   const [sortMode, setSortMode] = useState<'latest' | 'oldest' | 'filename'>(
     'latest'
   );
@@ -4318,6 +4465,29 @@ function ReportsDashboard({
 
         setReports(normalizeReportHistoryRows(data));
 
+        const originalRows = await supabase.rpc('get_my_ia_originals');
+        if (!originalRows.error && Array.isArray(originalRows.data)) {
+          const map: Record<string, { bucket: string; path: string }> = {};
+          for (const row of originalRows.data as Record<string, unknown>[]) {
+            if (
+              typeof row.submission_id === 'string' &&
+              typeof row.raw_file_path === 'string'
+            ) {
+              map[row.submission_id] = {
+                bucket:
+                  typeof row.raw_file_bucket === 'string'
+                    ? row.raw_file_bucket
+                    : 'ia-uploads',
+                path: row.raw_file_path,
+              };
+            }
+          }
+          if (active) setOriginals(map);
+        }
+
+        const yearMap = await loadReportYears();
+        if (active) setReportYears(yearMap);
+
         setLoadState('ready');
       } catch (error) {
         console.error('Saved IA reports could not be loaded', error);
@@ -4343,21 +4513,30 @@ function ReportsDashboard({
   const filteredReports = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
+    const base = reports.filter(
+      (report) =>
+        (!filterSubject || report.subject === filterSubject) &&
+        (!filterYear ||
+          (filterYear === '__none'
+            ? !reportYears[report.submission_id]
+            : reportYears[report.submission_id] === filterYear))
+    );
+
     const matching = query
-      ? reports.filter((report) => {
+      ? base.filter((report) => {
           const searchable = [
             report.original_filename,
             report.project_title,
             report.research_question ?? '',
             report.subject,
-            `Version ${report.version_number}`,
+            reportYears[report.submission_id] ?? '',
           ]
             .join(' ')
             .toLowerCase();
 
           return searchable.includes(query);
         })
-      : reports.slice();
+      : base.slice();
 
     return matching.sort((left, right) => {
       if (sortMode === 'filename') {
@@ -4368,7 +4547,7 @@ function ReportsDashboard({
 
       return sortMode === 'oldest' ? -difference : difference;
     });
-  }, [reports, searchQuery, sortMode]);
+  }, [reports, searchQuery, sortMode, filterSubject, filterYear, reportYears]);
 
   const projectCount = useMemo(
     () => new Set(reports.map((report) => report.project_id)).size,
@@ -4446,6 +4625,37 @@ function ReportsDashboard({
             aria-label="Search saved IA reports"
           />
         </label>
+
+        <div className="premium-report-sort">
+          <span>Subject</span>
+          <select
+            value={filterSubject}
+            onChange={(e) => setFilterSubject(e.target.value)}
+            aria-label="Filter by subject"
+          >
+            <option value="">All</option>
+            {subjectList.map((s) => (
+              <option key={s.name} value={s.name}>{s.label}</option>
+            ))}
+          </select>
+          <ChevronDown aria-hidden="true" />
+        </div>
+
+        <div className="premium-report-sort">
+          <span>Year</span>
+          <select
+            value={filterYear}
+            onChange={(e) => setFilterYear(e.target.value)}
+            aria-label="Filter by academic year"
+          >
+            <option value="">All</option>
+            {yearList.map((y) => (
+              <option key={y.label} value={y.label}>{y.label}</option>
+            ))}
+            <option value="__none">No year</option>
+          </select>
+          <ChevronDown aria-hidden="true" />
+        </div>
 
         <div className="premium-report-sort">
           <span>Sort</span>
@@ -4540,6 +4750,48 @@ function ReportsDashboard({
                 className="premium-report-row"
                 key={report.submission_id}
               >
+                {renamingId === report.submission_id ? (
+                  <div className="premium-report-file premium-report-renaming">
+                    <span>
+                      <FileText aria-hidden="true" />
+                    </span>
+                    <div>
+                      <input
+                        autoFocus
+                        maxLength={120}
+                        value={renameValue}
+                        disabled={renameBusy}
+                        aria-label="Report name"
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') void commitRename(report);
+                          if (e.key === 'Escape') setRenamingId(null);
+                        }}
+                      />
+                      <select
+                        className="premium-rename-year"
+                        value={renameYear}
+                        disabled={renameBusy}
+                        aria-label="Academic year"
+                        onChange={(e) => setRenameYear(e.target.value)}
+                      >
+                        <option value="">No academic year</option>
+                        {yearList.map((y) => (
+                          <option key={y.label} value={y.label}>{y.label}</option>
+                        ))}
+                      </select>
+                      <div className="premium-rename-actions">
+                        <button type="button" disabled={renameBusy} onClick={() => void commitRename(report)}>
+                          {renameBusy ? 'Saving…' : 'Save name'}
+                        </button>
+                        <button type="button" disabled={renameBusy} onClick={() => setRenamingId(null)}>
+                          Cancel
+                        </button>
+                        {renameError && <em>{renameError}</em>}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <button
                   className="premium-report-file"
                   type="button"
@@ -4553,23 +4805,27 @@ function ReportsDashboard({
                   <div>
                     <strong>{report.original_filename}</strong>
                     <p>
-                      Version {report.version_number}
-                      {' · '}
-                      Completed{' '}
-                      {formatReportDate(
-                        report.report_generated_at ??
-                          report.saved_at ??
-                          report.uploaded_at
-                      )}
+                      Uploaded {formatReportDate(report.uploaded_at)}
                     </p>
-                    <small>
-                      {report.project_title}
+                    <small className="premium-report-meta">
+                      <em className="premium-subject-pill">
+                        {subjectLabel(subjectList, report.subject)}
+                      </em>
+                      {reportYears[report.submission_id] && (
+                        <em className="premium-year-pill">
+                          {reportYears[report.submission_id]}
+                        </em>
+                      )}
+                      {!originals[report.submission_id] && (
+                        <em className="premium-orig-gone">Original deleted</em>
+                      )}
                       {report.research_question
-                        ? ` · ${report.research_question}`
+                        ? ` ${report.research_question}`
                         : ''}
                     </small>
                   </div>
                 </button>
+                )}
 
                 <div className="premium-report-features">
                   {report.annotated_html_ready && (
@@ -4605,19 +4861,89 @@ function ReportsDashboard({
                   </strong>
                 </div>
 
-                <button
-                  className="premium-report-open"
-                  type="button"
-                  onClick={() => void handleOpen(report.submission_id)}
-                  disabled={Boolean(openingSubmissionId)}
-                  aria-label={`Open ${report.original_filename}`}
-                >
-                  {isOpening ? (
-                    <LoaderCircle className="premium-spin" aria-hidden="true" />
-                  ) : (
-                    <ChevronRight aria-hidden="true" />
+                <div className="premium-report-actions">
+                  {originals[report.submission_id] && (
+                    <button
+                      className="premium-report-rename"
+                      type="button"
+                      title="Download the original file"
+                      aria-label={`Download original of ${report.original_filename}`}
+                      onClick={() => void downloadOriginal(report)}
+                    >
+                      <Download aria-hidden="true" />
+                    </button>
                   )}
-                </button>
+                  <button
+                    className="premium-report-rename"
+                    type="button"
+                    title="Rename report"
+                    aria-label={`Rename ${report.original_filename}`}
+                    onClick={() => {
+                      setRenameError('');
+                      setRenameValue(report.original_filename);
+                      setRenameYear(reportYears[report.submission_id] ?? '');
+                      setRenamingId(report.submission_id);
+                    }}
+                  >
+                    <Pencil aria-hidden="true" />
+                  </button>
+                  {originals[report.submission_id] && (
+                  <button
+                    className="premium-report-rename premium-report-delete"
+                    type="button"
+                    title="Delete original IA"
+                    aria-label={`Delete original IA ${report.original_filename}`}
+                    onClick={() => {
+                      setDeleteError('');
+                      setConfirmDeleteId(report.submission_id);
+                    }}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </button>
+                  )}
+                  <button
+                    className="premium-report-open"
+                    type="button"
+                    onClick={() => void handleOpen(report.submission_id)}
+                    disabled={Boolean(openingSubmissionId)}
+                    aria-label={`Open ${report.original_filename}`}
+                  >
+                    {isOpening ? (
+                      <LoaderCircle className="premium-spin" aria-hidden="true" />
+                    ) : (
+                      <ChevronRight aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+
+                {confirmDeleteId === report.submission_id && (
+                  <div className="premium-delete-confirm" role="alertdialog">
+                    <p>
+                      <strong>Delete the original IA file?</strong> Only the
+                      uploaded PDF or DOCX of “{report.original_filename}” is
+                      removed to free up space. Your review, marks, fix plan and
+                      annotated copies stay safe and keep working.
+                    </p>
+                    <div>
+                      <button
+                        type="button"
+                        className="danger"
+                        disabled={deleteBusy}
+                        onClick={() => void confirmDelete(report)}
+                      >
+                        {deleteBusy ? 'Deleting…' : 'Yes, delete the original'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deleteBusy}
+                        onClick={() => setConfirmDeleteId(null)}
+                      >
+                        Cancel
+                      </button>
+                      {deleteError && <em>{deleteError}</em>}
+                    </div>
+                  </div>
+                )}
               </article>
             );
           })}
@@ -4640,6 +4966,10 @@ type UploadWorkspaceProps = {
   onClearFile: () => void;
   onUpload: () => void;
   onRetrySession: () => void;
+  subject: string;
+  onSubjectChange: (value: string) => void;
+  year: string;
+  onYearChange: (value: string) => void;
 };
 
 function UploadWorkspace({
@@ -4653,7 +4983,21 @@ function UploadWorkspace({
   onClearFile,
   onUpload,
   onRetrySession,
+  subject,
+  onSubjectChange,
+  year,
+  onYearChange,
 }: UploadWorkspaceProps) {
+  const { subjects } = useSubjects(true);
+  const { years: yearOptions } = useAcademicYears(true);
+
+  useEffect(() => {
+    if (!year && yearOptions.length > 0) onYearChange(yearOptions[0].label);
+  }, [year, yearOptions, onYearChange]);
+
+  useEffect(() => {
+    if (!subject && subjects.length === 1) onSubjectChange(subjects[0].name);
+  }, [subject, subjects, onSubjectChange]);
   const stageDescriptions = [
     'Reads the usable text from your uploaded IA draft.',
     'Identifies sections, headings and evidence locations.',
@@ -4746,8 +5090,40 @@ function UploadWorkspace({
             </span>
             <span>
               <Clock3 aria-hidden="true" />
-              Source removed after processing window
+              Original kept 6 months
             </span>
+          </div>
+
+          <div className="upload-subject-row">
+          <label className="upload-subject-field">
+            <span>Subject <b aria-hidden="true">*</b></span>
+            <select
+              value={subject}
+              onChange={(e) => onSubjectChange(e.target.value)}
+              disabled={status === 'uploading'}
+              required
+            >
+              <option value="">Choose the subject of this IA</option>
+              {subjects.map((s) => (
+                <option key={s.name} value={s.name}>{s.label}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="upload-subject-field">
+            <span>Academic year <b aria-hidden="true">*</b></span>
+            <select
+              value={year}
+              onChange={(e) => onYearChange(e.target.value)}
+              disabled={status === 'uploading'}
+              required
+            >
+              <option value="">Choose the academic year</option>
+              {yearOptions.map((y) => (
+                <option key={y.label} value={y.label}>{y.label}</option>
+              ))}
+            </select>
+          </label>
           </div>
 
           <input
@@ -4832,7 +5208,7 @@ function UploadWorkspace({
             className="primary-button review-upload-primary-v7"
             type="button"
             onClick={onUpload}
-            disabled={!selectedFile || status === 'uploading'}
+            disabled={!selectedFile || !subject || !year || status === 'uploading'}
           >
             {status === 'uploading' ? (
               <>
@@ -4920,8 +5296,8 @@ function PrivacyCard() {
             copy: 'Your document is not placed in a public folder.',
           },
           {
-            title: 'Original file removed',
-            copy: 'The uploaded PDF or DOCX is scheduled for deletion after approximately one hour.',
+            title: 'Original file kept for 6 months',
+            copy: 'Your saved report keeps its original PDF or DOCX privately for 6 months so you can download it again. You can delete just the original file at any time from My IA Reports; your review and annotated copies stay.',
           },
           {
             title: 'Secure account connection',
@@ -5108,7 +5484,7 @@ function ProcessingWorkspace({
   );
 }
 
-type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan' | 'markmap' | 'marks';
+type ReviewTab = 'detailed' | 'workshop' | 'comparison' | 'annotated' | 'plan' | 'markmap' | 'marks' | 'anncopy' | 'progress';
 
 type ReviewLoadState = 'loading' | 'ready' | 'error';
 
@@ -5299,6 +5675,9 @@ function CompletionWorkspace({
     'unassigned';
 
   const isFreeReview = accessMode === 'free_review';
+  const mm = useMarkMap(submission?.id ?? '', isFreeReview);
+  const [ticks, setTick] = useTicks(submission?.id ?? '');
+  useEffect(() => { if (mm.map) setMarkMapScore({ mark: mm.map.mark, maximum: mm.map.maximum }); }, [mm.map]);
 
   const hasFullReviewAccess =
     accessMode === 'paid_credit' || accessMode === 'complimentary';
@@ -5758,10 +6137,9 @@ function CompletionWorkspace({
             <div className="review-tabgroup" role="tablist" aria-label="Student report tabs">
               <span className="review-tabgroup-label">{reviewSpace === 'teacher' ? 'Student report' : 'For the student'}</span>
               {([
-                ['marks', SearchCheck, 'Marks & fix plan', isFreeReview ? 'Locked' : 'Mark + steps'],
-                ['detailed', BookOpen, 'Feedback', isFreeReview ? 'First criterion preview' : 'By criterion'],
-                ['workshop', ListChecks, 'Section guide', 'All 9 IA sections'],
-                ['plan', ClipboardList, 'Progress plan', isFreeReview ? 'Locked' : 'Next steps'],
+                ['marks', SearchCheck, 'Fix your IA', isFreeReview ? 'Locked' : 'Section by section'],
+                ['anncopy', Eye, 'Annotated copy', isFreeReview ? 'Locked' : 'Comments beside your report'],
+                ['progress', ListChecks, 'Progress', isFreeReview ? 'Locked' : 'Fixes you have ticked'],
               ] as const).map(([id, Icon, label, hint]) => (
                 <button
                   key={id}
@@ -5791,8 +6169,21 @@ function CompletionWorkspace({
               >
                 <SearchCheck aria-hidden="true" />
                 <span>
-                  <strong>Mark map</strong>
-                  <small>Recommended mark</small>
+                  <strong>Teacher view</strong>
+                  <small>Marks and coaching</small>
+                </span>
+              </button>
+              <button
+                className={`review-tab ${activeTab === 'anncopy' ? 'review-tab-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'anncopy'}
+                onClick={() => setActiveTab('anncopy')}
+              >
+                <Eye aria-hidden="true" />
+                <span>
+                  <strong>Annotated copy</strong>
+                  <small>Comments by strand code</small>
                 </span>
               </button>
               <button
@@ -5804,7 +6195,7 @@ function CompletionWorkspace({
               >
                 <Eye aria-hidden="true" />
                 <span>
-                  <strong>Annotated IA</strong>
+                  <strong>Annotated file</strong>
                   <small>{isFreeReview ? '20-line preview' : 'Marked copy and notes'}</small>
                 </span>
               </button>
@@ -5860,23 +6251,15 @@ function CompletionWorkspace({
                 )}
 
                 {reviewSpace === 'teacher' && activeTab === 'markmap' && (
-                  <MarkMapTab
-                    onScore={setMarkMapScore}
-                    mode="teacher"
-                    submissionId={submission?.id ?? ''}
-                    findings={reviewData.findings}
-                    isFreePreview={isFreeReview}
-                  />
+                  <TeacherWorkspace mm={mm} submissionId={submission?.id ?? ''} isFreePreview={isFreeReview} openAnnotated={() => setActiveTab('anncopy')} />
                 )}
                 {activeTab === 'marks' && (
-                  <MarkMapTab
-                    onScore={setMarkMapScore}
-                    mode="student"
-                    submissionId={submission?.id ?? ''}
-                    findings={reviewData.findings}
-                    isFreePreview={isFreeReview}
-                  />
+                  <StudentWorkspace mm={mm} submissionId={submission?.id ?? ''} isFreePreview={isFreeReview} ticks={ticks} setTick={setTick} />
                 )}
+                {activeTab === 'progress' && <ProgressView mm={mm} ticks={ticks} />}
+                {activeTab === 'anncopy' && (isFreeReview
+                  ? <section className="ws"><p className="w-note">The annotated copy needs the full review.</p></section>
+                  : <AnnotatedCopy mm={mm} teacher={reviewSpace === 'teacher'} canToggle={reviewSpace === 'teacher'} />)}
 
                 {reviewSpace === 'teacher' && activeTab === 'annotated' && (
                   <>
@@ -8522,7 +8905,7 @@ function useMarkMapTotals(ids: string[]): Record<string, { mark: number; maximum
 }
 
 type CriterionMarkView = { mark: number; max: number; why: string; confidence: string };
-const FEEDBACK_CODE: Record<string, string> = { ResearchDesign: 'A', DataAnalysis: 'B', Conclusion: 'C', Evaluation: 'E' };
+const FEEDBACK_CODE: Record<string, string> = { ResearchDesign: 'RD', DataAnalysis: 'DA', Conclusion: 'CO', Evaluation: 'EV' };
 function useCriterionMarks(submissionId: string): Record<string, CriterionMarkView> {
   const [marks, setMarks] = useState<Record<string, CriterionMarkView>>({});
   useEffect(() => {

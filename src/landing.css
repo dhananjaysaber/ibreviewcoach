@@ -7,8 +7,8 @@
     --landing-ink: #0E1726;
     --landing-navy: #0E1726;
     --landing-navy-2: #1B2A44;
-    --landing-blue: #2347F5;
-    --landing-blue-hover: #1A36C4;
+    --landing-blue: #D97706;
+    --landing-blue-hover: #92400E;
     --landing-blue-soft: #F2F4F7;
     --landing-sky-soft: #F2F4F7;
     --landing-mint-soft: #edf9f6;
@@ -17,8 +17,8 @@
     --landing-text: #0E1726;
     --landing-muted: #65748c;
     --landing-muted-2: #8490a3;
-    --landing-border: #E8EDFF;
-    --landing-border-strong: #E8EDFF;
+    --landing-border: #FEF3C7;
+    --landing-border-strong: #FEF3C7;
     --landing-surface: #ffffff;
     --landing-surface-alt: #F2F4F7;
     --landing-success: #14745f;
@@ -117,8 +117,8 @@
     flex: 0 0 auto;
     border-radius: 11px;
     color: #ffffff;
-    background: linear-gradient(145deg, var(--landing-blue), #1A36C4);
-    box-shadow: 0 8px 20px rgba(35, 71, 245, 0.2);
+    background: linear-gradient(145deg, var(--landing-blue), #92400E);
+    box-shadow: 0 8px 20px rgba(217,119,6, 0.2);
   }
   
   .brand-mark svg {
@@ -276,8 +276,8 @@
     padding: clamp(68px, 8vw, 108px) 20px clamp(78px, 8vw, 110px);
     overflow: hidden;
     background:
-      radial-gradient(circle at 82% 18%, rgba(35, 71, 245, 0.17), transparent 29%),
-      radial-gradient(circle at 95% 82%, rgba(35, 71, 245, 0.09), transparent 27%),
+      radial-gradient(circle at 82% 18%, rgba(217,119,6, 0.17), transparent 29%),
+      radial-gradient(circle at 95% 82%, rgba(217,119,6, 0.09), transparent 27%),
       linear-gradient(180deg, #F2F4F7 0%, #ffffff 72%);
   }
   
@@ -289,7 +289,7 @@
     right: -290px;
     top: -330px;
     border-radius: 50%;
-    background: linear-gradient(145deg, rgba(35, 71, 245, 0.1), rgba(14, 23, 38, 0.025));
+    background: linear-gradient(145deg, rgba(217,119,6, 0.1), rgba(14, 23, 38, 0.025));
     pointer-events: none;
   }
   
@@ -300,8 +300,8 @@
     pointer-events: none;
     opacity: 0.6;
     background-image:
-      linear-gradient(rgba(35, 71, 245, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(35, 71, 245, 0.025) 1px, transparent 1px);
+      linear-gradient(rgba(217,119,6, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(217,119,6, 0.025) 1px, transparent 1px);
     background-size: 52px 52px;
     mask-image: linear-gradient(to bottom, black, transparent 82%);
   }
@@ -381,14 +381,14 @@
     border: 1px solid var(--landing-blue);
     color: #ffffff;
     background: var(--landing-blue);
-    box-shadow: 0 10px 24px rgba(35, 71, 245, 0.2);
+    box-shadow: 0 10px 24px rgba(217,119,6, 0.2);
   }
   
   .landing-primary-button:hover {
     transform: translateY(-1px);
     border-color: var(--landing-blue-hover);
     background: var(--landing-blue-hover);
-    box-shadow: 0 14px 30px rgba(35, 71, 245, 0.24);
+    box-shadow: 0 14px 30px rgba(217,119,6, 0.24);
   }
   
   .landing-secondary-button {
@@ -455,7 +455,7 @@
     inset: 14px -18px -18px 18px;
     z-index: -1;
     border-radius: 28px;
-    background: linear-gradient(145deg, rgba(35, 71, 245, 0.13), rgba(35, 71, 245, 0.08));
+    background: linear-gradient(145deg, rgba(217,119,6, 0.13), rgba(217,119,6, 0.08));
     filter: blur(2px);
   }
   
@@ -488,7 +488,7 @@
     color: #ffffff;
     background:
       radial-gradient(circle at 84% 15%, rgba(255, 255, 255, 0.18), transparent 27%),
-      linear-gradient(135deg, #0E1726, #1A36C4);
+      linear-gradient(135deg, #0E1726, #92400E);
   }
   
   .landing-preview-score span {
@@ -506,7 +506,7 @@
   .landing-preview-tabs {
     margin: 13px 0 11px;
     padding: 4px;
-    border: 1px solid #E8EDFF;
+    border: 1px solid #FEF3C7;
     border-radius: 10px;
     background: #F2F4F7;
   }
@@ -529,7 +529,7 @@
   
   .landing-preview-finding {
     padding: 17px;
-    border: 1px solid #E8EDFF;
+    border: 1px solid #FEF3C7;
     border-left: 3px solid #d66659;
     border-radius: 13px;
     background: #ffffff;
@@ -674,7 +674,7 @@
   .landing-feature-card:nth-child(4) {
     min-height: 246px;
     background:
-      radial-gradient(circle at 100% 0%, rgba(35, 71, 245, 0.1), transparent 34%),
+      radial-gradient(circle at 100% 0%, rgba(217,119,6, 0.1), transparent 34%),
       #ffffff;
   }
   
@@ -685,7 +685,7 @@
   
   .landing-feature-card:hover {
     transform: translateY(-3px);
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     box-shadow: var(--landing-shadow-md);
   }
   
@@ -695,7 +695,7 @@
     display: inline-grid;
     place-items: center;
     flex: 0 0 auto;
-    border: 1px solid #E8EDFF;
+    border: 1px solid #FEF3C7;
     border-radius: 12px;
     color: var(--landing-blue);
     background: var(--landing-blue-soft);
@@ -734,12 +734,12 @@
   .landing-feature-card:nth-child(4) .landing-icon-box {
     color: #ffffff;
     border-color: transparent;
-    background: linear-gradient(145deg, var(--landing-blue), #1A36C4);
+    background: linear-gradient(145deg, var(--landing-blue), #92400E);
   }
   
   .landing-feature-card:nth-child(2) .landing-icon-box,
   .landing-feature-card:nth-child(5) .landing-icon-box {
-    color: #2347F5;
+    color: #D97706;
     background: var(--landing-purple-soft);
   }
   
@@ -763,7 +763,7 @@
     padding-left: max(20px, calc((100vw - var(--landing-container)) / 2));
     color: #ffffff;
     background:
-      radial-gradient(circle at 86% 10%, rgba(35, 71, 245, 0.24), transparent 28%),
+      radial-gradient(circle at 86% 10%, rgba(217,119,6, 0.24), transparent 28%),
       linear-gradient(140deg, #0E1726, #1B2A44 70%, #1B2A44);
   }
   
@@ -772,7 +772,7 @@
   }
   
   .landing-criteria-section .landing-section-heading > span {
-    color: #E8EDFF;
+    color: #FEF3C7;
   }
   
   .landing-criteria-section .landing-section-heading h2 {
@@ -801,7 +801,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 9px;
-    color: #E8EDFF;
+    color: #FEF3C7;
     background: rgba(255, 255, 255, 0.1);
     font-size: 0.68rem;
     font-weight: 720;
@@ -813,7 +813,7 @@
   }
   
   .landing-criteria-grid p {
-    color: #E8EDFF;
+    color: #FEF3C7;
   }
   
   /* ---------- How it works ---------- */
@@ -844,7 +844,7 @@
     right: 10px;
     left: 48px;
     height: 1px;
-    background: #E8EDFF;
+    background: #FEF3C7;
   }
   
   .landing-step-grid li > span {
@@ -854,7 +854,7 @@
     height: 38px;
     display: grid;
     place-items: center;
-    border: 1px solid #E8EDFF;
+    border: 1px solid #FEF3C7;
     border-radius: 50%;
     color: #ffffff;
     background: var(--landing-blue);
@@ -910,7 +910,7 @@
     display: grid;
     align-content: center;
     gap: 5px;
-    border: 1px solid #E8EDFF;
+    border: 1px solid #FEF3C7;
     border-radius: 14px;
     background: #F2F4F7;
   }
@@ -987,16 +987,16 @@
   
   .landing-price-card:hover {
     transform: translateY(-3px);
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     box-shadow: var(--landing-shadow-md);
   }
   
   .landing-price-card.featured {
     border: 2px solid var(--landing-blue);
     background:
-      radial-gradient(circle at 100% 0%, rgba(35, 71, 245, 0.09), transparent 32%),
+      radial-gradient(circle at 100% 0%, rgba(217,119,6, 0.09), transparent 32%),
       #ffffff;
-    box-shadow: 0 20px 52px rgba(35, 71, 245, 0.15);
+    box-shadow: 0 20px 52px rgba(217,119,6, 0.15);
   }
   
   .landing-popular-badge {
@@ -1178,7 +1178,7 @@
   }
   
   .landing-faq-grid details[open] {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     box-shadow: var(--landing-shadow-sm);
   }
   
@@ -1233,12 +1233,12 @@
     color: #ffffff;
     background:
       radial-gradient(circle at 88% 8%, rgba(255, 255, 255, 0.14), transparent 28%),
-      linear-gradient(135deg, #0E1726, #1B2A44 68%, #1A36C4);
+      linear-gradient(135deg, #0E1726, #1B2A44 68%, #92400E);
     box-shadow: 0 24px 60px rgba(14, 23, 38, 0.18);
   }
   
   .landing-final-cta span {
-    color: #E8EDFF;
+    color: #FEF3C7;
     font-size: 0.7rem;
     font-weight: 730;
     letter-spacing: 0.08em;
@@ -1255,7 +1255,7 @@
   .landing-final-cta p {
     max-width: 670px;
     margin: 0;
-    color: #E8EDFF;
+    color: #FEF3C7;
     font-size: 0.94rem;
     line-height: 1.68;
   }
@@ -1326,7 +1326,7 @@
     display: grid;
     place-items: center;
     background:
-      radial-gradient(circle at 85% 15%, rgba(35, 71, 245, 0.12), transparent 30%),
+      radial-gradient(circle at 85% 15%, rgba(217,119,6, 0.12), transparent 30%),
       #F2F4F7;
   }
   
@@ -1363,7 +1363,7 @@
   
   .site-footer {
     padding: 22px 20px 30px;
-    border-top: 1px solid #E8EDFF;
+    border-top: 1px solid #FEF3C7;
     color: #778397;
     background: #ffffff;
     text-align: center;
@@ -1711,7 +1711,7 @@
   /* More colourful, premium trust cards. */
   .landing-proof-strip {
     gap: 0;
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
   }
   
   .landing-proof-strip > div:nth-child(1) {
@@ -1731,11 +1731,11 @@
   }
   
   .landing-proof-strip > div:nth-child(1) strong {
-    color: #1A36C4;
+    color: #92400E;
   }
   
   .landing-proof-strip > div:nth-child(2) strong {
-    color: #2347F5;
+    color: #D97706;
   }
   
   .landing-proof-strip > div:nth-child(3) strong {
@@ -1772,7 +1772,7 @@
   }
   
   .landing-feature-card:nth-child(1) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background:
       linear-gradient(145deg, #F2F4F7 0%, #F2F4F7 70%);
   }
@@ -1782,7 +1782,7 @@
   }
   
   .landing-feature-card:nth-child(2) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background:
       linear-gradient(145deg, #F2F4F7 0%, #F2F4F7 70%);
   }
@@ -1822,17 +1822,17 @@
   }
   
   .landing-feature-card:nth-child(6) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background:
       linear-gradient(145deg, #F2F4F7 0%, #F2F4F7 72%);
   }
   
   .landing-feature-card:nth-child(6)::after {
-    background: rgba(35, 71, 245, 0.16);
+    background: rgba(217,119,6, 0.16);
   }
   
   .landing-feature-card:nth-child(7) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background:
       linear-gradient(145deg, #F2F4F7 0%, #F2F4F7 72%);
   }
@@ -1842,7 +1842,7 @@
   }
   
   .landing-feature-card:nth-child(8) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background:
       linear-gradient(145deg, #F2F4F7 0%, #F2F4F7 72%);
   }
@@ -1854,13 +1854,13 @@
   .landing-feature-card:nth-child(1) .landing-icon-box {
     color: #ffffff;
     border-color: transparent;
-    background: linear-gradient(145deg, #2347F5, #1A36C4);
+    background: linear-gradient(145deg, #D97706, #92400E);
   }
   
   .landing-feature-card:nth-child(2) .landing-icon-box {
     color: #ffffff;
     border-color: transparent;
-    background: linear-gradient(145deg, #8FA3FA, #2347F5);
+    background: linear-gradient(145deg, #8FA3FA, #D97706);
   }
   
   .landing-feature-card:nth-child(3) .landing-icon-box {
@@ -1884,19 +1884,19 @@
   .landing-feature-card:nth-child(6) .landing-icon-box {
     color: #ffffff;
     border-color: transparent;
-    background: linear-gradient(145deg, #8FA3FA, #2347F5);
+    background: linear-gradient(145deg, #8FA3FA, #D97706);
   }
   
   .landing-feature-card:nth-child(7) .landing-icon-box {
     color: #ffffff;
     border-color: transparent;
-    background: linear-gradient(145deg, #2347F5, #2347F5);
+    background: linear-gradient(145deg, #D97706, #D97706);
   }
   
   .landing-feature-card:nth-child(8) .landing-icon-box {
     color: #ffffff;
     border-color: transparent;
-    background: linear-gradient(145deg, #8FA3FA, #2347F5);
+    background: linear-gradient(145deg, #8FA3FA, #D97706);
   }
   
   /* Turn the four-step journey into colourful cards while keeping it aligned. */
@@ -1920,12 +1920,12 @@
   }
   
   .landing-step-grid li:nth-child(1) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background: linear-gradient(145deg, #F2F4F7, #F2F4F7);
   }
   
   .landing-step-grid li:nth-child(2) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background: linear-gradient(145deg, #F2F4F7, #F2F4F7);
   }
   
@@ -1940,13 +1940,13 @@
   }
   
   .landing-step-grid li:nth-child(1) > span {
-    background: #2347F5;
-    border-color: #2347F5;
+    background: #D97706;
+    border-color: #D97706;
   }
   
   .landing-step-grid li:nth-child(2) > span {
-    background: #2347F5;
-    border-color: #2347F5;
+    background: #D97706;
+    border-color: #D97706;
   }
   
   .landing-step-grid li:nth-child(3) > span {
@@ -1965,12 +1965,12 @@
   
   /* Give limits more colour without looking childish. */
   .landing-limit-grid > div:nth-child(1) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background: linear-gradient(145deg, #F2F4F7, #F2F4F7);
   }
   
   .landing-limit-grid > div:nth-child(2) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background: linear-gradient(145deg, #F2F4F7, #F2F4F7);
   }
   
@@ -1985,11 +1985,11 @@
   }
   
   .landing-limit-grid > div:nth-child(1) strong {
-    color: #1A36C4;
+    color: #92400E;
   }
   
   .landing-limit-grid > div:nth-child(2) strong {
-    color: #2347F5;
+    color: #D97706;
   }
   
   .landing-limit-grid > div:nth-child(3) strong {
@@ -2002,17 +2002,17 @@
   
   /* Colour-coded pricing cards while preserving hierarchy and readability. */
   .landing-price-card:nth-child(1) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background: linear-gradient(180deg, #F2F4F7 0%, #ffffff 46%);
   }
   
   .landing-price-card:nth-child(2) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background: linear-gradient(180deg, #F2F4F7 0%, #ffffff 46%);
   }
   
   .landing-price-card:nth-child(3) {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background:
       radial-gradient(circle at 100% 0%, rgba(143, 163, 250, 0.15), transparent 32%),
       linear-gradient(180deg, #F2F4F7 0%, #ffffff 50%);
@@ -2028,11 +2028,11 @@
   }
   
   .landing-price-card:nth-child(2) .landing-price-label {
-    color: #1A36C4;
+    color: #92400E;
   }
   
   .landing-price-card:nth-child(3) .landing-price-label {
-    color: #2347F5;
+    color: #D97706;
   }
   
   .landing-price-card:nth-child(4) .landing-price-label {
@@ -2048,7 +2048,7 @@
   }
   
   .landing-integrity-grid article:last-child {
-    border-color: #E8EDFF;
+    border-color: #FEF3C7;
     background:
       radial-gradient(circle at 100% 0%, rgba(143, 163, 250, 0.15), transparent 30%),
       linear-gradient(145deg, #F2F4F7 0%, #ffffff 72%);

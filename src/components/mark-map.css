@@ -1,5 +1,5 @@
 .mm-root { display: grid; gap: 16px; font-family: 'Inter', Inter, system-ui, sans-serif; }
-.mm-hero { display: flex; gap: 24px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 22px 24px; border-radius: 22px; color: #fff; background: linear-gradient(120deg, #1B2A44, #2347F5 50%, #2347F5); box-shadow: var(--aurora-shadow); }
+.mm-hero { display: flex; gap: 24px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 22px 24px; border-radius: 22px; color: #fff; background: linear-gradient(120deg, #1B2A44, #D97706 50%, #D97706); box-shadow: var(--aurora-shadow); }
 .mm-hero span { display: block; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
 .mm-hero strong { font-family: 'Bricolage Grotesque', sans-serif; font-size: 2.2rem; }
 .mm-hero em { display: block; font-style: normal; font-size: .85rem; opacity: .9; }

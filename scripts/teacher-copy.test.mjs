@@ -37,10 +37,10 @@ const mm = {
   data_sufficiency: 'n=20 limits power.',
   appendix_check: [{ label: 'Raw data', relevant: true, reason: 'Supports B1.' }],
   word_count: { counted: 3500, limit: 3200, over_by: 300, cut_at: { heading: 'Evaluation', page: 6 } },
-  criteria: [{ code: 'A', criterion: 'Research design', max: 6, mark: 4, why_mark: 'A1 and A2 are met at 3-4 but A3 omits trial counts.', confidence: 'high',
+  criteria: [{ code: 'RD', criterion: 'Research design', max: 6, mark: 4, why_mark: 'A1 and A2 are met at 3-4 but A3 omits trial counts.', confidence: 'high',
     strands: [
-      { id: 'A1', name: 'Research Question Context', level: '5-6', reason: 'The introduction places the question in a specific <context>.', missing: '', evidence: [{ quote: 'grip strength & smash speed', page: 2, section: 'Introduction' }] },
-      { id: 'A3', name: 'Reproducibility of methodology', level: '0', no_evidence: true, reason: 'No verified quotation supports this strand, so no credit is given.', missing: 'Trial counts and distances.', evidence: [] },
+      { id: 'RD1', name: 'Research Question Context', level: '5-6', reason: 'The introduction places the question in a specific <context>.', missing: '', evidence: [{ quote: 'grip strength & smash speed', page: 2, section: 'Introduction' }] },
+      { id: 'RD3', name: 'Reproducibility of methodology', level: '0', no_evidence: true, reason: 'No verified quotation supports this strand, so no credit is given.', missing: 'Trial counts and distances.', evidence: [] },
     ] }],
 };
 test('mark copy: strand table shows level, exact descriptor, evidence and justification, escaped', () => {
@@ -56,4 +56,11 @@ test('mark copy: strand table shows level, exact descriptor, evidence and justif
   assert.ok(html.includes('300 over'));
   assert.ok(html.includes('A strand receives no credit where no quotation'));
   assert.equal((html.match(/<tr>/g) || []).length, 3); // header + two strands
+});
+
+test('teacher copy includes guidance for strands below the top level and the teacher-mark line', () => {
+  const html = buildMarkCopyHtml({ generatedOn: 'x', map: { ...mm, plan: [{ code: 'RD', strands: [{ id: 'RD3', coach: { need: 'Specific context.', miss: "The background is a general overview of 'many sports'.", ask: ['Which study links the variables?'], strong: 'Four sources tied to the design.', direction: 'Open with the forearm strength and racket speed evidence.' } }] }] } });
+  assert.ok(html.includes('Guidance for the teacher'));
+  assert.ok(html.includes('Which study links the variables?'));
+  assert.ok(html.includes("Teacher's own mark"));
 });

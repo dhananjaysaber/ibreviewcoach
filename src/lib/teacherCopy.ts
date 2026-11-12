@@ -89,8 +89,10 @@ export type MarkCopyStrand = {
 };
 export type MarkCopyCriterion = { code: string; criterion: string; max: number; mark: number; why_mark: string; confidence: string; strands: MarkCopyStrand[] };
 export type MarkCopyLimit = { kind: string; criterion: string; strand: string | null; detail: string; action: string };
+export type MarkCopyCoach = { need: string; miss: string; ask: string[]; strong: string; direction: string };
 export type MarkCopyMap = {
   mark: number; maximum: number; criteria: MarkCopyCriterion[]; data_sufficiency: string; limits?: MarkCopyLimit[];
+  plan?: { code: string; strands: { id: string; coach?: MarkCopyCoach | null }[] }[] | null;
   appendix_check: { label: string; relevant: boolean; reason: string }[];
   word_count: { counted: number; limit: number; over_by: number; cut_at: { heading: string; page: number | null } | null };
 };
@@ -118,12 +120,24 @@ export function buildMarkCopyHtml(input: { map: MarkCopyMap; generatedOn: string
     const l = (m.limits ?? []).filter((x) => x.criterion === code);
     return l.length ? `<div class="lim"><b>What limits this mark</b><ul>${l.map((x) => `<li>${escapeHtml(x.detail)} <i>To fix:</i> ${escapeHtml(x.action)}</li>`).join('')}</ul></div>` : '';
   };
+  const coachFor = (c: MarkCopyCriterion) => {
+    const items = c.strands.filter((s) => s.level !== '5-6').map((s) => ({ s, k: m.plan?.flatMap((p) => p.strands).find((x) => x.id === s.id)?.coach })).filter((x) => x.k);
+    if (!items.length) return '';
+    return `<div class="coach"><b>Guidance for the teacher: how to move this student up</b>${items.map(({ s, k }) => `
+      <div class="cs"><h3>${escapeHtml(s.id)} · ${escapeHtml(s.name)} (${escapeHtml(s.level)})</h3>
+        <p><b>The descriptor needs:</b> ${escapeHtml(k!.need)}</p>
+        <p><b>Missing in this report:</b> ${escapeHtml(k!.miss)}</p>
+        <p><b>Ask or tell the student:</b></p><ul>${k!.ask.map((a) => `<li>${escapeHtml(a)}</li>`).join('')}</ul>
+        <p><b>A stronger version contains:</b> ${escapeHtml(k!.strong)}</p>
+        ${k!.direction ? `<p><b>Direction on this student's topic:</b> ${escapeHtml(k!.direction)}</p>` : ''}</div>`).join('')}</div>`;
+  };
   const crit = m.criteria.map((c) => `
     <section>
       <h2>${escapeHtml(c.code)} · ${escapeHtml(c.criterion)} <span class="band">${c.mark} / ${c.max} · ${escapeHtml(c.confidence)} confidence</span></h2>
       <p class="why"><b>Moderator justification.</b> ${escapeHtml(c.why_mark)}</p>
       <table><thead><tr><th>Strand</th><th>Level</th><th>Descriptor met</th><th>Evidence in the report</th><th>Moderator justification</th></tr></thead><tbody>${rows(c)}</tbody></table>
       ${limitsFor(c.code)}
+      ${coachFor(c)}
       <p class="tmark"><b>Teacher's own mark:</b> ______ / ${c.max} &nbsp; <b>Difference from recommended (${c.mark}):</b> ______</p>
     </section>`).join('');
   const wc = m.word_count;
@@ -141,7 +155,7 @@ h1{font-size:21px;margin:0 0 4px}.sub{color:#555;margin:0 0 18px;font-size:12px}
 h2{font-size:16px;border-bottom:2px solid #1a1a1a;padding-bottom:4px;margin:26px 0 8px}
 .band{float:right;font:600 12px/1.9 system-ui,sans-serif}
 .why{margin:0 0 10px}
-.lim{border-left:3px solid #b45309;background:#fff7ed;padding:6px 10px;margin:10px 0;font-size:12px}.lim ul{margin:4px 0 0 16px;padding:0}.tmark{margin:8px 0 0;font:12px system-ui,sans-serif;border:1px dashed #999;padding:6px 8px}
+.lim{border-left:3px solid #b45309;background:#fff7ed;padding:6px 10px;margin:10px 0;font-size:12px}.lim ul{margin:4px 0 0 16px;padding:0}.coach{border:1px solid #9aa6bf;background:#f4f6ff;padding:8px 12px;margin:10px 0;font-size:12px}.coach h3{font:700 12px system-ui,sans-serif;margin:8px 0 2px}.coach p{margin:2px 0}.coach ul{margin:2px 0 4px 16px;padding:0}.tmark{margin:8px 0 0;font:12px system-ui,sans-serif;border:1px dashed #999;padding:6px 8px}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th,td{border:1px solid #b9b9b9;padding:6px 8px;vertical-align:top;text-align:left}
 th{background:#eee;font:600 11px system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em}

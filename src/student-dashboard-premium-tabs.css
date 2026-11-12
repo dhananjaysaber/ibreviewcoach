@@ -27,16 +27,16 @@
   justify-content: space-between;
   gap: 28px;
   padding: 30px 32px;
-  border: 1px solid rgba(35, 71, 245, 0.12);
+  border: 1px solid rgba(217,119,6, 0.12);
   border-radius: 20px;
   background: radial-gradient(
       circle at 88% 16%,
-      rgba(35, 71, 245, 0.12),
+      rgba(217,119,6, 0.12),
       transparent 27%
     ),
     linear-gradient(135deg, #ffffff 0%, #F2F4F7 56%, #F2F4F7 100%);
   box-shadow: 0 1px 2px rgba(14, 23, 38, 0.03),
-    0 14px 40px rgba(35, 71, 245, 0.06);
+    0 14px 40px rgba(217,119,6, 0.06);
 }
 
 .student-dashboard-hero::after {
@@ -47,7 +47,7 @@
   right: -94px;
   bottom: -145px;
   border-radius: 999px;
-  border: 38px solid rgba(35, 71, 245, 0.045);
+  border: 38px solid rgba(217,119,6, 0.045);
   pointer-events: none;
 }
 
@@ -66,7 +66,7 @@
   gap: 7px;
   width: max-content;
   max-width: 100%;
-  color: var(--pw-blue-600, #2347F5);
+  color: var(--pw-blue-600, #D97706);
   font-size: 0.72rem;
   font-weight: 850;
   letter-spacing: 0.09em;
@@ -103,19 +103,19 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  border: 1px solid var(--pw-blue-600, #2347F5);
+  border: 1px solid var(--pw-blue-600, #D97706);
   border-radius: 12px;
   color: #ffffff;
-  background: var(--pw-blue-600, #2347F5);
+  background: var(--pw-blue-600, #D97706);
   cursor: pointer;
   font-size: 0.84rem;
   font-weight: 800;
-  box-shadow: 0 10px 24px rgba(35, 71, 245, 0.2);
+  box-shadow: 0 10px 24px rgba(217,119,6, 0.2);
 }
 
 .student-dashboard-primary-action:hover:not(:disabled) {
-  background: var(--pw-blue-700, #1A36C4);
-  border-color: var(--pw-blue-700, #1A36C4);
+  background: var(--pw-blue-700, #92400E);
+  border-color: var(--pw-blue-700, #92400E);
 }
 
 .student-dashboard-primary-action:disabled {
@@ -166,9 +166,9 @@
 }
 
 .student-dashboard-tab-active {
-  color: var(--pw-blue-700, #1A36C4);
+  color: var(--pw-blue-700, #92400E);
   background: var(--pw-blue-50, #F2F4F7);
-  box-shadow: inset 0 0 0 1px rgba(35, 71, 245, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(217,119,6, 0.12);
 }
 
 .student-dashboard-tab-active::after {
@@ -179,7 +179,7 @@
   bottom: 4px;
   height: 2px;
   border-radius: 999px;
-  background: var(--pw-blue-600, #2347F5);
+  background: var(--pw-blue-600, #D97706);
 }
 
 .student-dashboard-tab svg {
@@ -216,14 +216,14 @@
 }
 
 .student-dashboard-next-card-active {
-  border-color: rgba(35, 71, 245, 0.2);
-  background: linear-gradient(90deg, rgba(35, 71, 245, 0.06), transparent 42%),
+  border-color: rgba(217,119,6, 0.2);
+  background: linear-gradient(90deg, rgba(217,119,6, 0.06), transparent 42%),
     #ffffff;
 }
 
 .student-dashboard-next-card-free {
-  border-color: rgba(35, 71, 245, 0.18);
-  background: linear-gradient(90deg, rgba(35, 71, 245, 0.055), transparent 42%),
+  border-color: rgba(217,119,6, 0.18);
+  background: linear-gradient(90deg, rgba(217,119,6, 0.055), transparent 42%),
     #ffffff;
 }
 
@@ -239,7 +239,7 @@
   display: grid;
   place-items: center;
   border-radius: 12px;
-  color: var(--pw-blue-700, #1A36C4);
+  color: var(--pw-blue-700, #92400E);
   background: var(--pw-blue-50, #F2F4F7);
 }
 
@@ -249,7 +249,7 @@
 }
 
 .student-dashboard-next-card-free .student-dashboard-next-icon {
-  color: #2347F5;
+  color: #D97706;
   background: #F2F4F7;
 }
 
@@ -296,10 +296,10 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  border: 1px solid var(--pw-blue-600, #2347F5);
+  border: 1px solid var(--pw-blue-600, #D97706);
   border-radius: 10px;
   color: #ffffff;
-  background: var(--pw-blue-600, #2347F5);
+  background: var(--pw-blue-600, #D97706);
   cursor: pointer;
   font-size: 0.74rem;
   font-weight: 800;
@@ -338,7 +338,7 @@
 
 .student-dashboard-metric-card:hover {
   transform: translateY(-1px);
-  border-color: rgba(35, 71, 245, 0.22);
+  border-color: rgba(217,119,6, 0.22);
   box-shadow: 0 10px 26px rgba(14, 23, 38, 0.055);
 }
 
@@ -348,7 +348,7 @@
   display: grid;
   place-items: center;
   border-radius: 10px;
-  color: var(--pw-blue-700, #1A36C4);
+  color: var(--pw-blue-700, #92400E);
   background: #F2F4F7;
 }
 
@@ -391,7 +391,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 3px;
-  color: var(--pw-blue-700, #1A36C4);
+  color: var(--pw-blue-700, #92400E);
   font-size: 0.67rem;
   font-weight: 750;
 }
@@ -433,7 +433,7 @@
 
 .student-dashboard-panel-heading > div > span,
 .student-dashboard-tab-header > div > span {
-  color: var(--pw-blue-600, #2347F5);
+  color: var(--pw-blue-600, #D97706);
   font-size: 0.67rem;
   font-weight: 850;
   letter-spacing: 0.085em;
@@ -464,9 +464,9 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid rgba(35, 71, 245, 0.14);
+  border: 1px solid rgba(217,119,6, 0.14);
   border-radius: 9px;
-  color: var(--pw-blue-700, #1A36C4);
+  color: var(--pw-blue-700, #92400E);
   background: #F2F4F7;
   cursor: pointer;
   font-size: 0.7rem;
@@ -501,7 +501,7 @@
   display: grid;
   place-items: center;
   border-radius: 12px;
-  color: #E8EDFF;
+  color: #FEF3C7;
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -604,7 +604,7 @@
   display: grid;
   place-items: center;
   border-radius: 10px;
-  color: var(--pw-blue-700, #1A36C4);
+  color: var(--pw-blue-700, #92400E);
   background: #F2F4F7;
 }
 
@@ -642,7 +642,7 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  color: #2347F5;
+  color: #D97706;
   font-size: 0.61rem;
   font-weight: 700;
 }
@@ -664,7 +664,7 @@
 }
 
 .student-dashboard-report-score strong {
-  color: var(--pw-blue-700, #1A36C4);
+  color: var(--pw-blue-700, #92400E);
   font-size: 0.8rem;
 }
 
@@ -708,7 +708,7 @@
   display: grid;
   place-items: center;
   border-radius: 12px;
-  color: var(--pw-blue-700, #1A36C4);
+  color: var(--pw-blue-700, #92400E);
   background: var(--pw-blue-50, #F2F4F7);
 }
 
@@ -737,10 +737,10 @@
 .student-dashboard-empty > button {
   min-height: 35px;
   padding: 7px 10px;
-  border: 1px solid var(--pw-blue-600, #2347F5);
+  border: 1px solid var(--pw-blue-600, #D97706);
   border-radius: 9px;
   color: #ffffff;
-  background: var(--pw-blue-600, #2347F5);
+  background: var(--pw-blue-600, #D97706);
   cursor: pointer;
   font-size: 0.7rem;
   font-weight: 750;

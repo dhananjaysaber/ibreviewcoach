@@ -1,0 +1,7 @@
+-- Applied to the project via the Supabase connector on 2026-11-11 (rename_my_ia_report, subjects_exemplars_free_review_off, free_review_off_functions).
+-- Summary: rename_my_ia_report(uuid,text) RPC; ia_subjects (seeded SEHS) and ia_exemplars tables with admin-only writes;
+-- private ia-exemplars storage bucket (PDF, 30 MB); get_my_ia_credit_summary reports free_review_available=false and can_start_review
+-- true for admins or holders of credits; reserve_my_ia_review_access_strict rejects the free_review source for students.
+-- 2026-11-12: keep_originals_180_days (trigger keeps saved originals 180 days; get_my_ia_originals RPC);
+-- edge function delete-ia-report removes a report's files and rows for its owner.
+-- 2026-11-12: academic_years (ia_academic_years, ia_submissions.academic_year, set_my_ia_academic_year, get_my_ia_years); delete-ia-report now deletes only the original file.

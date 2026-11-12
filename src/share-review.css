@@ -21,7 +21,7 @@
   max-height: min(900px, calc(100dvh - 48px));
   overflow: auto;
   overscroll-behavior: contain;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 24px;
   background: #ffffff;
   box-shadow: 0 28px 80px rgba(14, 23, 38, 0.28),
@@ -37,7 +37,7 @@
   justify-content: space-between;
   gap: 20px;
   padding: 24px 26px 20px;
-  border-bottom: 1px solid #E8EDFF;
+  border-bottom: 1px solid #FEF3C7;
   background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -58,8 +58,8 @@
   height: 44px;
   border-radius: 14px;
   color: #ffffff;
-  background: linear-gradient(145deg, #2347F5, #1A36C4);
-  box-shadow: 0 10px 22px rgba(35, 71, 245, 0.2);
+  background: linear-gradient(145deg, #D97706, #92400E);
+  box-shadow: 0 10px 22px rgba(217,119,6, 0.2);
 }
 
 .annotation-share-icon svg {
@@ -72,7 +72,7 @@
 .annotation-share-created > div > span {
   display: block;
   margin-bottom: 5px;
-  color: #2347F5;
+  color: #D97706;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -106,7 +106,7 @@
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 12px;
   color: #475467;
   background: #ffffff;
@@ -115,7 +115,7 @@
 
 .annotation-share-close:hover:not(:disabled) {
   color: #0E1726;
-  border-color: #E8EDFF;
+  border-color: #FEF3C7;
   background: #F2F4F7;
 }
 
@@ -135,9 +135,9 @@
   gap: 12px;
   margin: 20px 26px 0;
   padding: 14px 16px;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 16px;
-  color: #2347F5;
+  color: #D97706;
   background: #F2F4F7;
 }
 
@@ -178,8 +178,8 @@
 }
 
 .annotation-share-loading {
-  color: #2347F5;
-  border: 1px solid #E8EDFF;
+  color: #D97706;
+  border: 1px solid #FEF3C7;
   background: #F2F4F7;
 }
 
@@ -228,7 +228,7 @@
 .annotation-share-existing {
   margin: 20px 26px 0;
   padding: 20px;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 18px;
   background: #ffffff;
 }
@@ -249,7 +249,7 @@
 .annotation-share-section-heading > svg {
   width: 21px;
   height: 21px;
-  color: #2347F5;
+  color: #D97706;
 }
 
 .annotation-share-section-heading > strong {
@@ -259,7 +259,7 @@
   height: 30px;
   padding: 0 9px;
   border-radius: 999px;
-  color: #2347F5;
+  color: #D97706;
   background: #F2F4F7;
   font-size: 0.8rem;
 }
@@ -273,7 +273,7 @@
 .annotation-share-preset {
   min-height: 44px;
   padding: 10px 12px;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 12px;
   color: #1B2A44;
   background: #ffffff;
@@ -289,7 +289,7 @@
 }
 
 .annotation-share-preset.active {
-  color: #1A36C4;
+  color: #92400E;
   border-color: #8FA3FA;
   background: #F2F4F7;
   box-shadow: inset 0 0 0 1px #8FA3FA;
@@ -313,7 +313,7 @@
   min-width: 0;
   min-height: 46px;
   box-sizing: border-box;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 12px;
   color: #0E1726;
   background: #ffffff;
@@ -329,7 +329,7 @@
 .annotation-share-custom-expiry input:focus,
 .annotation-share-url-row input:focus {
   border-color: #8FA3FA;
-  box-shadow: 0 0 0 3px rgba(35, 71, 245, 0.11);
+  box-shadow: 0 0 0 3px rgba(217,119,6, 0.11);
 }
 
 .annotation-share-custom-expiry small {
@@ -343,7 +343,7 @@
   gap: 11px;
   margin-top: 16px;
   padding: 14px;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 14px;
   background: #F2F4F7;
   cursor: pointer;
@@ -354,7 +354,7 @@
   width: 18px;
   height: 18px;
   margin: 2px 0 0;
-  accent-color: #2347F5;
+  accent-color: #D97706;
 }
 
 .annotation-share-download-option > span {
@@ -394,8 +394,8 @@
   padding: 11px 16px;
   border: 0;
   color: #ffffff;
-  background: linear-gradient(145deg, #2347F5, #1A36C4);
-  box-shadow: 0 10px 20px rgba(35, 71, 245, 0.18);
+  background: linear-gradient(145deg, #D97706, #92400E);
+  box-shadow: 0 10px 20px rgba(217,119,6, 0.18);
 }
 
 .annotation-share-create-button:disabled,
@@ -413,7 +413,7 @@
 }
 
 .annotation-share-created {
-  border-color: #E8EDFF;
+  border-color: #FEF3C7;
   background: linear-gradient(180deg, #F2F4F7 0%, #ffffff 100%);
 }
 
@@ -444,9 +444,9 @@
 
 .annotation-share-url-row button {
   padding: 10px 14px;
-  border: 1px solid #2347F5;
+  border: 1px solid #D97706;
   color: #ffffff;
-  background: #2347F5;
+  background: #D97706;
 }
 
 .annotation-share-empty {
@@ -454,7 +454,7 @@
   align-items: center;
   gap: 10px;
   padding: 16px;
-  border: 1px dashed #E8EDFF;
+  border: 1px dashed #FEF3C7;
   border-radius: 14px;
   color: #6b6785;
   background: #F2F4F7;
@@ -478,7 +478,7 @@
   gap: 14px;
   align-items: center;
   padding: 14px;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 14px;
   background: #F2F4F7;
 }
@@ -556,8 +556,8 @@
 
 .annotation-share-security-note {
   margin-bottom: 24px;
-  color: #2347F5;
-  border: 1px solid #E8EDFF;
+  color: #D97706;
+  border: 1px solid #FEF3C7;
   background: #F2F4F7;
 }
 
@@ -574,7 +574,7 @@
 
 .annotation-share-retry button {
   padding: 10px 14px;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   color: #1B2A44;
   background: #ffffff;
 }
@@ -600,7 +600,7 @@
   color: #0E1726;
   background: radial-gradient(
       circle at 20% 10%,
-      rgba(35, 71, 245, 0.11),
+      rgba(217,119,6, 0.11),
       transparent 34%
     ),
     linear-gradient(180deg, #F2F4F7 0%, #F2F4F7 100%);
@@ -610,7 +610,7 @@
   width: min(520px, 100%);
   padding: 34px;
   box-sizing: border-box;
-  border: 1px solid #E8EDFF;
+  border: 1px solid #FEF3C7;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 24px 70px rgba(14, 23, 38, 0.13);
@@ -625,7 +625,7 @@
   margin: 0 auto 12px;
   border-radius: 16px;
   color: #ffffff;
-  background: linear-gradient(145deg, #2347F5, #1A36C4);
+  background: linear-gradient(145deg, #D97706, #92400E);
 }
 
 .shared-review-gateway-mark svg {
@@ -636,7 +636,7 @@
 .shared-review-gateway-brand {
   display: block;
   margin-bottom: 18px;
-  color: #2347F5;
+  color: #D97706;
   font-size: 0.76rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -647,7 +647,7 @@
   width: 25px;
   height: 25px;
   margin-bottom: 14px;
-  color: #2347F5;
+  color: #D97706;
 }
 
 .shared-review-gateway-card h1 {

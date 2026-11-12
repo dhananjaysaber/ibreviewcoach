@@ -1,0 +1,18 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) important;
+@custom-variant dark (&:where(.dark, .dark *));
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", system-ui, sans-serif;
+  --font-serif: "Source Serif 4 Variable", Georgia, serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+}
+/* Scoped stand-in for Tailwind preflight (the rest of the app keeps its own base styles). */
+:where(.ibia-landing) *, :where(.ibia-landing) *::before, :where(.ibia-landing) *::after { box-sizing: border-box; border: 0 solid; }
+:where(.ibia-landing) button { background: none; font: inherit; color: inherit; cursor: pointer; padding: 0; }
+:where(.ibia-landing) h1, :where(.ibia-landing) h2, :where(.ibia-landing) h3, :where(.ibia-landing) h4, :where(.ibia-landing) p, :where(.ibia-landing) ul { margin: 0; padding: 0; }
+:where(.ibia-landing) ul { list-style: none; }
+:where(.ibia-landing) a { color: inherit; text-decoration: none; }
+:where(.ibia-landing) img, :where(.ibia-landing) svg { display: block; max-width: 100%; }
+.ibia-landing { font-family: var(--font-sans); width: 100%; }
+.ibia-landing h1, .ibia-landing h2, .ibia-landing h3 { letter-spacing: normal; }
+.ibia-landing.reveal { opacity: 1; transform: none; }

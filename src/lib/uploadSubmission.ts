@@ -17,14 +17,16 @@ type ReservationResponse = {
 
 export async function uploadIaSubmission(
   validatedFile: ValidatedIaFile,
-  requestedSource: IaReviewAccessSource
+  requestedSource: IaReviewAccessSource,
+  subject: string,
+  academicYear: string
 ): Promise<IaSubmission> {
   await ensureAnonymousSession();
 
   const { data, error: createError } = await supabase.rpc(
     'create_ia_submission',
     {
-      p_subject: 'SEHS',
+      p_subject: subject,
       p_original_filename: validatedFile.filename,
       p_mime_type: validatedFile.mimeType,
       p_file_size_bytes: validatedFile.sizeBytes,
@@ -40,6 +42,12 @@ export async function uploadIaSubmission(
   const submission = normalizeSubmissionResponse(
     data as CreateSubmissionResponse
   );
+
+  const { error: yearError } = await supabase.rpc('set_my_ia_academic_year', {
+    p_submission_id: submission.id,
+    p_year: academicYear,
+  });
+  if (yearError) console.error('Academic year could not be saved', yearError);
 
   try {
     const { data: reservationData, error: reservationError } =
