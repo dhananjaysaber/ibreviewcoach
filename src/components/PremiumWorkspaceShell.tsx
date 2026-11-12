@@ -1,3 +1,4 @@
+import { PolicyLinks } from '../PolicyPages';
 import {
   Bell,
   BookOpenCheck,
@@ -311,6 +312,29 @@ export function PremiumWorkspaceShell({
               <ChevronRight aria-hidden="true" />
             </button>
           ))}
+
+          {!isAdmin && (
+            <button
+              className={
+                activeView === 'dashboard'
+                  ? 'premium-sidebar-link premium-sidebar-link-active premium-sidebar-account-link'
+                  : 'premium-sidebar-link premium-sidebar-account-link'
+              }
+              type="button"
+              onClick={() => runNavigation(onOpenDashboard)}
+            >
+              <span className="premium-sidebar-link-icon">
+                <UserRound aria-hidden="true" />
+              </span>
+
+              <span className="premium-sidebar-link-copy">
+                <strong>My Account</strong>
+                <small>Profile, credits and sign-out</small>
+              </span>
+
+              <ChevronRight aria-hidden="true" />
+            </button>
+          )}
         </nav>
 
         <section className="premium-sidebar-guidance">
@@ -607,6 +631,7 @@ export function PremiumWorkspaceShell({
             Indicative guidance only. Final assessment decisions
             remain with your teacher and the IB assessment process.
           </span>
+          <PolicyLinks />
         </footer>
       </section>
 
