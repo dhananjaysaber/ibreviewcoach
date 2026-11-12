@@ -136,12 +136,12 @@ import './member-experience.css';
 import './premium-workspace.css';
 import './admin-control-centre.css';
 import './share-review.css';
-import './theme-amber.css';
 import { NewLanding } from './landing/NewLanding';
 import { LogoMark, LogoLockup } from './components/LogoMark';
 import './aurora.css';
 import './scholar.css';
 import './premium.css';
+import './theme-amber.css';
 import { TeacherCopyPanel } from './components/TeacherCopyPanel';
 
 type AppStatus =

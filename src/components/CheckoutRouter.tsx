@@ -13,14 +13,17 @@ export function CheckoutRouter(props: Props) {
   const { pack, onClose } = props;
   return (
     <div className="paypal-checkout-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <section className="paypal-checkout-modal" role="dialog" aria-modal="true" aria-labelledby="pay-method-title">
+      <section className="paypal-checkout-modal pay-choose" role="dialog" aria-modal="true" aria-labelledby="pay-method-title">
         <button className="paypal-checkout-close" type="button" onClick={onClose} aria-label="Close"><X aria-hidden="true" /></button>
-        <div className="paypal-checkout-heading">
-          <span className="paypal-checkout-icon"><CreditCard aria-hidden="true" /></span>
-          <div><span>Choose how to pay</span><h2 id="pay-method-title">{pack.display_name}</h2></div>
+        <div className="pay-choose-head">
+          <span className="pay-choose-icon"><CreditCard aria-hidden="true" /></span>
+          <div><small>Choose how to pay</small><h2 id="pay-method-title">{pack.display_name}</h2></div>
         </div>
-        <button className="paypal-primary-action paypal-wide-action" type="button" onClick={() => setMethod('razorpay')}>Pay in rupees: UPI, cards, netbanking (Razorpay)</button>
-        <button className="paypal-secondary-action paypal-wide-action" type="button" onClick={() => setMethod('paypal')}>Pay in US dollars (PayPal) — ${pack.price_usd.toFixed(2)}</button>
+        <div className="pay-choose-options">
+        <button className="pay-opt pay-opt-primary" type="button" onClick={() => setMethod('razorpay')}><strong>Pay in rupees</strong><span>UPI, cards, netbanking · Razorpay</span></button>
+        <button className="pay-opt" type="button" onClick={() => setMethod('paypal')}><strong>Pay in US dollars</strong><span>PayPal · ${pack.price_usd.toFixed(2)}</span></button>
+        </div>
+        <p className="pay-choose-note">Secure checkout. Your card details never touch our servers.</p>
       </section>
     </div>
   );
