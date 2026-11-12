@@ -2,11 +2,13 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from './App';
-import '@fontsource-variable/fraunces/full.css';
-import '@fontsource-variable/inter';
+import { initMotion } from './lib/motion';
+import '@fontsource-variable/plus-jakarta-sans';
+import '@fontsource-variable/source-serif-4';
 import '@fontsource-variable/jetbrains-mono';
 import './index.css';
 
+initMotion();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

@@ -134,6 +134,7 @@ import './member-experience.css';
 import './premium-workspace.css';
 import './admin-control-centre.css';
 import './share-review.css';
+import './theme-amber.css';
 import './aurora.css';
 import './scholar.css';
 import './premium.css';
@@ -3104,6 +3105,27 @@ function LandingPage({
               <span className="chip-good">Variables ✓</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="landing-marquee" aria-hidden="true">
+        <div className="landing-marquee-track">
+          <span>Official 24-mark IB rubric</span>
+          <span>SEHS live now</span>
+          <span>Sciences coming soon</span>
+          <span>Annotated copy</span>
+          <span>Step-by-step fix plan</span>
+          <span>Exemplar IAs</span>
+          <span>Private by design</span>
+          <span>Coaching, never ghostwriting</span>
+          <span>Official 24-mark IB rubric</span>
+          <span>SEHS live now</span>
+          <span>Sciences coming soon</span>
+          <span>Annotated copy</span>
+          <span>Step-by-step fix plan</span>
+          <span>Exemplar IAs</span>
+          <span>Private by design</span>
+          <span>Coaching, never ghostwriting</span>
         </div>
       </section>
 

@@ -1,0 +1,35 @@
+/* IB IA Review theme: navy + amber, Plus Jakarta Sans + Source Serif 4.
+   Loaded last: re-points the design tokens so every page shares one look. */
+:root {
+  --p-night: #090E1A; --p-night-2: #0F172A; --p-panel: #151F38; --p-panel-2: #1A2644;
+  --p-ivory: #FAF8F5; --p-hair: #E9E4DA; --p-text: #0F172A; --p-muted: #5B6478;
+  --p-indigo: #B45309; --p-indigo-dark: #92400E; --p-violet: #F59E0B;
+  --p-gold: #FBBF24; --p-gold-2: #FDE68A;
+  --p-grad: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  --p-gold-grad: linear-gradient(135deg, #FCD34D, #FBBF24 45%, #F59E0B);
+  --p-serif: 'Source Serif 4 Variable', Georgia, serif;
+  --p-sans: 'Plus Jakarta Sans Variable', system-ui, sans-serif;
+  --s-cobalt-soft: #FEF3C7; --pw-surface-soft: #FFFDF9;
+}
+h1, h2 { font-variation-settings: normal; font-weight: 500; }
+.site-header { background: rgba(9,14,26,.82) !important; backdrop-filter: blur(14px) !important; position: sticky; top: 0; z-index: 40; }
+.landing-primary-button, .header-account-button { background: var(--p-gold-grad) !important; color: #0F172A !important; box-shadow: 0 10px 26px -8px rgba(245,158,11,.55) !important; }
+.landing-primary-button svg { color: #0F172A !important; }
+.auth-input-shell:focus-within, .upload-subject-field select:focus { box-shadow: 0 0 0 4px rgba(245,158,11,.18) !important; }
+.premium-reports-page .premium-report-features > span { background: rgba(245,158,11,.12); }
+
+/* Motion: section reveals + marquee (Lenis drives the scroll) */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+.landing-marquee { overflow: hidden; background: #090E1A; border-block: 1px solid rgba(255,255,255,.08); padding: 14px 0; }
+.landing-marquee-track { display: flex; width: max-content; gap: 44px; animation: ibia-marquee 60s linear infinite; }
+.landing-marquee span { color: #FBBF24; font: 600 .78rem var(--p-sans); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+.landing-marquee span::after { content: '·'; margin-left: 44px; color: #64748B; }
+@keyframes ibia-marquee { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .landing-marquee-track { animation: none; }
+}
