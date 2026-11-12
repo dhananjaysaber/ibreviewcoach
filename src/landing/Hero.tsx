@@ -10,8 +10,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenUpload, onOpenExemplar }) => {
   return (
     <section className="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden bg-[#faf8f5] dark:bg-[#090e1a] transition-colors">
       {/* Subtle radial ambient gradients */}
-      <div className="absolute top-0 right-1/4 w-[600px] h-[500px] bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-1/4 w-[700px] h-[600px] bg-[radial-gradient(closest-side,rgba(245,158,11,0.16),rgba(245,158,11,0.05)_60%,transparent)] pointer-events-none" />
+      <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-[radial-gradient(closest-side,rgba(59,130,246,0.07),transparent)] pointer-events-none" />
 
       <div className="w-full px-5 sm:px-10 lg:px-16 2xl:px-24 relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
@@ -76,7 +76,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenUpload, onOpenExemplar }) => {
           <div className="lg:col-span-5">
             <div className="relative mx-auto max-w-md lg:max-w-none">
               {/* Decorative vibrant backdrop halo */}
-              <div className="absolute -inset-1.5 bg-gradient-to-r from-amber-500/30 via-amber-400/20 to-sky-500/25 rounded-3xl blur-2xl opacity-80" />
+              <div className="absolute -inset-1.5 rounded-3xl shadow-[0_0_70px_8px_rgba(245,158,11,0.22)] pointer-events-none" />
 
               <div className="relative bg-white dark:bg-[#121a2d] border border-slate-200 dark:border-slate-700/90 rounded-2xl p-6 sm:p-7 shadow-xl dark:shadow-2xl dark:shadow-black/70 text-slate-900 dark:text-slate-100 backdrop-blur-sm transition-colors">
                 {/* Header of Snapshot Card */}

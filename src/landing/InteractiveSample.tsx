@@ -18,8 +18,8 @@ export const InteractiveSample: React.FC<InteractiveSampleProps> = ({ onOpenUplo
   return (
     <section id="interactive-demo" className="py-20 bg-[#faf8f5] dark:bg-[#090e1a] relative overflow-hidden border-t border-slate-200/80 dark:border-slate-800/80 transition-colors">
       {/* Background glow effects */}
-      <div className="absolute top-1/4 -left-48 w-96 h-96 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 -right-48 w-96 h-96 bg-blue-600/10 dark:bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 -left-48 w-[30rem] h-[30rem] bg-[radial-gradient(closest-side,rgba(245,158,11,0.12),transparent)] pointer-events-none" />
+      <div className="absolute bottom-10 -right-48 w-[30rem] h-[30rem] bg-[radial-gradient(closest-side,rgba(37,99,235,0.10),transparent)] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}
@@ -285,7 +285,7 @@ export const InteractiveSample: React.FC<InteractiveSampleProps> = ({ onOpenUplo
           {/* Right Column: Live Diagnostic & Fix Plan Card */}
           <div className="lg:col-span-5 flex flex-col gap-4">
             <div className="bg-white dark:bg-[#121a2d] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-6 sm:p-7 shadow-xl dark:shadow-2xl dark:shadow-black/50 relative overflow-hidden transition-colors">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/15 dark:bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-40 h-40 bg-[radial-gradient(closest-side,rgba(245,158,11,0.15),transparent)] pointer-events-none" />
 
               {/* Pin identifier badge & score impact */}
               <div className="flex items-center justify-between gap-3 mb-4">
