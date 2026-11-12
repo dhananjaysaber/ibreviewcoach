@@ -1467,6 +1467,17 @@ function App() {
 
       window.dispatchEvent(new CustomEvent('ia-credit-balance-changed'));
 
+      if (submission) {
+        // Resume: the free run only did Research Design. Run the missing criteria,
+        // the annotated copy and the progress plan now that the review is paid.
+        void startPipeline({
+          ...submission,
+          commercial_access: upgradedAccess,
+          access_expires_at: null,
+          retention_policy: 'account',
+        });
+      }
+
       window.dispatchEvent(new CustomEvent('ia-report-history-changed'));
 
       window.scrollTo({
@@ -5667,6 +5678,8 @@ type ProgressPlanView = {
   targets: ProgressTarget[];
 };
 
+type LockedCriterion = { code: string; name: string; maxMarks: number };
+
 type DetailedReviewData = {
   findings: DetailedFinding[];
   criteria: CriterionCoaching[];
@@ -5676,6 +5689,9 @@ type DetailedReviewData = {
   expired: boolean;
   accessExpiresAt: string | null;
   previewCriterion: string | null;
+  lockedCriteria: LockedCriterion[];
+  unlockedMarks: number | null;
+  totalMarks: number | null;
   progressPlanLocked: boolean;
   annotatedPreviewAvailable: boolean;
   canDownload: boolean;
@@ -6170,14 +6186,16 @@ function CompletionWorkspace({
           </div>
           <div className="report-bar-stats">
             <div>
-              <span>Indicative range</span>
+              <span>{isFreeReview ? 'Marks' : 'Indicative range'}</span>
               <strong>
-                {markMapScore
+                {isFreeReview
+                  ? 'Locked'
+                  : markMapScore
                   ? `${markMapScore.mark} / ${markMapScore.maximum}`
                   : completion?.overallMarkRange
                   ? `${completion.overallMarkRange[0]}–${completion.overallMarkRange[1]}`
                   : 'Ready'}
-                {!markMapScore && completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
+                {!isFreeReview && !markMapScore && completion?.maximumMark ? ` / ${completion.maximumMark}` : ''}
               </strong>
             </div>
             <div>
@@ -7297,6 +7315,83 @@ function ReviewResultAccessBanner({
   return null;
 }
 
+function FreeMarksStrip() {
+  return (
+    <div className="free-marks-strip" role="status">
+      <div>
+        <span>Your free review</span>
+        <strong>Research Design feedback</strong>
+      </div>
+      <div className="free-marks-locked">
+        <LockKeyhole aria-hidden="true" />
+        <span>Marks and the other 3 criteria are locked</span>
+      </div>
+    </div>
+  );
+}
+
+function LockedCriteriaCards({
+  locked,
+  startNumber,
+  paymentsEnabled,
+  onUpgrade,
+}: {
+  locked: LockedCriterion[];
+  startNumber: number;
+  paymentsEnabled: boolean;
+  onUpgrade: () => void;
+}) {
+  const items = locked.length
+    ? locked
+    : [
+        { code: 'DataAnalysis', name: 'Data Analysis', maxMarks: 6 },
+        { code: 'Conclusion', name: 'Conclusion', maxMarks: 6 },
+        { code: 'Evaluation', name: 'Evaluation', maxMarks: 6 },
+      ];
+
+  return (
+    <div className="locked-criteria-list">
+      {items.map((item, index) => (
+        <article className="locked-criterion-card" key={item.code || item.name}>
+          <header>
+            <div className="criterion-title-group">
+              <span className="criterion-number">{startNumber + index}</span>
+              <div>
+                <span className="criterion-label">SEHS criterion</span>
+                <h2>{item.name}</h2>
+              </div>
+            </div>
+            <div className="criterion-score-group">
+              <span>Locked</span>
+              <strong>{item.maxMarks} marks</strong>
+            </div>
+          </header>
+
+          <div className="locked-criterion-blur" aria-hidden="true">
+            <span /><span /><span /><span />
+          </div>
+
+          <div className="locked-criterion-cta">
+            <LockKeyhole aria-hidden="true" />
+            <strong>Locked in the free review</strong>
+            <p>
+              {paymentsEnabled
+                ? `Unlock a full review to see your ${item.name} mark, every finding, action and completion check.`
+                : 'This criterion needs full review access.'}
+            </p>
+            {paymentsEnabled && (
+              <button type="button" onClick={onUpgrade}>
+                <CreditCard aria-hidden="true" />
+                Unlock full review
+              </button>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 type LockedReviewSectionProps = {
   title: string;
   description: string;
@@ -7454,6 +7549,8 @@ function DetailedReviewTab({
         </span>
       </div>
 
+      {isFreePreview && <FreeMarksStrip />}
+
       <nav className="criterion-jump-list" aria-label="Jump to criterion">
         {criterionSections.map((section, index) => (
           <a key={section.code} href={`#criterion-${section.code}`}>
@@ -7469,15 +7566,16 @@ function DetailedReviewTab({
             key={section.code}
             section={section}
             number={index + 1}
-            marked={criterionMarks[FEEDBACK_CODE[section.code] ?? '']}
+            marked={isFreePreview ? undefined : criterionMarks[FEEDBACK_CODE[section.code] ?? '']}
+            feedbackOnly={isFreePreview}
           />
         ))}
       </div>
 
       {isFreePreview && (
-        <LockedReviewSection
-          title="Unlock the remaining detailed-review criteria"
-          description="A full review reveals Data Analysis, Conclusion and Evaluation guidance, every finding, specific action, reflective question and completion check."
+        <LockedCriteriaCards
+          locked={data.lockedCriteria}
+          startNumber={criterionSections.length + 1}
           paymentsEnabled={paymentsEnabled}
           onUpgrade={onUpgrade}
         />
@@ -7497,12 +7595,14 @@ type CriterionReviewSectionProps = {
   section: CriterionSection;
   number: number;
   marked?: CriterionMarkView;
+  feedbackOnly?: boolean;
 };
 
 function CriterionReviewSection({
   section,
   number,
   marked,
+  feedbackOnly = false,
 }: CriterionReviewSectionProps) {
   const scoreRange = section.coaching?.indicative_mark_range;
   const maximumMark = section.coaching?.criterion_max_marks;
@@ -7525,19 +7625,21 @@ function CriterionReviewSection({
         </div>
 
         <div className="criterion-score-group">
-          <span>{marked ? 'Marked' : 'Indicative range'}</span>
+          <span>{feedbackOnly ? 'Free review' : marked ? 'Marked' : 'Indicative range'}</span>
           <strong>
-            {marked
+            {feedbackOnly
+              ? 'Feedback only'
+              : marked
               ? `${marked.mark} / ${marked.max}`
               : `${scoreRange ? `${scoreRange[0]}–${scoreRange[1]}` : 'Review ready'}${maximumMark ? ` / ${maximumMark}` : ''}`}
           </strong>
-          {(marked?.confidence || section.coaching?.confidence) && (
+          {!feedbackOnly && (marked?.confidence || section.coaching?.confidence) && (
             <small>{capitalize(marked?.confidence || section.coaching?.confidence || '')} confidence</small>
           )}
         </div>
       </header>
 
-      {(marked?.why || section.coaching?.why_this_range) && (
+      {!feedbackOnly && (marked?.why || section.coaching?.why_this_range) && (
         <div className="criterion-range-rationale">
           <SearchCheck aria-hidden="true" />
           <div>
@@ -7804,7 +7906,7 @@ function AnnotatedIaTab({
 
           <p>
             {isFreePreview
-              ? 'The free preview includes the complete overview and the first 20 lines of the annotated IA. The remaining document and connected comments stay locked.'
+              ? 'The free preview gives Research Design feedback and shows the first 20 lines of your IA. Marks, the other criteria, the rest of the document and connected comments stay locked.'
               : 'The annotated view follows the order of your draft. Highlighted passages and numbered markers connect directly to the relevant criterion finding, specific action and completion check.'}
           </p>
         </div>
@@ -7921,11 +8023,11 @@ function AnnotatedIaTab({
         <div className="annotated-feature-card">
           <SearchCheck aria-hidden="true" />
           <strong>
-            {isFreePreview ? 'Overview included' : 'Exact evidence'}
+            {isFreePreview ? 'Research Design feedback' : 'Exact evidence'}
           </strong>
           <span>
             {isFreePreview
-              ? 'See the full review overview before the document preview begins.'
+              ? 'Research Design feedback is included. Marks and the other three criteria are locked.'
               : 'Highlights are calculated from saved sentence and paragraph locations.'}
           </span>
         </div>
@@ -9173,6 +9275,15 @@ async function loadDetailedReviewData(
     expired,
     accessExpiresAt: asText(data.access_expires_at),
     previewCriterion: asText(data.preview_criterion),
+    lockedCriteria: Array.isArray(data.locked_criteria)
+      ? data.locked_criteria.filter(isRecord).map((item) => ({
+          code: asText(item.code) ?? '',
+          name: asText(item.name) ?? asText(item.code) ?? 'Locked criterion',
+          maxMarks: asNumber(item.max_marks) ?? 6,
+        }))
+      : [],
+    unlockedMarks: asNumber(data.unlocked_marks),
+    totalMarks: asNumber(data.total_marks),
     progressPlanLocked: data.progress_plan_locked === true,
     annotatedPreviewAvailable: data.annotated_preview_available === true,
     canDownload: data.can_download === true,

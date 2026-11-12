@@ -89,3 +89,107 @@ html.lenis, html.lenis body { height: auto; }
   .app-shell-premium .review-process-v7 > .review-process-grid-v7 > .review-process-step-v7 { min-width: 176px !important; width: 176px !important; scroll-snap-align: start; }
   .app-shell-premium main.review-upload-page-v7, .app-shell-premium .premium-workspace-stage { max-width: 100%; min-width: 0; overflow-x: clip; }
 }
+
+/* =====================================================================
+   Signed-in pages (student + admin) share the landing page look:
+   navy shell, amber actions, ivory surfaces, serif headings.
+   ===================================================================== */
+:root, .app-shell, .app-shell-premium {
+  --s-ground: #FAF8F5; --s-ink: #0F172A; --s-line: #E9E4DA; --s-muted: #5B6478;
+  --s-cobalt: #B45309; --s-cobalt-dark: #92400E; --s-cobalt-soft: #FEF3C7; --s-yellow: #FBBF24;
+  --s-head: var(--p-serif);
+  --navy: #0F172A; --navy-soft: #1B2A44; --blue: #B45309; --blue-soft: #FEF3C7;
+  --text: #0F172A; --muted: #5B6478; --border: #E9E4DA; --background: #FAF8F5;
+  --pw-page: #FAF8F5; --pw-surface: #FFFFFF; --pw-surface-soft: #FFFDF9; --pw-text: #0F172A; --pw-text-muted: #5B6478;
+  --pw-blue-600: #B45309; --pw-blue-700: #92400E; --pw-blue-50: #FEF3C7;
+  --pw-violet-600: #B45309; --pw-violet-50: #FEF3C7;
+  --pw-border: #E9E4DA; --pw-border-strong: #D9D2C3;
+}
+html, body { background: #FAF8F5 !important; }
+.app-shell-premium, .app-shell-premium button, .app-shell-premium input, .app-shell-premium select, .app-shell-premium textarea { font-family: var(--p-sans); }
+.app-shell-premium h1, .app-shell-premium h2, .app-shell-premium h3 { font-family: var(--p-serif) !important; font-weight: 600; letter-spacing: -.01em; }
+
+/* Shell: navy bars like the landing navigation */
+.premium-topbar { background: #0B1120 !important; border-bottom: 1px solid rgba(255,255,255,.08) !important; box-shadow: none !important; color: #F8FAFC; }
+.premium-topbar h1, .premium-topbar strong { color: #F8FAFC !important; }
+.premium-topbar-left span, .premium-topbar span.premium-topbar-eyebrow { color: #FBBF24 !important; }
+.premium-topbar button { background: rgba(255,255,255,.07) !important; border-color: rgba(255,255,255,.16) !important; color: #F8FAFC !important; }
+.premium-topbar .premium-account-avatar, .premium-account-avatar { background: var(--p-gold-grad) !important; color: #0F172A !important; box-shadow: none !important; }
+.premium-sidebar { background: linear-gradient(180deg, #0F172A, #090E1A) !important; }
+.premium-sidebar-link-active { box-shadow: inset 3px 0 0 #FBBF24 !important; }
+.premium-sidebar-link-active .premium-sidebar-link-icon { background: #FBBF24 !important; color: #0F172A !important; }
+.premium-mobile-nav { background: #0B1120 !important; border-top: 1px solid rgba(255,255,255,.08) !important; box-shadow: none !important; }
+.premium-mobile-nav button { color: #94A3B8 !important; }
+.premium-mobile-nav .premium-mobile-nav-active { background: var(--p-gold-grad) !important; color: #0F172A !important; }
+
+/* Hero blocks: navy with amber accent */
+.admin-hero, .student-dashboard-hero, .reports-hero, .wg2-hero, .mm-hero, .sx-hero, .detailed-review-panel .review-panel-heading {
+  background: radial-gradient(120% 140% at 100% 0%, rgba(245,158,11,.22), transparent 55%), linear-gradient(135deg, #0F172A, #090E1A) !important;
+  color: #F8FAFC !important; border: 1px solid rgba(251,191,36,.18) !important; box-shadow: 0 18px 50px -24px rgba(9,14,26,.6) !important;
+}
+.admin-hero h1, .admin-hero h2, .admin-hero p, .student-dashboard-hero h1, .student-dashboard-hero h2, .student-dashboard-hero p { color: #F8FAFC !important; }
+.admin-hero p, .student-dashboard-hero p { color: #CBD5E1 !important; }
+.admin-hero .admin-kicker, .student-dashboard-hero [class*="kicker"], .student-dashboard-hero [class*="eyebrow"] { color: #FBBF24 !important; }
+.admin-hero .admin-refresh-button { background: rgba(255,255,255,.08); color: #F8FAFC; border-color: rgba(255,255,255,.2); }
+
+/* Primary actions: amber with navy text, as on the landing page */
+.app-shell-premium .student-dashboard-tab-active, .app-shell-premium .student-dashboard-next-card > button,
+.app-shell-premium .main-content .upload-card > .primary-button, .app-shell-premium .review-upload-primary-v7,
+.sx.cmp .sx-btn-primary, .sx.cmp button.sx-btn:not(.sx-btn-ghost), .sx-btn-primary,
+.paypal-primary-action, .member-header-nav .member-nav-active, .review-choice-buy-button, .member-access-action,
+.member-reports-primary, .review-access-result > button, .review-locked-content > button, .global-review-status-inner > button,
+.admin-primary-button, .annotation-share-create-button, .annotation-share-url-row button, .wg2-footer button:last-child,
+.review-choice-popular, .primary-button {
+  background: var(--p-gold-grad) !important; color: #0F172A !important; border-color: transparent !important;
+  box-shadow: 0 10px 26px -10px rgba(245,158,11,.55) !important;
+}
+.paypal-primary-action:hover, .admin-primary-button:hover, .primary-button:hover { filter: brightness(1.05); background: var(--p-gold-grad) !important; }
+.premium-review-strip > div, .review-choice-mark, .member-profile-avatar, .member-account-welcome-mark, .shared-review-gateway-mark, .wg2-audit { background: var(--p-gold-grad) !important; color: #0F172A !important; }
+.paypal-secondary-action { color: #92400E; border-color: #E9E4DA; background: #fff; }
+
+/* Cards and tabs */
+.admin-tab-active, .student-dashboard-tab-active { color: #0F172A; }
+.admin-tab-active { background: #FEF3C7 !important; border-color: rgba(245,158,11,.4) !important; color: #92400E !important; }
+.premium-card, .admin-panel, .review-upload-card-v7, .review-process-card-v7 { border-color: #E9E4DA !important; }
+
+/* Checkout modals: navy, for every step (choose, pay, success) */
+.paypal-checkout-modal { background: linear-gradient(160deg, #0F172A 0%, #090E1A 100%) !important; border: 1px solid rgba(251,191,36,.25) !important; color: #F8FAFC; box-shadow: 0 30px 90px rgba(0,0,0,.55) !important; }
+.paypal-checkout-modal .paypal-checkout-close { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); color: #CBD5E1; }
+.paypal-checkout-icon { background: var(--p-gold-grad) !important; color: #0F172A !important; }
+.paypal-checkout-heading span { color: #FBBF24 !important; }
+.paypal-checkout-heading h2 { color: #F8FAFC !important; font-family: var(--p-serif); font-weight: 600; }
+.paypal-order-summary > div, .paypal-order-summary > div:nth-child(n) { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.12) !important; }
+.paypal-order-summary span { color: #94A3B8 !important; }
+.paypal-order-summary strong { color: #F8FAFC !important; }
+.paypal-checkout-status { background: rgba(255,255,255,.06) !important; color: #E2E8F0 !important; }
+.paypal-security-note, .paypal-integrity-note { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.12) !important; color: #CBD5E1 !important; }
+.paypal-security-note svg, .paypal-integrity-note svg { color: #FBBF24 !important; }
+.paypal-checkout-modal .paypal-secondary-action { background: rgba(255,255,255,.06); color: #F8FAFC; border-color: rgba(255,255,255,.18); }
+.paypal-result-success { background: rgba(16,185,129,.12) !important; border-color: rgba(16,185,129,.35) !important; color: #6EE7B7 !important; }
+.paypal-result-error { background: rgba(239,68,68,.12) !important; border-color: rgba(239,68,68,.35) !important; color: #FCA5A5 !important; }
+.paypal-result-pending, .paypal-result-cancelled { background: rgba(251,191,36,.1) !important; border-color: rgba(251,191,36,.35) !important; color: #FDE68A !important; }
+.paypal-result-pending span, .paypal-result-cancelled span { color: #FDE68A !important; }
+
+/* ===== Strict free review: marks strip + locked criteria ===== */
+.free-marks-strip{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 18px;padding:16px 20px;border-radius:16px;border:1px solid rgba(230,168,23,.45);background:linear-gradient(135deg,#0f1d3a,#172a52);color:#fff}
+.free-marks-strip span{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.free-marks-strip strong{display:block;margin-top:4px;font-family:var(--p-serif,Georgia,serif);font-size:26px;color:#f3c04a}
+.free-marks-locked{display:flex;align-items:center;gap:8px}
+.free-marks-locked svg{width:18px;height:18px;color:#f3c04a}
+.free-marks-locked span{font-size:13px;letter-spacing:0;text-transform:none;color:#fff;font-weight:700}
+.locked-criteria-list{display:grid;gap:16px;margin-top:18px}
+.locked-criterion-card{position:relative;overflow:hidden;border:1px solid rgba(15,29,58,.14);border-radius:18px;background:#fffdf8;padding:20px}
+.locked-criterion-card header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.locked-criterion-card .criterion-score-group strong{color:#8a6a1a}
+.locked-criterion-blur{display:grid;gap:10px;margin-top:16px;filter:blur(6px);opacity:.55;user-select:none;pointer-events:none}
+.locked-criterion-blur span{display:block;height:14px;border-radius:7px;background:linear-gradient(90deg,#d8cfbb,#eee6d3)}
+.locked-criterion-blur span:nth-child(2){width:86%}
+.locked-criterion-blur span:nth-child(3){width:94%}
+.locked-criterion-blur span:nth-child(4){width:62%}
+.locked-criterion-cta{position:absolute;left:0;right:0;bottom:0;top:72px;display:grid;place-content:center;justify-items:center;gap:8px;padding:16px;text-align:center;background:linear-gradient(180deg,rgba(255,253,248,.2),rgba(255,253,248,.92))}
+.locked-criterion-cta svg{width:22px;height:22px;color:#0f1d3a}
+.locked-criterion-cta strong{color:#0f1d3a;font-family:var(--p-serif,Georgia,serif);font-size:18px}
+.locked-criterion-cta p{margin:0;max-width:440px;font-size:13px;color:#5a6577}
+.locked-criterion-cta button{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:10px 18px;font-weight:800;cursor:pointer;color:#0f1d3a;background:linear-gradient(180deg,#f3c04a,#e6a817)}
+.locked-criterion-cta button svg{width:16px;height:16px;color:#0f1d3a}
+@media (max-width:640px){.locked-criterion-card{padding:16px;min-height:230px}.free-marks-strip strong{font-size:22px}}

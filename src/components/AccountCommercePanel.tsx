@@ -702,7 +702,7 @@ export function AccountCommercePanel({
 
                       <div className="member-purchase-quick-details">
                         <PurchaseDetail
-                          label="PayPal order"
+                          label={`${providerName(purchase)} order`}
                           value={
                             purchase.paypal_order_id ??
                             'Not available'
@@ -754,7 +754,7 @@ export function AccountCommercePanel({
                       )}
 
                       <div className="account-purchase-actions">
-                        {isPending && (
+                        {isPending && providerName(purchase) === 'PayPal' && (
                           <button
                             className="account-commerce-primary-button"
                             type="button"
@@ -915,7 +915,7 @@ function InvoiceModal({
         </button>
 
         <div className="account-invoice-brand">
-          <span>PE Freak</span>
+          <span>IB IA Review</span>
           <strong>SEHS IA Review Coach</strong>
         </div>
 
@@ -960,7 +960,7 @@ function InvoiceModal({
             label="Merchant"
             value={
               purchase.merchant_name ||
-              'PE Freak'
+              'IB IA Review'
             }
           />
         </div>
@@ -1001,11 +1001,11 @@ function InvoiceModal({
 
           <div>
             <span>Payment method</span>
-            <strong>PayPal</strong>
+            <strong>{providerName(purchase)}</strong>
           </div>
 
           <div>
-            <span>PayPal order</span>
+            <span>{providerName(purchase)} order</span>
             <strong className="account-mono">
               {purchase.paypal_order_id ??
                 'Not available'}
@@ -1013,7 +1013,7 @@ function InvoiceModal({
           </div>
 
           <div>
-            <span>PayPal transaction</span>
+            <span>{providerName(purchase)} payment</span>
             <strong className="account-mono">
               {purchase.paypal_capture_id ??
                 'Not available'}
@@ -1196,7 +1196,7 @@ function normalizePurchase(
       normalizeText(
         value.merchant_name
       ) ||
-      'PE Freak',
+      'IB IA Review',
     customer_email:
       normalizeText(
         value.customer_email
@@ -1406,7 +1406,7 @@ function buildPrintableInvoiceHtml(
       <div>
         <strong>${escapeHtml(
           purchase.merchant_name ||
-          'PE Freak'
+          'IB IA Review'
         )}</strong>
         <span>SEHS IA Review Coach</span>
       </div>
@@ -1439,7 +1439,7 @@ function buildPrintableInvoiceHtml(
       </div>
       <div>
         <span>Payment method</span>
-        <strong>PayPal</strong>
+        <strong>${providerName(purchase)}</strong>
       </div>
     </section>
 
@@ -1466,14 +1466,14 @@ function buildPrintableInvoiceHtml(
 
     <section class="payment">
       <div>
-        <span>PayPal order</span>
+        <span>${providerName(purchase)} order</span>
         <strong>${escapeHtml(
           purchase.paypal_order_id ??
           'Not available'
         )}</strong>
       </div>
       <div>
-        <span>PayPal transaction</span>
+        <span>${providerName(purchase)} payment</span>
         <strong>${escapeHtml(
           purchase.paypal_capture_id ??
           'Not available'
@@ -1640,6 +1640,10 @@ function normalizeText(
       ? value.trim()
       : ''
   );
+}
+
+function providerName(purchase: { paypal_order_id: string | null }): 'Razorpay' | 'PayPal' {
+  return purchase.paypal_order_id?.startsWith('order_') ? 'Razorpay' : 'PayPal';
 }
 
 function escapeHtml(
