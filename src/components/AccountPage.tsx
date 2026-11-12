@@ -332,10 +332,8 @@ export function AccountPage({
 
   const greeting = useMemo(
     () =>
-      getGreeting(
-        session?.user.email ?? null
-      ),
-    [session?.user.email]
+      getGreeting(),
+    []
   );
 
   const nextAction = useMemo(
@@ -522,7 +520,7 @@ export function AccountPage({
           <TabPageHeader
             eyebrow="Billing & receipts"
             title="Purchases and invoices"
-            description="Your PayPal payment records, invoices and printable receipts are kept together in one place."
+            description="Your payment records, invoices and printable receipts are kept together in one place."
           />
 
           <div className="student-dashboard-commerce student-dashboard-commerce-billing">
@@ -1184,7 +1182,7 @@ function getNextActionPresentation(
       title:
         'Your free limited review is available',
       description:
-        'Preview the first detailed-review criterion and annotated IA overview before choosing full access.',
+        'Get Research Design feedback and a preview of the annotated IA before choosing full access.',
       actionLabel:
         'Review an IA',
       action: 'review',
@@ -1361,9 +1359,7 @@ function normalizeCommerceSnapshot(
   };
 }
 
-function getGreeting(
-  email: string | null
-): {
+function getGreeting(): {
   title: string;
   subtitle: string;
 } {
@@ -1377,65 +1373,12 @@ function getGreeting(
       ? 'Good afternoon'
       : 'Good evening';
 
-  const displayName =
-    getDisplayNameFromEmail(
-      email
-    );
-
   return {
-    title: displayName
-      ? `${period}, ${displayName}`
-      : period,
+    title: period,
 
     subtitle:
       'Review your progress, manage access and keep every IA version organised in one focused workspace.',
   };
-}
-
-function getDisplayNameFromEmail(
-  email: string | null
-): string {
-  const localPart =
-    email?.split('@')[0]?.trim() ??
-    '';
-
-  if (!localPart) {
-    return '';
-  }
-
-  const chunks =
-    localPart
-      .split(/[._-]+/u)
-      .map((chunk) =>
-        chunk
-          .replace(
-            /\d+$/u,
-            ''
-          )
-          .trim()
-      )
-      .filter(Boolean);
-
-  if (chunks.length === 0) {
-    return '';
-  }
-
-  const first =
-    chunks[0]
-      .replace(
-        /mail$/iu,
-        ''
-      )
-      .trim();
-
-  const name =
-    first || chunks[0];
-
-  return `${name
-    .charAt(0)
-    .toUpperCase()}${name
-    .slice(1)
-    .toLowerCase()}`;
 }
 
 function deriveMarkSummary(

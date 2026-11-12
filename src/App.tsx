@@ -3561,7 +3561,7 @@ function LandingPage({
 
           <FaqItem
             question="Can a free user download the report?"
-            answer="No. The free review is a limited preview: the first detailed-review criterion and the overview plus first 20 lines of the annotated IA. The progress plan, complete review, permanent history, printing and downloads require a review credit."
+            answer="No. The free review is a limited preview: Research Design feedback and the first 20 lines of the annotated IA. Marks, the other three criteria, the progress plan, permanent history, printing and downloads require a review credit."
           />
         </div>
       </section>
@@ -3724,11 +3724,11 @@ function PricingSection({
           <ul>
             <li>
               <Check aria-hidden="true" />
-              First detailed-review criterion
+              Research Design feedback (no marks)
             </li>
             <li>
               <Check aria-hidden="true" />
-              Annotated IA overview + 20-line preview
+              Annotated IA preview (first 20 lines)
             </li>
             <li className="locked">
               <LockKeyhole aria-hidden="true" />
@@ -3947,8 +3947,9 @@ function MemberReviewAccessGate({
             <LockKeyhole aria-hidden="true" />
             <strong>Free limited preview</strong>
             <span>
-              First detailed-review criterion, annotated overview and the
-              opening 20 lines. Progress plan and downloads stay locked.
+              Research Design feedback and the opening 20 lines of the
+              annotated IA. Marks, other criteria, progress plan and
+              downloads stay locked.
             </span>
             <small>
               {freeReviewAvailable === false
@@ -7261,8 +7262,8 @@ function ReviewResultAccessBanner({
           <span>Free limited review</span>
           <strong>You are viewing a preview of the complete IA review</strong>
           <p>
-            The first detailed-review criterion and the opening 20 lines of the
-            annotated IA are available. The complete review, progress plan,
+            Research Design feedback and the opening 20 lines of the annotated
+            IA are available. Marks, the other criteria, the progress plan,
             downloads and permanent history require full review access.
             {!paymentsEnabled
               ? ' New paid review-credit purchases are temporarily unavailable.'
