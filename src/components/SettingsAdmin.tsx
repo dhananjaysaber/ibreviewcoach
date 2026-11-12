@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { driveEmbedUrl, toExemplar, type Exemplar } from '../lib/exemplars';
-import { subjectLabel, useSubjects } from '../lib/subjects';
+import { subjectLabel, useAcademicYears, useSubjects } from '../lib/subjects';
 
 type Draft = { id: string; title: string; subject: string; fix_url: string; annotated_url: string; sort_order: number; is_active: boolean; fix_file: File | null; annotated_file: File | null; fix_path: string | null; annotated_path: string | null; isNew: boolean };
 const blank = (subject: string): Draft => ({ id: crypto.randomUUID(), title: '', subject, fix_url: '', annotated_url: '', sort_order: 100, is_active: true, fix_file: null, annotated_file: null, fix_path: null, annotated_path: null, isNew: true });
 
 export function SettingsAdmin() {
   const { subjects, reload } = useSubjects(false);
+  const { years, reload: reloadYears } = useAcademicYears(false);
+  const [newYear, setNewYear] = useState('');
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [newName, setNewName] = useState('');
   const [newLabel, setNewLabel] = useState('');
@@ -34,6 +36,19 @@ export function SettingsAdmin() {
   async function patchSubject(name: string, patch: { is_active?: boolean; label?: string }) {
     const { error } = await supabase.from('ia_subjects').update(patch).eq('name', name);
     say(!error, error ? 'Could not update the subject.' : 'Subject updated.'); void reload();
+  }
+
+  async function addYear() {
+    const label = newYear.trim();
+    if (!label) return say(false, 'Enter an academic year, for example 2027–28.');
+    const top = Math.max(0, ...years.map((y) => y.sort_order));
+    const { error } = await supabase.from('ia_academic_years').insert({ label, sort_order: top + 10 });
+    if (error) return say(false, error.code === '23505' ? 'That academic year already exists.' : 'Could not add the academic year.');
+    setNewYear(''); say(true, 'Academic year added.'); void reloadYears();
+  }
+  async function toggleYear(label: string, is_active: boolean) {
+    const { error } = await supabase.from('ia_academic_years').update({ is_active }).eq('label', label);
+    say(!error, error ? 'Could not update the academic year.' : 'Academic year updated.'); void reloadYears();
   }
 
   async function upload(id: string, kind: 'fix' | 'annotated', file: File) {
@@ -91,6 +106,24 @@ export function SettingsAdmin() {
           <input placeholder="Subject, e.g. Biology" value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={40} />
           <input placeholder="Pill label, e.g. Biology IA" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} maxLength={60} />
           <button type="button" className="set-primary" onClick={() => void addSubject()}><Plus aria-hidden="true" /> Add subject</button>
+        </div>
+      </section>
+
+      <section className="set-card">
+        <h3>Academic years</h3>
+        <p>Years appear in the upload dropdown and as the filter and pill in My IA Reports. The newest year is pre-selected at upload. Switching one off hides it from the upload dropdown; reports keep their year.</p>
+        <ul className="set-list">
+          {years.map((y) => (
+            <li key={y.label}>
+              <em className="premium-year-pill">{y.label}</em>
+              <span>{y.is_active ? 'Active' : 'Switched off'}</span>
+              <button type="button" onClick={() => void toggleYear(y.label, !y.is_active)}>{y.is_active ? 'Switch off' : 'Switch on'}</button>
+            </li>
+          ))}
+        </ul>
+        <div className="set-row">
+          <input placeholder="e.g. 2027–28" value={newYear} onChange={(e) => setNewYear(e.target.value)} maxLength={20} />
+          <button type="button" className="set-primary" onClick={() => void addYear()}><Plus aria-hidden="true" /> Add academic year</button>
         </div>
       </section>
 

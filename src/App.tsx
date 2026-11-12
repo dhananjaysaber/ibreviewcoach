@@ -109,7 +109,7 @@ import {
 } from './lib/pipeline';
 
 import { uploadIaSubmission } from './lib/uploadSubmission';
-import { subjectLabel, useSubjects } from './lib/subjects';
+import { loadReportYears, subjectLabel, useAcademicYears, useSubjects } from './lib/subjects';
 import { ExemplarsPage } from './components/ExemplarsPage';
 
 import { DOCX_MIME_TYPE, PDF_MIME_TYPE } from './types/ia';
@@ -357,6 +357,7 @@ function App() {
     useState<ReviewAccessSummary | null>(null);
 
   const [reviewSubject, setReviewSubject] = useState('');
+  const [reviewYear, setReviewYear] = useState('');
   const [reviewAccessSource, setReviewAccessSource] =
     useState<IaReviewAccessSource | null>(() => loadSavedReviewAccessSource());
 
@@ -889,8 +890,8 @@ function App() {
       return;
     }
 
-    if (!reviewSubject) {
-      setMessage('Please choose the subject of this IA.');
+    if (!reviewSubject || !reviewYear) {
+      setMessage('Please choose the subject and academic year of this IA.');
       setErrorContext('file');
       setStatus('error');
       return;
@@ -904,7 +905,8 @@ function App() {
       const createdSubmission = await uploadIaSubmission(
         selectedFile,
         reviewAccessSource,
-        reviewSubject
+        reviewSubject,
+        reviewYear
       );
 
       setSubmission(createdSubmission);
@@ -2008,6 +2010,8 @@ function App() {
           onRetrySession={retrySecureSession}
           subject={reviewSubject}
           onSubjectChange={setReviewSubject}
+          year={reviewYear}
+          onYearChange={setReviewYear}
         />
       ) : (
         <AccountPage
@@ -2088,6 +2092,8 @@ function App() {
         onRetrySession={retrySecureSession}
         subject={reviewSubject}
         onSubjectChange={setReviewSubject}
+        year={reviewYear}
+        onYearChange={setReviewYear}
       />
     );
 
@@ -4239,6 +4245,11 @@ function ReportsDashboard({
   const [searchQuery, setSearchQuery] = useState('');
 
   const { subjects: subjectList } = useSubjects(false);
+  const { years: yearList } = useAcademicYears(false);
+  const [reportYears, setReportYears] = useState<Record<string, string>>({});
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterYear, setFilterYear] = useState('');
+  const [renameYear, setRenameYear] = useState('');
   const [originals, setOriginals] = useState<
     Record<string, { bucket: string; path: string }>
   >({});
@@ -4273,36 +4284,64 @@ function ReportsDashboard({
     });
     setDeleteBusy(false);
     if (error) {
-      setDeleteError('Could not delete this IA. Please try again.');
+      setDeleteError('Could not delete the original. Please try again.');
       return;
     }
-    setReports((rows) =>
-      rows.filter((r) => r.submission_id !== report.submission_id)
-    );
+    setOriginals((m) => {
+      const copy = { ...m };
+      delete copy[report.submission_id];
+      return copy;
+    });
     setConfirmDeleteId(null);
   }
 
   async function commitRename(report: ReportHistoryRow) {
     const next = renameValue.trim();
-    if (!next || next === report.original_filename) {
+    const nameChanged = Boolean(next) && next !== report.original_filename;
+    const yearChanged =
+      renameYear !== (reportYears[report.submission_id] ?? '');
+    if (!nameChanged && !yearChanged) {
       setRenamingId(null);
       return;
     }
     setRenameBusy(true);
     setRenameError('');
-    const { data, error } = await supabase.rpc('rename_my_ia_report', {
-      p_submission_id: report.submission_id,
-      p_filename: next,
-    });
-    setRenameBusy(false);
-    if (error) {
-      setRenameError('Could not rename. Please try again.');
-      return;
+    let savedName = report.original_filename;
+    if (nameChanged) {
+      const { data, error } = await supabase.rpc('rename_my_ia_report', {
+        p_submission_id: report.submission_id,
+        p_filename: next,
+      });
+      if (error) {
+        setRenameBusy(false);
+        setRenameError('Could not rename. Please try again.');
+        return;
+      }
+      savedName = typeof data === 'string' && data ? data : next;
     }
-    const saved = typeof data === 'string' && data ? data : next;
+    if (yearChanged) {
+      const { error } = await supabase.rpc('set_my_ia_academic_year', {
+        p_submission_id: report.submission_id,
+        p_year: renameYear,
+      });
+      if (error) {
+        setRenameBusy(false);
+        setRenameError('Could not save the academic year. Please try again.');
+        return;
+      }
+      setReportYears((m) => {
+        const copy = { ...m };
+        if (renameYear) copy[report.submission_id] = renameYear;
+        else delete copy[report.submission_id];
+        return copy;
+      });
+    }
+    setRenameBusy(false);
     setReports((rows) =>
       rows.map((r) =>
-        r.submission_id === report.submission_id ? { ...r, original_filename: saved } : r
+        r.submission_id === report.submission_id
+          ? { ...r, original_filename: savedName }
+          : r
       )
     );
     setRenamingId(null);
@@ -4366,6 +4405,9 @@ function ReportsDashboard({
           if (active) setOriginals(map);
         }
 
+        const yearMap = await loadReportYears();
+        if (active) setReportYears(yearMap);
+
         setLoadState('ready');
       } catch (error) {
         console.error('Saved IA reports could not be loaded', error);
@@ -4391,21 +4433,30 @@ function ReportsDashboard({
   const filteredReports = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
+    const base = reports.filter(
+      (report) =>
+        (!filterSubject || report.subject === filterSubject) &&
+        (!filterYear ||
+          (filterYear === '__none'
+            ? !reportYears[report.submission_id]
+            : reportYears[report.submission_id] === filterYear))
+    );
+
     const matching = query
-      ? reports.filter((report) => {
+      ? base.filter((report) => {
           const searchable = [
             report.original_filename,
             report.project_title,
             report.research_question ?? '',
             report.subject,
-            `Version ${report.version_number}`,
+            reportYears[report.submission_id] ?? '',
           ]
             .join(' ')
             .toLowerCase();
 
           return searchable.includes(query);
         })
-      : reports.slice();
+      : base.slice();
 
     return matching.sort((left, right) => {
       if (sortMode === 'filename') {
@@ -4416,7 +4467,7 @@ function ReportsDashboard({
 
       return sortMode === 'oldest' ? -difference : difference;
     });
-  }, [reports, searchQuery, sortMode]);
+  }, [reports, searchQuery, sortMode, filterSubject, filterYear, reportYears]);
 
   const projectCount = useMemo(
     () => new Set(reports.map((report) => report.project_id)).size,
@@ -4494,6 +4545,37 @@ function ReportsDashboard({
             aria-label="Search saved IA reports"
           />
         </label>
+
+        <div className="premium-report-sort">
+          <span>Subject</span>
+          <select
+            value={filterSubject}
+            onChange={(e) => setFilterSubject(e.target.value)}
+            aria-label="Filter by subject"
+          >
+            <option value="">All</option>
+            {subjectList.map((s) => (
+              <option key={s.name} value={s.name}>{s.label}</option>
+            ))}
+          </select>
+          <ChevronDown aria-hidden="true" />
+        </div>
+
+        <div className="premium-report-sort">
+          <span>Year</span>
+          <select
+            value={filterYear}
+            onChange={(e) => setFilterYear(e.target.value)}
+            aria-label="Filter by academic year"
+          >
+            <option value="">All</option>
+            {yearList.map((y) => (
+              <option key={y.label} value={y.label}>{y.label}</option>
+            ))}
+            <option value="__none">No year</option>
+          </select>
+          <ChevronDown aria-hidden="true" />
+        </div>
 
         <div className="premium-report-sort">
           <span>Sort</span>
@@ -4606,6 +4688,18 @@ function ReportsDashboard({
                           if (e.key === 'Escape') setRenamingId(null);
                         }}
                       />
+                      <select
+                        className="premium-rename-year"
+                        value={renameYear}
+                        disabled={renameBusy}
+                        aria-label="Academic year"
+                        onChange={(e) => setRenameYear(e.target.value)}
+                      >
+                        <option value="">No academic year</option>
+                        {yearList.map((y) => (
+                          <option key={y.label} value={y.label}>{y.label}</option>
+                        ))}
+                      </select>
                       <div className="premium-rename-actions">
                         <button type="button" disabled={renameBusy} onClick={() => void commitRename(report)}>
                           {renameBusy ? 'Saving…' : 'Save name'}
@@ -4637,6 +4731,14 @@ function ReportsDashboard({
                       <em className="premium-subject-pill">
                         {subjectLabel(subjectList, report.subject)}
                       </em>
+                      {reportYears[report.submission_id] && (
+                        <em className="premium-year-pill">
+                          {reportYears[report.submission_id]}
+                        </em>
+                      )}
+                      {!originals[report.submission_id] && (
+                        <em className="premium-orig-gone">Original deleted</em>
+                      )}
                       {report.research_question
                         ? ` ${report.research_question}`
                         : ''}
@@ -4699,16 +4801,18 @@ function ReportsDashboard({
                     onClick={() => {
                       setRenameError('');
                       setRenameValue(report.original_filename);
+                      setRenameYear(reportYears[report.submission_id] ?? '');
                       setRenamingId(report.submission_id);
                     }}
                   >
                     <Pencil aria-hidden="true" />
                   </button>
+                  {originals[report.submission_id] && (
                   <button
                     className="premium-report-rename premium-report-delete"
                     type="button"
-                    title="Delete this IA"
-                    aria-label={`Delete ${report.original_filename}`}
+                    title="Delete original IA"
+                    aria-label={`Delete original IA ${report.original_filename}`}
                     onClick={() => {
                       setDeleteError('');
                       setConfirmDeleteId(report.submission_id);
@@ -4716,6 +4820,7 @@ function ReportsDashboard({
                   >
                     <Trash2 aria-hidden="true" />
                   </button>
+                  )}
                   <button
                     className="premium-report-open"
                     type="button"
@@ -4734,10 +4839,10 @@ function ReportsDashboard({
                 {confirmDeleteId === report.submission_id && (
                   <div className="premium-delete-confirm" role="alertdialog">
                     <p>
-                      <strong>Delete this IA permanently?</strong> The original
-                      file, saved annotated copies, review, marks and plan for
-                      “{report.original_filename}” will be removed and cannot be
-                      recovered. Credits already used are not refunded.
+                      <strong>Delete the original IA file?</strong> Only the
+                      uploaded PDF or DOCX of “{report.original_filename}” is
+                      removed to free up space. Your review, marks, fix plan and
+                      annotated copies stay safe and keep working.
                     </p>
                     <div>
                       <button
@@ -4746,7 +4851,7 @@ function ReportsDashboard({
                         disabled={deleteBusy}
                         onClick={() => void confirmDelete(report)}
                       >
-                        {deleteBusy ? 'Deleting…' : 'Yes, delete everything'}
+                        {deleteBusy ? 'Deleting…' : 'Yes, delete the original'}
                       </button>
                       <button
                         type="button"
@@ -4783,6 +4888,8 @@ type UploadWorkspaceProps = {
   onRetrySession: () => void;
   subject: string;
   onSubjectChange: (value: string) => void;
+  year: string;
+  onYearChange: (value: string) => void;
 };
 
 function UploadWorkspace({
@@ -4798,8 +4905,15 @@ function UploadWorkspace({
   onRetrySession,
   subject,
   onSubjectChange,
+  year,
+  onYearChange,
 }: UploadWorkspaceProps) {
   const { subjects } = useSubjects(true);
+  const { years: yearOptions } = useAcademicYears(true);
+
+  useEffect(() => {
+    if (!year && yearOptions.length > 0) onYearChange(yearOptions[0].label);
+  }, [year, yearOptions, onYearChange]);
 
   useEffect(() => {
     if (!subject && subjects.length === 1) onSubjectChange(subjects[0].name);
@@ -4915,6 +5029,21 @@ function UploadWorkspace({
             </select>
           </label>
 
+          <label className="upload-subject-field">
+            <span>Academic year <b aria-hidden="true">*</b></span>
+            <select
+              value={year}
+              onChange={(e) => onYearChange(e.target.value)}
+              disabled={status === 'uploading'}
+              required
+            >
+              <option value="">Choose the academic year</option>
+              {yearOptions.map((y) => (
+                <option key={y.label} value={y.label}>{y.label}</option>
+              ))}
+            </select>
+          </label>
+
           <input
             ref={fileInputRef}
             className="visually-hidden"
@@ -4997,7 +5126,7 @@ function UploadWorkspace({
             className="primary-button review-upload-primary-v7"
             type="button"
             onClick={onUpload}
-            disabled={!selectedFile || !subject || status === 'uploading'}
+            disabled={!selectedFile || !subject || !year || status === 'uploading'}
           >
             {status === 'uploading' ? (
               <>
@@ -5086,7 +5215,7 @@ function PrivacyCard() {
           },
           {
             title: 'Original file kept for 6 months',
-            copy: 'Your saved report keeps its original PDF or DOCX privately for 6 months so you can download it again. You can delete an IA and everything linked to it at any time from My IA Reports.',
+            copy: 'Your saved report keeps its original PDF or DOCX privately for 6 months so you can download it again. You can delete just the original file at any time from My IA Reports; your review and annotated copies stay.',
           },
           {
             title: 'Secure account connection',

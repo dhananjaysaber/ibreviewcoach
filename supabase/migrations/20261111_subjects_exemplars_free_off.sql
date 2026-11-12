@@ -4,3 +4,4 @@
 -- true for admins or holders of credits; reserve_my_ia_review_access_strict rejects the free_review source for students.
 -- 2026-11-12: keep_originals_180_days (trigger keeps saved originals 180 days; get_my_ia_originals RPC);
 -- edge function delete-ia-report removes a report's files and rows for its owner.
+-- 2026-11-12: academic_years (ia_academic_years, ia_submissions.academic_year, set_my_ia_academic_year, get_my_ia_years); delete-ia-report now deletes only the original file.

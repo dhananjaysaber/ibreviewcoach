@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useState} from 'react';
+import {loadReportYears} from '../lib/subjects';
 import {supabase} from '../lib/supabase';
 import {buildAnnotationComparisonHtml,buildTemplateAnalysisHtml,compareSides,type Comparison} from '../lib/compareIas';
 import type {WorkshopCriterion,WorkshopFinding} from '../lib/sectionMap';
@@ -28,6 +29,8 @@ function Preview({html,title}:{html:string;title:string}){
 
 export function CompareIas(){
  const [rows,setRows]=useState<HistoryRow[]|null>(null);
+ const [yearOf,setYearOf]=useState<Record<string,string>>({});
+ useEffect(()=>{void loadReportYears().then(setYearOf)},[]);
  const [error,setError]=useState('');
  const [picked,setPicked]=useState<string[]>([]);
  const [busy,setBusy]=useState(false);
@@ -71,7 +74,7 @@ export function CompareIas(){
     <h4><i>1</i>Select two reports</h4>
     {rows===null?<p className="sx-muted">Loading your reports…</p>
      :rows.length<2?<p className="sx-muted">You need at least two completed reports to compare. Complete another review and it will appear here.</p>
-     :<ul className="cmp-list">{rows.map(r=>{const n=picked.indexOf(r.submission_id);const rank=ordered.findIndex(o=>o.submission_id===r.submission_id);return <li key={r.submission_id}><label className={n>=0?'cmp-on':''}><input type="checkbox" checked={n>=0} onChange={()=>toggle(r.submission_id)}/><span className="cmp-main"><strong>{r.original_filename}</strong><small>{r.project_title} · uploaded {when(r.uploaded_at||r.report_generated_at)}{r.word_count?' · '+r.word_count.toLocaleString()+' words':''}</small></span>{n>=0&&<b className="cmp-badge">{rank===0&&ordered.length===2?'First (earlier)':ordered.length===2?'Second (later)':'Selected'}</b>}</label></li>})}</ul>}
+     :<ul className="cmp-list">{rows.map(r=>{const n=picked.indexOf(r.submission_id);const rank=ordered.findIndex(o=>o.submission_id===r.submission_id);return <li key={r.submission_id}><label className={n>=0?'cmp-on':''}><input type="checkbox" checked={n>=0} onChange={()=>toggle(r.submission_id)}/><span className="cmp-main"><strong>{r.original_filename}</strong><small>{r.project_title}{yearOf[r.submission_id]?<em className="premium-year-pill" style={{marginLeft:6}}>{yearOf[r.submission_id]}</em>:null} · uploaded {when(r.uploaded_at||r.report_generated_at)}{r.word_count?' · '+r.word_count.toLocaleString()+' words':''}</small></span>{n>=0&&<b className="cmp-badge">{rank===0&&ordered.length===2?'First (earlier)':ordered.length===2?'Second (later)':'Selected'}</b>}</label></li>})}</ul>}
     <div className="cmp-actions"><button className="sx-btn sx-btn-primary" type="button" onClick={()=>void run()} disabled={ordered.length!==2||busy}>{busy?'Preparing comparison…':ordered.length===2?'Compare these two':'Select two reports'}</button><small className="sx-muted">Order matters: the first is treated as the earlier IA.</small></div>
     {error&&<p role="alert" className="sx-error">{error}</p>}
    </div>

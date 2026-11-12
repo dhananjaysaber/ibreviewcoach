@@ -434,3 +434,7 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .premium-delete-confirm button.danger { color: #fff; border-color: transparent; background: #c45749; }
 .premium-delete-confirm em { font-style: normal; font-size: .8rem; }
 .premium-reports-page .premium-report-actions { flex-wrap: wrap; max-width: 168px; }
+.premium-year-pill { display: inline-flex; align-items: center; padding: 3px 10px; margin-right: 6px; border-radius: 999px; font-style: normal; font-weight: 700; font-size: .72rem; letter-spacing: .02em; color: #0f6b5c; background: rgba(20,184,166,.12); border: 1px solid rgba(20,184,166,.32); white-space: nowrap; }
+.premium-orig-gone { margin-right: 6px; font-style: normal; font-size: .72rem; font-weight: 600; color: #8a5a00; background: #fff5de; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+.premium-rename-year { margin-top: 6px; padding: 7px 10px; border: 1.5px solid var(--p-hair); border-radius: 10px; font: 600 .85rem var(--p-sans); background: #fff; max-width: 220px; }
+.premium-report-toolbar { flex-wrap: wrap; }
