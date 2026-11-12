@@ -5,7 +5,19 @@ export function initMotion() {
   if (typeof window === 'undefined') return;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!reduce) {
-    const lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
+    // Let nested scroll areas (modals, drawers, panels) scroll natively instead of being captured by Lenis.
+    const inNestedScroller = (node: Element | null) => {
+      for (let el = node as HTMLElement | null; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+        const oy = getComputedStyle(el).overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 1) return true;
+      }
+      return false;
+    };
+    const lenis = new Lenis({
+      lerp: 0.09,
+      smoothWheel: true,
+      prevent: (node: Element) => !!node.closest?.('[data-lenis-prevent]') || inNestedScroller(node),
+    });
     const raf = (t: number) => { lenis.raf(t); requestAnimationFrame(raf); };
     requestAnimationFrame(raf);
     document.addEventListener('click', (e) => {

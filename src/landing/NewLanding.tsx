@@ -35,7 +35,7 @@ export function NewLanding({ packs, paymentsEnabled, onStart, onSignIn, onOpenEx
         <InteractiveSample onOpenUpload={onStart} />
         <SubjectGrid onSelectSubjectForReview={onStart} />
         <HowItWorks onOpenUpload={onStart} />
-        <CriteriaExplorer />
+        <CriteriaExplorer onOpenUpload={onStart} />
         <AcademicIntegrity />
         <PricingSection packs={packs} paymentsEnabled={paymentsEnabled} onChoosePack={onChoosePack} onStart={onStart} />
         <FaqSection />

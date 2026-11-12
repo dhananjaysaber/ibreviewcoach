@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SEHS_CRITERIA, type SehsCriterion, type SehsLevel } from './sehs-criteria';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-export const CriteriaExplorer: React.FC = () => {
+export const CriteriaExplorer: React.FC<{ onOpenUpload: () => void }> = ({ onOpenUpload }) => {
   const [selectedCriteriaId, setSelectedCriteriaId] = useState<'RD' | 'DA' | 'CO' | 'EV'>('RD');
   const [band, setBand] = useState<SehsLevel>('5-6');
   const BANDS: SehsLevel[] = ['1-2', '3-4', '5-6'];
@@ -119,19 +119,44 @@ export const CriteriaExplorer: React.FC = () => {
             </div>
 
             {/* Right: Common Pitfalls that Lose Marks */}
-            <div className="lg:col-span-5 max-h-[34rem] overflow-y-auto bg-slate-50 dark:bg-[#0d1527] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm">
+            <div className="lg:col-span-5 relative bg-slate-50 dark:bg-[#0d1527] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm overflow-hidden">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 mb-4">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
                 <span>What the teacher checks</span>
               </div>
-              <ul className="space-y-3.5 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
-                {currentCriteria.strands.flatMap((st) => st.checks.map((chk) => ({ id: st.id, chk }))).map((x, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <span className="text-amber-600 dark:text-amber-400 font-bold shrink-0 mt-0.5">✓</span>
-                    <span className="leading-relaxed"><strong className="font-mono text-xs mr-1.5 text-slate-500 dark:text-slate-400">{x.id}</strong>{x.chk}</span>
-                  </li>
-                ))}
-              </ul>
+              {(() => {
+                const all = currentCriteria.strands.flatMap((st) => st.checks.map((chk) => ({ id: st.id, chk })));
+                const shown = all.slice(0, 3);
+                const hidden = all.slice(3);
+                return (
+                  <>
+                    <ul className="space-y-3.5 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                      {shown.map((x, i) => (
+                        <li key={i} className="flex items-start gap-2.5">
+                          <span className="text-amber-600 dark:text-amber-400 font-bold shrink-0 mt-0.5">✓</span>
+                          <span className="leading-relaxed"><strong className="font-mono text-xs mr-1.5 text-slate-500 dark:text-slate-400">{x.id}</strong>{x.chk}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {hidden.length > 0 && (
+                      <div className="relative mt-3.5">
+                        <ul aria-hidden="true" className="space-y-3.5 text-xs sm:text-sm text-slate-700 dark:text-slate-200 blur-[5px] select-none pointer-events-none">
+                          {hidden.slice(0, 4).map((x, i) => (
+                            <li key={i} className="flex items-start gap-2.5">
+                              <span className="text-amber-600 dark:text-amber-400 font-bold shrink-0 mt-0.5">✓</span>
+                              <span className="leading-relaxed">{'locked check '.repeat(Math.max(3, Math.round(x.chk.length / 14))).trim()}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center gap-3 bg-gradient-to-b from-transparent via-slate-50/60 dark:via-[#0d1527]/60 to-slate-50 dark:to-[#0d1527]">
+                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">+{hidden.length} more checks for {currentCriteria.name}</span>
+                          <button onClick={onOpenUpload} className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 rounded-xl shadow-lg shadow-amber-500/20 cursor-pointer">Start a review to know more</button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
