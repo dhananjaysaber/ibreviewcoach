@@ -1,6 +1,6 @@
 // Supabase Edge Function: razorpay-create-order (verify_jwt = true)
 // The browser sends only a pack_code. Price and credits come from ia_credit_packs.
-// Secrets: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, optional RAZORPAY_USD_INR_RATE (fallback only, default 88).
+// Secrets: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, optional RAZORPAY_USD_INR_RATE (fallback only, default 94).
 // The USD to INR rate is looked up live for each order (ECB reference rate via frankfurter.dev).
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -20,7 +20,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
     if (!publicKey || !serviceKey) throw new Error("Supabase keys missing");
     const keyId = need("RAZORPAY_KEY_ID");
     const keySecret = need("RAZORPAY_KEY_SECRET");
-    const fallbackRate = Number(Deno.env.get("RAZORPAY_USD_INR_RATE") ?? "88");
+    const fallbackRate = Number(Deno.env.get("RAZORPAY_USD_INR_RATE") ?? "94");
     if (!Number.isFinite(fallbackRate) || fallbackRate <= 0) throw new Error("RAZORPAY_USD_INR_RATE is invalid");
     const { rate, source: rateSource } = await getUsdInrRate(fallbackRate);
 
