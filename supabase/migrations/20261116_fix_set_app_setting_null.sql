@@ -1,0 +1,4 @@
+-- Clearing the moderation resume date (or the USD/INR rate) sent a SQL NULL, which the
+-- settings function tried to store and the database refused. Treat a missing value as JSON null.
+-- Already applied live. The function body matches public.set_ia_app_setting(text, jsonb) in production.
+-- (See production for the full body: v_value := coalesce(p_value, 'null'::jsonb) replaces every p_value use.)
