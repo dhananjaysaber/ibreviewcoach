@@ -261,11 +261,11 @@ export const IB_SUBJECTS: SubjectItem[] = [
 export const FREQUENT_QUESTIONS = [
   {
     q: 'Does IB IA Review write or rewrite my IA for me?',
-    a: 'No. We coach, we do not ghostwrite. You get criterion-linked commentary, a projected mark and a fix plan that tells you what to change and why. You write every word.'
+    a: 'No. We coach, we do not ghostwrite. You get criterion-linked commentary, indicative marks and a fix plan that tells you what to change and why. You write every word.'
   },
   {
     q: 'How fast do I receive my annotated report and fix plan?',
-    a: 'A review usually finishes within a few minutes of upload. The annotated IA and fix plan then appear in My IA Reports, and you are notified when it is ready.'
+    a: 'The free review is an automated review prepared by our model and is ready within 30 minutes. Paid reviews are marked and approved by an authorised IB moderator and are ready within 24 hours. Your report then appears in My IA Reports and you are emailed when it is ready.'
   },
   {
     q: 'What file formats can I upload?',
@@ -281,7 +281,7 @@ export const FREQUENT_QUESTIONS = [
   },
   {
     q: 'How do review credits work, and do they expire?',
-    a: 'One credit covers one full review of one draft. Each revised draft uses one more credit. Purchased credits stay valid for 365 days.'
+    a: 'One credit covers one full moderator-marked review of one draft. A credit is used only when your report is published, and a review that fails on our side keeps your credit. Each revised draft uses one more credit. Purchased credits stay valid for 365 days.'
   },
   {
     q: 'Which subjects are available?',

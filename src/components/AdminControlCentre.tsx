@@ -29,6 +29,7 @@ import {
 
 import { supabase } from '../lib/supabase';
 import { SettingsAdmin } from './SettingsAdmin';
+import { ModerationAdmin } from './ModerationAdmin';
 import { loadAppSettings, saveAppSetting } from '../lib/rightClick';
 import { useEffect as useEffectPP, useState as useStatePP } from 'react';
 
@@ -39,6 +40,7 @@ type AdminTab =
   | 'students'
   | 'payments'
   | 'reviews'
+  | 'moderation'
   | 'health'
   | 'pricing'
   | 'settings'
@@ -268,6 +270,11 @@ const TABS: Array<{
     key: 'reviews',
     label: 'Reviews & Usage',
     icon: <BookOpenCheck aria-hidden="true" />,
+  },
+  {
+    key: 'moderation',
+    label: 'Moderation queue',
+    icon: <ShieldCheck aria-hidden="true" />,
   },
   {
     key: 'health',
@@ -656,6 +663,8 @@ export function AdminControlCentre() {
       await loadPayments();
     } else if (activeTab === 'reviews') {
       await loadReviews();
+    } else if (activeTab === 'moderation') {
+      /* the moderation tab loads its own data */
     } else if (activeTab === 'health') {
       await loadWebhooks();
     } else if (activeTab === 'pricing') {
@@ -1120,6 +1129,8 @@ New pricing and checkout will be hidden and blocked immediately. Existing credit
           edit={setEditingPack}
         />
       )}
+
+      {activeTab === 'moderation' && <ModerationAdmin />}
 
       {activeTab === 'settings' && <SettingsAdmin />}
 

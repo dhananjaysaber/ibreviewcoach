@@ -168,7 +168,7 @@ export function MarkMapTab({ submissionId, isFreePreview, mode, onScore }: { onS
                       <p><b>Where you are:</b> {p.where_you_are}</p>
                       <div><b>What to do, step by step</b><ol>{p.steps.map((x, i) => <li key={i}>{x}</li>)}</ol></div>
                       <div className="mm-example"><span>Example to help you understand. It is not text for your IA.</span><p>{p.example}</p></div>
-                      <div className="mm-prompts"><b>Prompts to help you improve (paste into an AI chat)</b>
+                      <div className="mm-prompts"><b>Prompts to help you improve</b>
                         {p.extend_prompts.map((x, i) => (
                           <div className="mm-prompt" key={i}><p>{x}</p><button type="button" className="mm-copy" onClick={() => void navigator.clipboard?.writeText(x)}>Copy</button></div>))}</div>
                       {p.done_when && <p className="mm-done"><b>You are done when:</b> {p.done_when}</p>}

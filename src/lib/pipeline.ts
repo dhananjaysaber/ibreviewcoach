@@ -319,7 +319,9 @@ export async function runIaPipelineToCompletion({
 
       message:
         data.completed
-          ? data.commercial_access === 'free_review'
+          ? data.awaiting_moderator
+            ? 'Your report is with your moderator for review.'
+            : data.commercial_access === 'free_review'
             ? 'Your free Research Design review is ready.'
             : 'Your detailed review, annotated IA and progress plan are ready.'
           : data.message ??
@@ -634,6 +636,14 @@ function buildCompletion(
     finalizedAt:
       typeof accumulated.finalization?.finalized_at === 'string'
         ? accumulated.finalization.finalized_at
+        : null,
+
+    awaitingModerator:
+      accumulated.finalization?.awaiting_moderator === true,
+
+    moderatorDueAt:
+      typeof accumulated.finalization?.moderation_due_at === 'string'
+        ? accumulated.finalization.moderation_due_at
         : null,
 
     completedAt:

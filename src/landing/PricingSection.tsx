@@ -20,6 +20,8 @@ interface PricingSectionProps {
 }
 
 const FEATURES = [
+  'Marked and approved by an authorised IB moderator before release',
+  'Ready within 24 hours',
   'All four criteria reviewed, marked out of 24',
   'Detailed findings for every criterion',
   'Annotated copy of your IA with Word download',
@@ -40,7 +42,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsE
             Simple review-credit pricing
           </h2>
           <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-            Your first review is free and covers Research Design only. One credit unlocks a full four-criterion review of one draft, with marks. Purchased credits stay valid for 365 days, so you can revise at your own pace.
+            Your first review is free: an automated review prepared by our model, covering Research Design only. Paid reviews are marked and approved by an authorised IB moderator and are ready within 24 hours. Purchased credits stay valid for 365 days, so you can revise at your own pace.
           </p>
         </div>
 
@@ -58,7 +60,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsE
                 <div className="text-xs font-semibold mt-1">1 per verified account · no card needed</div>
               </div>
               <ul className="space-y-2.5 text-xs sm:text-sm mb-8">
-                {['Research Design reviewed with written feedback', 'No marks shown on the free review', 'Other 3 criteria, marks and annotated copy locked', 'Fix plan and Word download unlock with a credit'].map((f) => (
+                {['Automated review prepared by our model, not reviewed by a moderator', 'Ready within 30 minutes', 'Research Design feedback only, no marks', 'Other 3 criteria, marks, annotated copy and fix plan unlock with a credit'].map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 shrink-0 mt-0.5" />
                     <span className="leading-relaxed">{f}</span>

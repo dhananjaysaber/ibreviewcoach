@@ -1,6 +1,6 @@
 // supabase/functions/run-ia-pipeline/index.ts
 //
-// IA Pipeline Orchestrator — v4.3 (free run stops after Research Design)
+// IA Pipeline Orchestrator — v4.4 (free run stops after Research Design; paid reports held for the moderator)
 //
 // Workflow: extract-document-text -> extract-structure -> map-to-rubric ->
 // generate-coaching -> generate-annotated-ia -> create-progress-plan
@@ -12,10 +12,14 @@
 // progress plan. When the student pays, the submission becomes paid and the
 // next call resumes from the saved state and runs only the missing stages.
 // Free responses never include the overall mark range or maximum mark.
+//
+// v4.4: when a paid report is complete, the database holds it for the moderator
+// (finalization.awaiting_moderator). Held responses never include marks, links or
+// stage details. The moderator is emailed once, best effort, when a report is held.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const ORCHESTRATOR_VERSION = "run-ia-pipeline-v4.3-free-rd-only";
+const ORCHESTRATOR_VERSION = "run-ia-pipeline-v4.4-moderated";
 const REQUIRED_DETAIL_VERSION = "detailed-findings-v1";
 const FREE_CRITERION = "ResearchDesign";
 const MIN_EXTRACTED_TEXT_LENGTH = 100;
@@ -145,6 +149,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (stateAfter.completed) {
       await ensureCompletedStatus(adminClient, submissionId);
       finalization = await finalizeCompletedReview(adminClient, submissionId);
+      if (readBooleanValue(finalization?.awaiting_moderator)) {
+        await notifyModeratorOfHeldReport(adminClient, submissionId);
+      }
     }
 
     const stageCompleted = didStageComplete(activeStage.key, stateBefore, stateAfter) ? activeStage.key : null;
@@ -406,6 +413,8 @@ function buildStateResponse(options: {
   const { state, stageCompleted, activeStage, childPayload, finalization = null, message } = options;
 
   const isFreeReview = state.isFreeReview;
+  const isHeld = readBooleanValue(finalization?.awaiting_moderator);
+  const hideAccessDetails = isFreeReview || isHeld;
 
   return {
     submission_id: state.submission.id,
@@ -424,17 +433,19 @@ function buildStateResponse(options: {
       : state.detailedFindingCodes,
 
     // Free reviews never receive the overall range or maximum mark.
-    overall_mark_range: isFreeReview ? null : state.overallMarkRange,
-    maximum_mark: isFreeReview ? null : state.maximumMark,
+    overall_mark_range: hideAccessDetails ? null : state.overallMarkRange,
+    maximum_mark: hideAccessDetails ? null : state.maximumMark,
 
     annotated_ia_ready: state.annotatedArtifactReady,
-    annotated_artifact_id: isFreeReview ? null : state.annotatedArtifact?.id ?? null,
-    annotated_artifact_expires_at: isFreeReview ? null : state.annotatedArtifact?.expires_at ?? null,
-    stage_metadata: getAccessAwareStageMetadata(childPayload, isFreeReview),
+    annotated_artifact_id: hideAccessDetails ? null : state.annotatedArtifact?.id ?? null,
+    annotated_artifact_expires_at: hideAccessDetails ? null : state.annotatedArtifact?.expires_at ?? null,
+    stage_metadata: getAccessAwareStageMetadata(childPayload, hideAccessDetails),
     finalization,
     report_saved: readBooleanValue(finalization?.report_saved),
     credit_consumed: readBooleanValue(finalization?.credit_consumed),
     commercial_access: readTextValue(finalization?.commercial_access),
+    awaiting_moderator: isHeld,
+    moderation_due_at: isHeld ? readTextValue(finalization?.moderation_due_at) : null,
     message,
     orchestrator_version: ORCHESTRATOR_VERSION,
   };
@@ -609,7 +620,51 @@ async function finalizeCompletedReview(
   return isPlainObject(data) ? data : {};
 }
 
+async function notifyModeratorOfHeldReport(
+  adminClient: ReturnType<typeof createClient>,
+  submissionId: string,
+): Promise<void> {
+  try {
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    if (!apiKey) return;
+    const from = Deno.env.get("EMAIL_FROM") ?? "IB IA Review <support@ibiareview.com>";
+    let to = Deno.env.get("MODERATOR_NOTIFY_EMAIL")?.trim() ?? "";
+    if (!to) {
+      const { data: admins } = await adminClient.from("ia_admin_users").select("user_id").eq("is_active", true).limit(1);
+      const adminId = admins?.[0]?.user_id;
+      if (adminId) {
+        const { data: user } = await adminClient.auth.admin.getUserById(adminId);
+        to = user?.user?.email ?? "";
+      }
+    }
+    if (!to) return;
+    const { data: sub } = await adminClient
+      .from("ia_submissions")
+      .select("original_filename, subject, moderation_due_at")
+      .eq("id", submissionId).maybeSingle();
+    const due = sub?.moderation_due_at ? new Date(sub.moderation_due_at).toUTCString() : "within 24 hours";
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from, to: [to],
+        subject: "New report waiting for your review",
+        html: `<p>A new report is waiting for moderator review.</p><p><strong>File:</strong> ${escapeHtml(String(sub?.original_filename ?? "IA report"))}<br><strong>Due:</strong> ${escapeHtml(due)}</p><p>Open the Admin moderation queue to review and publish it.</p>`,
+      }),
+    });
+  } catch (error) {
+    console.error("[run-ia-pipeline] moderator notification failed", getErrorMessage(error));
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+}
+
 function buildCompletedMessage(finalization: Record<string, unknown> | null): string {
+  if (readBooleanValue(finalization?.awaiting_moderator)) {
+    return "Your report is with your moderator for review.";
+  }
   const commercialAccess = readTextValue(finalization?.commercial_access);
   if (commercialAccess === "free_review") {
     return "Your free Research Design review is ready.";

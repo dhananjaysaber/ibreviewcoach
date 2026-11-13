@@ -136,6 +136,8 @@ export type PipelineFinalization = {
   report_saved?: boolean;
   saved_artifact_count?: number;
   finalized_at?: string;
+  awaiting_moderator?: boolean;
+  moderation_due_at?: string | null;
 };
 
 export type RunIaPipelineResponse = {
@@ -173,6 +175,8 @@ export type RunIaPipelineResponse = {
   report_saved?: boolean;
   credit_consumed?: boolean;
   commercial_access?: IaCommercialAccess | null;
+  awaiting_moderator?: boolean;
+  moderation_due_at?: string | null;
 
   orchestrator_version?: string;
 };
@@ -204,6 +208,9 @@ export type PipelineCompletion = {
   creditConsumed: boolean;
   commercialAccess: IaCommercialAccess | null;
   finalizedAt: string | null;
+
+  awaitingModerator?: boolean;
+  moderatorDueAt?: string | null;
 
   completedAt: string;
 };
