@@ -148,6 +148,7 @@ import './aurora.css';
 import './scholar.css';
 import './premium.css';
 import './theme-amber.css';
+import './admin-redesign.css';
 import { TeacherCopyPanel } from './components/TeacherCopyPanel';
 
 type AppStatus =
