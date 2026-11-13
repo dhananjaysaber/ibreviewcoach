@@ -977,16 +977,8 @@ New pricing and checkout will be hidden and blocked immediately. Existing credit
     <section className="admin-control-centre">
       <header className="admin-hero">
         <div>
-          <span className="admin-kicker">
-            <ShieldCheck aria-hidden="true" />
-            Secure administration
-          </span>
           <h2>Commercial Control Centre</h2>
-          <p>
-            Manage students, payments, credits, review
-            usage, pricing and payment health without
-            weakening the student-facing security rules.
-          </p>
+          <p>Students, payments, credits, moderation and pricing in one place.</p>
         </div>
 
         {import.meta.env.DEV && (
@@ -994,7 +986,7 @@ New pricing and checkout will be hidden and blocked immediately. Existing credit
             href="/local-lab/index.html"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ alignSelf: 'center', display: 'inline-flex', padding: '12px 14px', background: '#173d7c', color: '#fff', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}
+            className="admin-secondary-button"
           >
             Open Local IA Test Lab
           </a>
@@ -1231,16 +1223,11 @@ function Overview({
 
   return (
     <div className="admin-tab-content">
-      <PaymentCollectionControl
-        enabled={paymentsEnabled}
-        state={paymentSettingState}
-        busy={paymentSettingBusy}
-        onChange={onSetPaymentsEnabled}
+      <AttentionStrip
+        health={data.payment_health}
+        onHealth={onHealth}
+        onPayments={onPayments}
       />
-
-      <PayPalMethodControl />
-
-      <RupeeRateControl />
 
       <div className="admin-stat-grid">
         <Stat
@@ -1263,129 +1250,172 @@ function Overview({
         />
         <Stat
           label="Purchased credits left"
-          value={formatInteger(
-            data.credits.purchase_credits_remaining
-          )}
-          helper={`${formatInteger(
-            data.credits.purchase_credits_granted
-          )} purchased in total`}
+          value={formatInteger(data.credits.purchase_credits_remaining)}
+          helper={`${formatInteger(data.credits.purchase_credits_granted)} purchased in total`}
           icon={<CreditCard aria-hidden="true" />}
         />
         <Stat
           label="Completed reviews"
           value={formatInteger(data.reviews.completed)}
-          helper={`${formatInteger(
-            data.reviews.total
-          )} reviews created`}
+          helper={`${formatInteger(data.reviews.total)} reviews created`}
           icon={<BookOpenCheck aria-hidden="true" />}
         />
       </div>
 
-      <div className="admin-overview-grid">
-        <Panel title="Payment activity">
-          <MetricRow
-            label="Paid"
-            value={data.payments.paid}
+      <div className="admin-ov-columns">
+        <section className="admin-panel admin-settings-card">
+          <h3>Checkout settings</h3>
+          <PaymentCollectionControl
+            enabled={paymentsEnabled}
+            state={paymentSettingState}
+            busy={paymentSettingBusy}
+            onChange={onSetPaymentsEnabled}
           />
-          <MetricRow
-            label="Pending / created"
-            value={
-              data.payments.pending +
-              data.payments.created
-            }
-          />
-          <MetricRow
-            label="Failed"
-            value={data.payments.failed}
-          />
-          <MetricRow
-            label="Refunded"
-            value={
-              data.payments.refunded +
-              data.payments.partially_refunded
-            }
-          />
-          <button
-            className="admin-text-button"
-            type="button"
-            onClick={onPayments}
-          >
-            Open Payments & Orders
-          </button>
-        </Panel>
+          <PayPalMethodControl />
+          <RupeeRateControl />
+        </section>
 
-        <Panel title="Payment health">
-          <MetricRow
-            label="Orders waiting"
-            value={
-              data.payment_health.pending_or_created
-            }
-          />
-          <MetricRow
-            label="Failed payments"
-            value={
-              data.payment_health.failed_payments
-            }
-          />
-          <MetricRow
-            label="Webhook failures"
-            value={
-              data.payment_health.webhook_failures
-            }
-          />
-          <MetricRow
-            label="Webhooks waiting"
-            value={
-              data.payment_health.webhooks_waiting
-            }
-          />
-          <button
-            className="admin-text-button"
-            type="button"
-            onClick={onHealth}
-          >
-            Open Payment Health
-          </button>
-        </Panel>
+        <div className="admin-ov-side">
+          <Panel title="Payments">
+            <MetricRow label="Paid" value={data.payments.paid} />
+            <MetricRow
+              label="Pending / created"
+              value={data.payments.pending + data.payments.created}
+            />
+            <MetricRow label="Failed" value={data.payments.failed} />
+            <MetricRow
+              label="Refunded"
+              value={data.payments.refunded + data.payments.partially_refunded}
+            />
+            <button className="admin-text-button" type="button" onClick={onPayments}>
+              Open Payments & Orders
+            </button>
+          </Panel>
 
-        <Panel title="Review access">
-          <MetricRow
-            label="Paid-credit reviews"
-            value={data.reviews.paid}
-          />
-          <MetricRow
-            label="Free limited reviews"
-            value={data.reviews.free}
-          />
-          <MetricRow
-            label="Complimentary / Admin"
-            value={data.reviews.complimentary}
-          />
-        </Panel>
+          <Panel title="Review access">
+            <MetricRow label="Paid-credit reviews" value={data.reviews.paid} />
+            <MetricRow label="Free limited reviews" value={data.reviews.free} />
+            <MetricRow label="Complimentary / Admin" value={data.reviews.complimentary} />
+          </Panel>
 
-        <Panel title="Processing usage">
-          <MetricText
-            label="Estimated processing cost"
-            value={formatMoney(
-              data.usage.estimated_ai_cost_usd,
-              'USD'
-            )}
-          />
-          <MetricText
-            label="Input tokens"
-            value={formatInteger(
-              data.usage.ai_input_tokens
-            )}
-          />
-          <MetricText
-            label="Output tokens"
-            value={formatInteger(
-              data.usage.ai_output_tokens
-            )}
-          />
-        </Panel>
+          <Panel title="Processing usage">
+            <MetricText
+              label="Estimated processing cost"
+              value={formatMoney(data.usage.estimated_ai_cost_usd, 'USD')}
+            />
+            <MetricText label="Input tokens" value={formatInteger(data.usage.ai_input_tokens)} />
+            <MetricText label="Output tokens" value={formatInteger(data.usage.ai_output_tokens)} />
+          </Panel>
+        </div>
       </div>
     </div>
+  );
+}
+
+function AttentionStrip({
+  health,
+  onHealth,
+  onPayments,
+}: {
+  health: DashboardData['payment_health'];
+  onHealth: () => void;
+  onPayments: () => void;
+}) {
+  const [waiting, setWaiting] = useStatePP<number | null>(null);
+  useEffectPP(() => {
+    void supabase
+      .rpc('admin_list_moderation_queue', { p_include_published: false })
+      .then(({ data, error }) => {
+        setWaiting(error || !Array.isArray(data) ? null : data.length);
+      });
+  }, []);
+
+  const items = [
+    { label: 'Reports awaiting moderator', value: waiting, onClick: undefined as (() => void) | undefined },
+    { label: 'Orders waiting', value: health.pending_or_created, onClick: onPayments },
+    { label: 'Failed payments', value: health.failed_payments, onClick: onHealth },
+    { label: 'Webhook failures', value: health.webhook_failures, onClick: onHealth },
+  ];
+  const needs = items.some((i) => (i.value ?? 0) > 0);
+
+  return (
+    <section className={`admin-attention ${needs ? 'admin-attention-warn' : 'admin-attention-ok'}`}>
+      <div className="admin-attention-title">
+        {needs ? <AlertCircle aria-hidden="true" /> : <CheckCircle2 aria-hidden="true" />}
+        <strong>{needs ? 'Needs attention' : 'All clear'}</strong>
+      </div>
+      <div className="admin-attention-items">
+        {items.map((i) => {
+          const hot = (i.value ?? 0) > 0;
+          const inner = (
+            <>
+              <b>{i.value === null ? '–' : formatInteger(i.value)}</b>
+              <span>{i.label}</span>
+            </>
+          );
+          return i.onClick && hot ? (
+            <button key={i.label} type="button" className="admin-attention-item admin-attention-hot" onClick={i.onClick}>
+              {inner}
+            </button>
+          ) : (
+            <div key={i.label} className={`admin-attention-item ${hot ? 'admin-attention-hot' : ''}`}>
+              {inner}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function SettingRow({
+  title,
+  text,
+  control,
+  below,
+}: {
+  title: string;
+  text: string;
+  control: ReactNode;
+  below?: ReactNode;
+}) {
+  return (
+    <div className="admin-setting">
+      <div className="admin-setting-main">
+        <div className="admin-setting-text">
+          <strong>{title}</strong>
+          <span>{text}</span>
+        </div>
+        <div className="admin-setting-control">{control}</div>
+      </div>
+      {below}
+    </div>
+  );
+}
+
+function Switch({
+  checked,
+  disabled,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  disabled?: boolean;
+  label: string;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <label className="admin-switch">
+      <input
+        type="checkbox"
+        role="switch"
+        aria-label={label}
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span className="admin-switch-track" aria-hidden="true" />
+    </label>
   );
 }
 
@@ -1400,74 +1430,35 @@ function PaymentCollectionControl({
   busy: boolean;
   onChange: (enabled: boolean) => void;
 }) {
+  if (state === 'error' || (state !== 'loading' && enabled === null)) {
+    return (
+      <SettingRow
+        title="Accept new payments"
+        text="The switch could not be read. Refresh before changing it."
+        control={<StatusPill value="failed" />}
+      />
+    );
+  }
   return (
-    <Panel title="Global payment collection">
-      {state === 'loading' ? (
-        <div className="admin-detail-list">
-          <article className="admin-detail-list-item">
-            <div>
-              <strong>Checking payment collection…</strong>
-              <span>
-                Reading the app-wide pricing and checkout setting.
-              </span>
-            </div>
-            <LoaderCircle
-              className="admin-spin"
-              aria-hidden="true"
-            />
-          </article>
-        </div>
-      ) : state === 'error' || enabled === null ? (
-        <SafeNote
-          warning
-          title="Payment collection status unavailable"
-          text="The switch could not be read. Refresh the Admin overview before changing payment collection."
-        />
-      ) : (
-        <div className="admin-detail-list">
-          <article className="admin-detail-list-item">
-            <div>
-              <strong>
-                {enabled
-                  ? 'Payments enabled'
-                  : 'Payments disabled'}
-              </strong>
-              <span>
-                {enabled
-                  ? 'Pricing and checkout are available to eligible users.'
-                  : 'New pricing and checkout are hidden and blocked. Existing credits, reports, purchases and invoices remain available.'}
-              </span>
-            </div>
-            <StatusPill
-              value={enabled ? 'active' : 'disabled'}
-            />
-          </article>
-
-          <label className="admin-toggle-row">
-            <input
-              type="checkbox"
-              checked={enabled}
-              disabled={busy}
-              onChange={(event) =>
-                onChange(event.target.checked)
-              }
-            />
-            <span>
-              {busy
-                ? 'Updating payment collection…'
-                : enabled
-                ? 'Accept new payments across the app'
-                : 'New payments are paused across the app'}
-            </span>
-          </label>
-
-          <SafeNote
-            title="Existing access is preserved"
-            text="Turning payments off does not remove purchased or complimentary credits, saved IA reports, completed orders or invoices. Admin unlimited review access also remains unchanged."
+    <SettingRow
+      title="Accept new payments"
+      text={
+        enabled === false
+          ? 'Pricing and checkout are hidden and blocked. Existing credits, reports and invoices stay available.'
+          : 'Pricing and checkout are open. Turning this off keeps all existing credits, reports and invoices.'
+      }
+      control={
+        <>
+          <StatusPill value={state === 'loading' ? 'pending' : enabled ? 'active' : 'disabled'} />
+          <Switch
+            label="Accept new payments across the app"
+            checked={enabled === true}
+            disabled={busy || state === 'loading'}
+            onChange={onChange}
           />
-        </div>
-      )}
-    </Panel>
+        </>
+      }
+    />
   );
 }
 
@@ -1483,22 +1474,19 @@ function PayPalMethodControl() {
     setBusy(false);
   }
   return (
-    <Panel title="PayPal payment method">
-      <div className="admin-detail-list">
-        <article className="admin-detail-list-item">
-          <div>
-            <strong>{on === null ? 'Checking…' : on ? 'PayPal is offered at checkout' : 'PayPal is hidden at checkout'}</strong>
-            <span>{on === false ? 'Students go straight to Razorpay (UPI, cards, netbanking in rupees).' : 'Students choose between Razorpay (rupees) and PayPal (US dollars).'}</span>
-          </div>
-          <StatusPill value={on ? 'active' : 'disabled'} />
-        </article>
-        <label className="admin-toggle-row">
-          <input type="checkbox" checked={on === true} disabled={busy || on === null} onChange={(e) => void change(e.target.checked)} />
-          <span>{busy ? 'Saving…' : on ? 'PayPal on: switch off to use Razorpay only' : 'PayPal off: switch on to offer it again'}</span>
-        </label>
-        {err && <SafeNote warning title="Could not save" text="The setting was not changed. Try again." />}
-      </div>
-    </Panel>
+    <SettingRow
+      title="PayPal at checkout"
+      text={on === false
+        ? 'Hidden. Students go straight to Razorpay (UPI, cards, netbanking in rupees).'
+        : 'Offered. Students choose between Razorpay (rupees) and PayPal (US dollars).'}
+      control={
+        <>
+          <StatusPill value={on === null ? 'pending' : on ? 'active' : 'disabled'} />
+          <Switch label="Offer PayPal at checkout" checked={on === true} disabled={busy || on === null} onChange={(v) => void change(v)} />
+        </>
+      }
+      below={err ? <SafeNote warning title="Could not save" text="The setting was not changed. Try again." /> : undefined}
+    />
   );
 }
 
@@ -1526,41 +1514,40 @@ function RupeeRateControl() {
     void save(Math.round(n * 100) / 100);
   }
   return (
-    <Panel title="Exchange rate for rupee checkout">
-      <div className="admin-detail-list">
-        <article className="admin-detail-list-item">
-          <div>
-            <strong>
-              {saved === undefined ? 'Checking…' : saved === null ? 'Automatic: the live USD to INR rate is used' : `Fixed: ₹${saved} per US$1`}
-            </strong>
-            <span>
-              Students pay in rupees through Razorpay. Prices on the site stay in dollars and are converted at this rate when checkout opens.
-              Leave it automatic, or save your own rate (between 50 and 150) and every new checkout will use it until you clear it.
-            </span>
+    <SettingRow
+      title="Rupee exchange rate"
+      text={
+        saved === undefined
+          ? 'Checking…'
+          : saved === null
+          ? 'Automatic: the live USD to INR rate is used when checkout opens. Or set your own rate (50 to 150).'
+          : `Fixed at ₹${saved} per US$1 for every new checkout until you clear it.`
+      }
+      control={<StatusPill value={saved === null ? 'active' : saved === undefined ? 'pending' : 'verified'} />}
+      below={
+        <>
+          <div className="admin-rate-row">
+            <span className="admin-rate-prefix">₹</span>
+            <input
+              type="number" min="50" max="150" step="0.01" inputMode="decimal"
+              value={text} disabled={busy || saved === undefined}
+              placeholder="e.g. 94.03"
+              onChange={(e) => { setText(e.target.value); setMsg(null); }}
+              aria-label="Rupees per US dollar"
+            />
+            <button type="button" className="admin-primary-button" disabled={busy || saved === undefined} onClick={onSave}>
+              {busy ? 'Saving…' : 'Save rate'}
+            </button>
+            <button type="button" className="admin-secondary-button" disabled={busy || saved === null || saved === undefined} onClick={() => void save(null)}>
+              Use automatic
+            </button>
           </div>
-          <StatusPill value={saved === null ? 'active' : 'pending'} />
-        </article>
-        <div className="admin-toggle-row">
-          <input
-            type="number" min="50" max="150" step="0.01" inputMode="decimal"
-            value={text} disabled={busy || saved === undefined}
-            placeholder="e.g. 94.03"
-            onChange={(e) => { setText(e.target.value); setMsg(null); }}
-            style={{ width: 120, padding: '8px 10px', borderRadius: 10, border: '1px solid #d9d4c7' }}
-            aria-label="Rupees per US dollar"
-          />
-          <button type="button" className="admin-primary-button" disabled={busy || saved === undefined} onClick={onSave}>
-            {busy ? 'Saving…' : 'Save rate'}
-          </button>
-          <button type="button" className="admin-secondary-button" disabled={busy || saved === null || saved === undefined} onClick={() => void save(null)}>
-            Use automatic rate
-          </button>
-        </div>
-        {msg === 'ok' && <SafeNote title="Saved" text="New checkouts use this setting straight away. Payments already started keep their original amount." />}
-        {msg === 'range' && <SafeNote warning title="Check the number" text="Enter a rate between 50 and 150 rupees per dollar." />}
-        {msg === 'err' && <SafeNote warning title="Could not save" text="The setting was not changed. Try again." />}
-      </div>
-    </Panel>
+          {msg === 'ok' && <SafeNote title="Saved" text="New checkouts use this straight away. Payments already started keep their original amount." />}
+          {msg === 'range' && <SafeNote warning title="Check the number" text="Enter a rate between 50 and 150 rupees per dollar." />}
+          {msg === 'err' && <SafeNote warning title="Could not save" text="The setting was not changed. Try again." />}
+        </>
+      }
+    />
   );
 }
 
