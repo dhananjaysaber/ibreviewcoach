@@ -19,7 +19,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenUpload, onOpenExemplar }) => {
           <div className="lg:col-span-7 space-y-6">
             {/* Editorial Kicker - clean unboxed metadata with responsive wrap */}
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-              <span>Official 24-Mark IB Rubric</span>
+              <span>Official IB criteria</span>
               <span aria-hidden="true" className="text-slate-400 dark:text-slate-600">·</span>
               <span>SEHS Live Now</span>
               <span aria-hidden="true" className="text-slate-400 dark:text-slate-600">·</span>
@@ -93,7 +93,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenUpload, onOpenExemplar }) => {
                       <div className="text-xs font-bold text-slate-900 dark:text-white tracking-wide">
                         SEHS IA Diagnostic Report
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-300">Official 24-Mark Moderation</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-300">Marked against the official criteria</div>
                     </div>
                   </div>
                   <div className="text-right">

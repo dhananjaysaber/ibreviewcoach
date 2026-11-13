@@ -87,6 +87,12 @@ import {
 } from './components/PayPalCheckoutModal';
 
 import { AccountPage } from './components/AccountPage';
+import {
+  ModerationAvailabilityNotice,
+  WaitingForModerator,
+  ModeratedBadge,
+  useIsModerated,
+} from './components/ModeratorReview';
 import { AdminControlCentre } from './components/AdminControlCentre';
 import {
   PremiumWorkspaceShell,
@@ -2012,7 +2018,7 @@ function App() {
           onRetry={retryPipeline}
         />
       ) : mainView === 'workspace' && status === 'complete' ? (
-        <CompletionWorkspace
+        <CompletionRouter
           selectedFile={selectedFile}
           submission={submission}
           completion={completion}
@@ -2039,6 +2045,7 @@ function App() {
           onSubjectChange={setReviewSubject}
           year={reviewYear}
           onYearChange={setReviewYear}
+          isFreeReview={reviewAccessSource === 'free_review'}
         />
       ) : (
         <AccountPage
@@ -2092,7 +2099,7 @@ function App() {
         onRetry={retryPipeline}
       />
     ) : status === 'complete' ? (
-      <CompletionWorkspace
+      <CompletionRouter
         selectedFile={selectedFile}
         submission={submission}
         completion={completion}
@@ -2119,6 +2126,7 @@ function App() {
         onSubjectChange={setReviewSubject}
         year={reviewYear}
         onYearChange={setReviewYear}
+        isFreeReview={reviewAccessSource === 'free_review'}
       />
     );
 
@@ -3159,7 +3167,7 @@ function LandingPage({
 
       <section className="landing-marquee" aria-hidden="true">
         <div className="landing-marquee-track">
-          <span>Official 24-mark IB rubric</span>
+          <span>Official IB criteria</span>
           <span>SEHS live now</span>
           <span>Sciences coming soon</span>
           <span>Annotated copy</span>
@@ -3167,7 +3175,7 @@ function LandingPage({
           <span>Exemplar IAs</span>
           <span>Private by design</span>
           <span>Coaching, never ghostwriting</span>
-          <span>Official 24-mark IB rubric</span>
+          <span>Official IB criteria</span>
           <span>SEHS live now</span>
           <span>Sciences coming soon</span>
           <span>Annotated copy</span>
@@ -5079,6 +5087,7 @@ type UploadWorkspaceProps = {
   onSubjectChange: (value: string) => void;
   year: string;
   onYearChange: (value: string) => void;
+  isFreeReview?: boolean;
 };
 
 function UploadWorkspace({
@@ -5096,6 +5105,7 @@ function UploadWorkspace({
   onSubjectChange,
   year,
   onYearChange,
+  isFreeReview = false,
 }: UploadWorkspaceProps) {
   const { subjects } = useSubjects(true);
   const { years: yearOptions } = useAcademicYears(true);
@@ -5312,6 +5322,8 @@ function UploadWorkspace({
               Retry secure session
             </button>
           )}
+
+          <ModerationAvailabilityNotice audience={isFreeReview ? 'free' : 'paid'} />
 
           <button
             className="primary-button review-upload-primary-v7"
@@ -5717,6 +5729,20 @@ type AnnotatedDocxResponse = {
   cached?: boolean;
 };
 
+function CompletionRouter(props: CompletionWorkspaceProps) {
+  if (props.completion?.awaitingModerator) {
+    return (
+      <WaitingForModerator
+        dueAt={props.completion.moderatorDueAt}
+        filename={props.selectedFile?.filename ?? props.submission?.original_filename ?? null}
+        onReset={props.onReset}
+        onOpenReports={props.onBackToReports}
+      />
+    );
+  }
+  return <CompletionWorkspace {...props} />;
+}
+
 type CompletionWorkspaceProps = {
   selectedFile: ValidatedIaFile | null;
   submission: IaSubmission | null;
@@ -5789,6 +5815,8 @@ function CompletionWorkspace({
     'unassigned';
 
   const isFreeReview = accessMode === 'free_review';
+  const moderated = useIsModerated(submission?.id);
+  useEffect(() => { if (moderated) { setReviewSpace('student'); setActiveTab('detailed'); } }, [moderated]);
   const mm = useMarkMap(submission?.id ?? '', isFreeReview);
   const [ticks, setTick] = useTicks(submission?.id ?? '');
   useEffect(() => { if (mm.map) setMarkMapScore({ mark: mm.map.mark, maximum: mm.map.maximum }); }, [mm.map]);
@@ -6238,6 +6266,9 @@ function CompletionWorkspace({
         </div>
 
         <div className="review-results-shell">
+          {moderated && <ModeratedBadge />}
+          {!moderated && (
+          <>
           <div className={`review-space review-space-${reviewSpace}`}>
             <div className="review-space-switch" role="tablist" aria-label="Choose a report">
               <button type="button" role="tab" aria-selected={reviewSpace === 'student'} className={reviewSpace === 'student' ? 'on' : ''} onClick={() => switchReviewSpace('student')}>Student report</button>
@@ -6319,6 +6350,8 @@ function CompletionWorkspace({
             )}
           </nav>
 
+          </>
+          )}
           <div className="review-tab-content">
             {reviewLoadState === 'loading' ? (
               <ReviewDataLoading />

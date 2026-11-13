@@ -172,7 +172,7 @@ export function RazorpayCheckoutModal({ pack, onClose, onStartReview, successAct
         )}
 
         <div className="paypal-security-note"><LockKeyhole aria-hidden="true" /><span>Prices and credit quantities are checked on the server. Card, UPI and bank details are handled by Razorpay and never reach us. Charged in Indian rupees at today&apos;s conversion.</span></div>
-        <div className="paypal-integrity-note"><ShieldCheck aria-hidden="true" /><span>One credit covers one supported SEHS IA draft. Refunds follow our <a href="/refund-policy">Refund Policy</a>.</span></div>
+        <div className="paypal-integrity-note"><ShieldCheck aria-hidden="true" /><span>One credit covers one supported SEHS IA draft. See our <a href="/refund-policy">Cancellation and Refund Policy</a>.</span></div>
       </section>
     </div>
   );

@@ -22,6 +22,7 @@ import {
 } from 'react';
 
 import type { Session } from '@supabase/supabase-js';
+import { PendingModeratorReviews } from './ModeratorReview';
 
 import { supabase } from '../lib/supabase';
 import { AccountCommercePanel } from './AccountCommercePanel';
@@ -714,6 +715,8 @@ function OverviewTab({
           }
         />
       </section>
+
+      <PendingModeratorReviews />
 
       <section className="student-dashboard-overview-grid">
         <div className="student-dashboard-panel student-dashboard-recent-panel">

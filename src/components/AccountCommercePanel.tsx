@@ -268,7 +268,7 @@ export function AccountCommercePanel({
           eyebrow: 'Free limited review available',
           title: 'Preview the review before purchasing',
           description:
-            'See Research Design feedback and the first 20 lines of the annotated IA. Marks, the other criteria, the progress plan and downloads stay locked.',
+            'An automated review prepared by our model, not reviewed by a moderator. Ready within 30 minutes, with Research Design feedback only. Marks, the other criteria, the progress plan and downloads stay locked.',
           actionLabel: 'Choose review option',
           actionIcon: <Sparkles aria-hidden="true" />,
           action: onStartReview,

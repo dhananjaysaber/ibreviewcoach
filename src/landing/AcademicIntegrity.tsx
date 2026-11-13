@@ -194,7 +194,7 @@ export const AcademicIntegrity: React.FC = () => {
                 </div>
               </div>
 
-              {/* Badge 4: Zero AI Model Retraining */}
+              {/* Badge 4: Zero Model Retraining */}
               <div className="bg-white dark:bg-[#121a2d] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-6 transition-all hover:border-purple-400/50 dark:hover:border-purple-400/50 group shadow-md shadow-black/20">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-700/60 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
@@ -209,7 +209,7 @@ export const AcademicIntegrity: React.FC = () => {
                   Model Retraining Exemption
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-200 leading-relaxed mb-4">
-                  Reviews run on our own hosted model. Your work is not used to train public AI models.
+                  Reviews run on our own hosted model. Your work is not used to train public models.
                 </p>
                 <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/80 text-xs font-medium text-slate-500 dark:text-slate-400">
                   <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />

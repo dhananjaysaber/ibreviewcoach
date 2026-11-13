@@ -29,6 +29,7 @@ import {
 
 import { supabase } from '../lib/supabase';
 import { SettingsAdmin } from './SettingsAdmin';
+import { ModerationAdmin } from './ModerationAdmin';
 import { loadAppSettings, saveAppSetting } from '../lib/rightClick';
 import { useEffect as useEffectPP, useState as useStatePP } from 'react';
 
@@ -39,6 +40,7 @@ type AdminTab =
   | 'students'
   | 'payments'
   | 'reviews'
+  | 'moderation'
   | 'health'
   | 'pricing'
   | 'settings'
@@ -268,6 +270,11 @@ const TABS: Array<{
     key: 'reviews',
     label: 'Reviews & Usage',
     icon: <BookOpenCheck aria-hidden="true" />,
+  },
+  {
+    key: 'moderation',
+    label: 'Moderation queue',
+    icon: <ShieldCheck aria-hidden="true" />,
   },
   {
     key: 'health',
@@ -656,6 +663,8 @@ export function AdminControlCentre() {
       await loadPayments();
     } else if (activeTab === 'reviews') {
       await loadReviews();
+    } else if (activeTab === 'moderation') {
+      /* the moderation tab loads its own data */
     } else if (activeTab === 'health') {
       await loadWebhooks();
     } else if (activeTab === 'pricing') {
@@ -1121,6 +1130,8 @@ New pricing and checkout will be hidden and blocked immediately. Existing credit
         />
       )}
 
+      {activeTab === 'moderation' && <ModerationAdmin />}
+
       {activeTab === 'settings' && <SettingsAdmin />}
 
       {activeTab === 'audit' && (
@@ -1228,6 +1239,8 @@ function Overview({
       />
 
       <PayPalMethodControl />
+
+      <RupeeRateControl />
 
       <div className="admin-stat-grid">
         <Stat
@@ -1484,6 +1497,68 @@ function PayPalMethodControl() {
           <span>{busy ? 'Saving…' : on ? 'PayPal on: switch off to use Razorpay only' : 'PayPal off: switch on to offer it again'}</span>
         </label>
         {err && <SafeNote warning title="Could not save" text="The setting was not changed. Try again." />}
+      </div>
+    </Panel>
+  );
+}
+
+function RupeeRateControl() {
+  const [saved, setSaved] = useStatePP<number | null | undefined>(undefined);
+  const [text, setText] = useStatePP('');
+  const [busy, setBusy] = useStatePP(false);
+  const [msg, setMsg] = useStatePP<'ok' | 'err' | 'range' | null>(null);
+  useEffectPP(() => {
+    void loadAppSettings().then((v) => {
+      const n = typeof v.usd_inr_rate === 'number' ? v.usd_inr_rate : null;
+      setSaved(n);
+      setText(n === null ? '' : String(n));
+    });
+  }, []);
+  async function save(value: number | null) {
+    setBusy(true); setMsg(null);
+    const ok = await saveAppSetting('usd_inr_rate', value);
+    if (ok) { setSaved(value); setText(value === null ? '' : String(value)); setMsg('ok'); } else setMsg('err');
+    setBusy(false);
+  }
+  function onSave() {
+    const n = Number(text);
+    if (!Number.isFinite(n) || n < 50 || n > 150) { setMsg('range'); return; }
+    void save(Math.round(n * 100) / 100);
+  }
+  return (
+    <Panel title="Exchange rate for rupee checkout">
+      <div className="admin-detail-list">
+        <article className="admin-detail-list-item">
+          <div>
+            <strong>
+              {saved === undefined ? 'Checking…' : saved === null ? 'Automatic: the live USD to INR rate is used' : `Fixed: ₹${saved} per US$1`}
+            </strong>
+            <span>
+              Students pay in rupees through Razorpay. Prices on the site stay in dollars and are converted at this rate when checkout opens.
+              Leave it automatic, or save your own rate (between 50 and 150) and every new checkout will use it until you clear it.
+            </span>
+          </div>
+          <StatusPill value={saved === null ? 'active' : 'pending'} />
+        </article>
+        <div className="admin-toggle-row">
+          <input
+            type="number" min="50" max="150" step="0.01" inputMode="decimal"
+            value={text} disabled={busy || saved === undefined}
+            placeholder="e.g. 94.03"
+            onChange={(e) => { setText(e.target.value); setMsg(null); }}
+            style={{ width: 120, padding: '8px 10px', borderRadius: 10, border: '1px solid #d9d4c7' }}
+            aria-label="Rupees per US dollar"
+          />
+          <button type="button" className="admin-primary-button" disabled={busy || saved === undefined} onClick={onSave}>
+            {busy ? 'Saving…' : 'Save rate'}
+          </button>
+          <button type="button" className="admin-secondary-button" disabled={busy || saved === null || saved === undefined} onClick={() => void save(null)}>
+            Use automatic rate
+          </button>
+        </div>
+        {msg === 'ok' && <SafeNote title="Saved" text="New checkouts use this setting straight away. Payments already started keep their original amount." />}
+        {msg === 'range' && <SafeNote warning title="Check the number" text="Enter a rate between 50 and 150 rupees per dollar." />}
+        {msg === 'err' && <SafeNote warning title="Could not save" text="The setting was not changed. Try again." />}
       </div>
     </Panel>
   );

@@ -202,7 +202,7 @@ function getFriendlyReservationError(rawMessage: string): string {
     message.includes('already in progress') ||
     message.includes('duplicate key')
   ) {
-    return 'An IA review is already in progress for this account. Open the current review instead of starting another.';
+    return 'Your previous IA is still being prepared. Please try again in a moment.';
   }
 
   if (

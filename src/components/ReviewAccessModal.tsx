@@ -141,10 +141,11 @@ export function ReviewAccessModal({
                   <span>Your first review is free</span>
                   <h3>Try it on your IA, no payment needed</h3>
                   <p>
-                    See Research Design feedback and the opening of the
-                    annotated IA. No marks are shown on the free review. Like
-                    what you see? Unlock the other three criteria, marks,
-                    progress plan and downloads with a credit.
+                    An automated review prepared by our model, not reviewed by a
+                    moderator. Ready within 30 minutes, with Research Design
+                    feedback only and no marks. Paid reviews are marked and
+                    approved by an authorised IB moderator and are ready within
+                    24 hours.
                   </p>
                 </div>
 
