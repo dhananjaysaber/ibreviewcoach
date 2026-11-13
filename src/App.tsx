@@ -75,6 +75,7 @@ import {
 
 import { supabase } from './lib/supabase';
 import { StudentWorkspace, ProgressView, useTicks } from './components/StudentWorkspace';
+import { ModeratedFixTab, ModeratedProgressTab, ModeratedAnnotatedTab } from './components/ModeratedStudentReport';
 import { TeacherWorkspace } from './components/TeacherWorkspace';
 import { AnnotatedCopy } from './components/AnnotatedCopy';
 import { useMarkMap } from './lib/useMarkMap';
@@ -5817,7 +5818,7 @@ function CompletionWorkspace({
 
   const isFreeReview = accessMode === 'free_review';
   const moderated = useIsModerated(submission?.id);
-  useEffect(() => { if (moderated) { setReviewSpace('student'); setActiveTab('detailed'); } }, [moderated]);
+  useEffect(() => { if (moderated) { setReviewSpace('student'); setActiveTab('marks'); } }, [moderated]);
   const mm = useMarkMap(submission?.id ?? '', isFreeReview);
   const [ticks, setTick] = useTicks(submission?.id ?? '');
   useEffect(() => { if (mm.map) setMarkMapScore({ mark: mm.map.mark, maximum: mm.map.maximum }); }, [mm.map]);
@@ -6268,9 +6269,8 @@ function CompletionWorkspace({
 
         <div className="review-results-shell">
           {moderated && <ModeratedBadge />}
-          {!moderated && (
           <>
-          <div className={`review-space review-space-${reviewSpace}`}>
+          {!moderated && <div className={`review-space review-space-${reviewSpace}`}>
             <div className="review-space-switch" role="tablist" aria-label="Choose a report">
               <button type="button" role="tab" aria-selected={reviewSpace === 'student'} className={reviewSpace === 'student' ? 'on' : ''} onClick={() => switchReviewSpace('student')}>Student report</button>
               <button type="button" role="tab" aria-selected={reviewSpace === 'teacher'} className={reviewSpace === 'teacher' ? 'on' : ''} onClick={() => switchReviewSpace('teacher')}>Teacher report</button>
@@ -6280,7 +6280,7 @@ function CompletionWorkspace({
                 ? 'For the student: what to fix, how to fix it and how to improve between drafts.'
                 : 'For the teacher: evidence-based marking against the IB rubric and the annotated copy.'}
             </p>
-          </div>
+          </div>}
           <nav className="review-tabbar" aria-label="IA review sections">
             <div className="review-tabgroup" role="tablist" aria-label="Student report tabs">
               <span className="review-tabgroup-label">{reviewSpace === 'teacher' ? 'Student report' : 'For the student'}</span>
@@ -6352,7 +6352,6 @@ function CompletionWorkspace({
           </nav>
 
           </>
-          )}
           <div className="review-tab-content">
             {reviewLoadState === 'loading' ? (
               <ReviewDataLoading />
@@ -6403,11 +6402,20 @@ function CompletionWorkspace({
                 {reviewSpace === 'teacher' && activeTab === 'markmap' && (
                   <TeacherWorkspace mm={mm} submissionId={submission?.id ?? ''} isFreePreview={isFreeReview} openAnnotated={() => setActiveTab('anncopy')} />
                 )}
-                {activeTab === 'marks' && (
+                {moderated && activeTab === 'marks' && (
+                  <ModeratedFixTab findings={reviewData.findings as never} criteria={reviewData.criteria as never} submissionId={submission?.id ?? ''} ticks={ticks} setTick={setTick} />
+                )}
+                {moderated && activeTab === 'progress' && (
+                  <ModeratedProgressTab findings={reviewData.findings as never} criteria={reviewData.criteria as never} ticks={ticks} />
+                )}
+                {moderated && activeTab === 'anncopy' && (
+                  <ModeratedAnnotatedTab findings={reviewData.findings as never} criteria={reviewData.criteria as never} loadText={mm.loadText} />
+                )}
+                {!moderated && activeTab === 'marks' && (
                   <StudentWorkspace mm={mm} submissionId={submission?.id ?? ''} isFreePreview={isFreeReview} ticks={ticks} setTick={setTick} />
                 )}
-                {activeTab === 'progress' && <ProgressView mm={mm} ticks={ticks} />}
-                {activeTab === 'anncopy' && (isFreeReview
+                {!moderated && activeTab === 'progress' && <ProgressView mm={mm} ticks={ticks} />}
+                {!moderated && activeTab === 'anncopy' && (isFreeReview
                   ? <section className="ws"><p className="w-note">The annotated copy needs the full review.</p></section>
                   : <AnnotatedCopy mm={mm} teacher={reviewSpace === 'teacher'} canToggle={reviewSpace === 'teacher'} />)}
 
