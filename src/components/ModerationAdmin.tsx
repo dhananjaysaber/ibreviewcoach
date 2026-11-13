@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { loadAppSettings, saveAppSetting } from '../lib/rightClick';
 import { ModeratedAdminReport } from './ModeratedAdminReport';
@@ -92,12 +92,15 @@ export function ModerationAdmin() {
   const [query, setQuery] = useState('');
   const [counts, setCounts] = useState<QueueRow[]>([]);
   const [note, setNote] = useState('');
+  const gen = useRef(0);
 
   useEffect(() => { const t = setTimeout(() => setQuery(search.trim()), 300); return () => clearTimeout(t); }, [search]);
 
   const load = useCallback(async (offset = 0) => {
+    const mine = ++gen.current;
     if (offset === 0) setLoading(true); else setMore(true);
     const { data, error } = await supabase.rpc('admin_list_moderated_reports', { p_status: filter, p_search: query, p_limit: PAGE, p_offset: offset });
+    if (mine !== gen.current) return; // a newer search or filter replaced this request
     if (error) setNote('The reports could not be loaded.');
     else {
       const list = (data ?? []) as QueueRow[];
