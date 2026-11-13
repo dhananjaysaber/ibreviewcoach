@@ -51,14 +51,28 @@ type ReviewPayload = {
 
 type Availability = { paused: boolean; daily_limit: number; taken_today: number };
 
-const card: React.CSSProperties = { border: '1px solid #e3dccb', borderRadius: 12, padding: 14, margin: '10px 0', background: '#fff' };
-const input: React.CSSProperties = { padding: '8px 10px', borderRadius: 10, border: '1px solid #d9d4c7', font: 'inherit' };
-const area: React.CSSProperties = { ...input, width: '100%', minHeight: 70, boxSizing: 'border-box' };
-
 function when(value: string | null): string {
   if (!value) return '—';
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+}
+
+function dueLabel(r: Pick<QueueRow, 'due_at' | 'moderation_status' | 'published_at'>): string {
+  if (r.moderation_status === 'published') return `Published ${when(r.published_at)}`;
+  if (!r.due_at) return 'No deadline';
+  const diff = new Date(r.due_at).getTime() - Date.now();
+  const hrs = Math.round(Math.abs(diff) / 3_600_000);
+  const span = hrs >= 48 ? `${Math.round(hrs / 24)} days` : hrs >= 1 ? `${hrs}h` : 'under an hour';
+  return diff < 0 ? `Overdue by ${span}` : `Due in ${span}`;
+}
+
+function Switch({ checked, label, onChange }: { checked: boolean; label: string; onChange: (v: boolean) => void }) {
+  return (
+    <label className="admin-switch">
+      <input type="checkbox" role="switch" aria-label={label} checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className="admin-switch-track" aria-hidden="true" />
+    </label>
+  );
 }
 
 export function ModerationAdmin() {
@@ -92,40 +106,64 @@ export function ModerationAdmin() {
 
   const waiting = rows.filter((r) => r.moderation_status === 'awaiting');
   const overdue = waiting.filter((r) => r.is_overdue).length;
+  const soon = waiting.filter((r) => r.is_due_soon).length;
 
   return (
     <div className="admin-tab-content">
-      <ModerationControls />
-      <section className="admin-panel">
-        <h3>Moderation queue</h3>
-        <p style={{ margin: '0 0 8px' }}>
-          {waiting.length} waiting{overdue > 0 ? `, ${overdue} overdue` : ''}. Sorted by deadline, most urgent first.
-        </p>
-        <label style={{ display: 'block', marginBottom: 8 }}>
-          <input type="checkbox" checked={showPublished} onChange={(e) => setShowPublished(e.target.checked)} /> Also show reports published in the last 14 days
-        </label>
-        {note && <div style={card} role="status">{note}</div>}
-        {loading ? <p>Loading…</p> : rows.length === 0 ? <p>Nothing is waiting for review.</p> : rows.map((r) => (
-          <article key={r.submission_id} style={{ ...card, borderColor: r.is_overdue ? '#c0392b' : r.is_due_soon ? '#d9a400' : '#e3dccb' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-              <div>
-                <strong>{r.original_filename ?? 'IA report'}</strong>
-                <div>{r.student_email ?? 'Unknown student'} · {r.subject ?? '—'}{r.word_count ? ` · ${r.word_count} words` : ''}</div>
-                <div>
-                  {r.moderation_status === 'published'
-                    ? `Published ${when(r.published_at)}`
-                    : `Due ${when(r.due_at)} · waiting ${r.hours_waiting ?? 0}h`}
-                  {r.is_overdue && <strong style={{ color: '#c0392b' }}> · OVERDUE</strong>}
-                  {r.is_due_soon && <strong style={{ color: '#a07800' }}> · due soon</strong>}
-                </div>
-              </div>
-              <button type="button" className="admin-primary-button" onClick={() => { setNote(''); setOpenId(r.submission_id); }}>
-                {r.moderation_status === 'published' ? 'View' : 'Review'}
-              </button>
+      {note && <div className="mod-note" role="status">{note}</div>}
+      <div className="mod-layout">
+        <section className="admin-panel mod-queue">
+          <div className="mod-queue-head">
+            <div>
+              <h3>Reports to review</h3>
+              <p>Most urgent first. Each student is promised 24 hours.</p>
             </div>
-          </article>
-        ))}
-      </section>
+            <div className="mod-seg" role="tablist" aria-label="Which reports to show">
+              <button type="button" role="tab" aria-selected={!showPublished} className={!showPublished ? 'on' : ''} onClick={() => setShowPublished(false)}>Waiting</button>
+              <button type="button" role="tab" aria-selected={showPublished} className={showPublished ? 'on' : ''} onClick={() => setShowPublished(true)}>Plus last 14 days</button>
+            </div>
+          </div>
+
+          <div className="mod-counts">
+            <div><b>{waiting.length}</b><span>Waiting</span></div>
+            <div className={overdue ? 'mod-bad' : ''}><b>{overdue}</b><span>Overdue</span></div>
+            <div className={soon ? 'mod-warn' : ''}><b>{soon}</b><span>Due soon</span></div>
+          </div>
+
+          {loading ? (
+            <p className="mod-empty">Loading…</p>
+          ) : rows.length === 0 ? (
+            <div className="mod-empty">
+              <strong>The queue is clear</strong>
+              <span>New paid reports appear here as soon as the review is finished.</span>
+            </div>
+          ) : (
+            <ul className="mod-list">
+              {rows.map((r) => {
+                const tone = r.moderation_status === 'published' ? 'done' : r.is_overdue ? 'bad' : r.is_due_soon ? 'warn' : 'ok';
+                return (
+                  <li key={r.submission_id} className={`mod-item mod-${tone}`}>
+                    <div className="mod-item-main">
+                      <strong>{r.original_filename ?? 'IA report'}</strong>
+                      <span>
+                        {r.student_email ?? 'Unknown student'}
+                        {r.subject ? ` · ${r.subject}` : ''}
+                        {r.word_count ? ` · ${r.word_count.toLocaleString()} words` : ''}
+                      </span>
+                    </div>
+                    <span className={`mod-pill mod-pill-${tone}`}>{dueLabel(r)}</span>
+                    <button type="button" className={r.moderation_status === 'published' ? 'admin-secondary-button' : 'admin-primary-button'} onClick={() => { setNote(''); setOpenId(r.submission_id); }}>
+                      {r.moderation_status === 'published' ? 'View' : 'Review'}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        <ModerationControls />
+      </div>
     </div>
   );
 }
@@ -136,7 +174,7 @@ function ModerationControls() {
   const [limit, setLimit] = useState('10');
   const [avail, setAvail] = useState<Availability | null>(null);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const refresh = useCallback(async () => {
     const s = await loadAppSettings();
@@ -149,49 +187,60 @@ function ModerationControls() {
   useEffect(() => { void refresh(); }, [refresh]);
 
   async function save() {
-    setBusy(true); setMsg('');
+    setBusy(true); setMsg(null);
     const n = Number(limit);
-    if (!Number.isInteger(n) || n < 1 || n > 200) { setMsg('Daily limit must be a whole number from 1 to 200.'); setBusy(false); return; }
-    if (paused && resume && !/^\d{4}-\d{2}-\d{2}$/.test(resume)) { setMsg('Resume date is not valid.'); setBusy(false); return; }
+    if (!Number.isInteger(n) || n < 1 || n > 200) { setMsg({ ok: false, text: 'Daily limit must be a whole number from 1 to 200.' }); setBusy(false); return; }
+    if (paused && resume && !/^\d{4}-\d{2}-\d{2}$/.test(resume)) { setMsg({ ok: false, text: 'Resume date is not valid.' }); setBusy(false); return; }
     const results = await Promise.all([
       saveAppSetting('moderation_paused', paused),
       saveAppSetting('moderation_resume_date', paused && resume ? resume : null),
       saveAppSetting('moderation_daily_limit', n),
     ]);
-    setMsg(results.every(Boolean) ? 'Saved. The upload page updates straight away.' : 'Something did not save. Try again.');
+    setMsg(results.every(Boolean) ? { ok: true, text: 'Saved. The upload page updates straight away.' } : { ok: false, text: 'Something did not save. Try again.' });
     await refresh();
     setBusy(false);
   }
 
+  const used = avail?.taken_today ?? 0;
+  const cap = avail?.daily_limit ?? Number(limit) ?? 10;
+  const pct = cap > 0 ? Math.min(100, Math.round((used / cap) * 100)) : 0;
+
   return (
-    <section className="admin-panel">
-      <h3>Moderator availability</h3>
-      <div className="admin-detail-list">
-        <p style={{ margin: 0 }}>
-          {avail ? `${avail.taken_today} of ${avail.daily_limit} slots used today.` : 'Checking…'}
-          {avail?.paused ? ' Paid reviews are currently paused.' : ''}
-        </p>
-        <label className="admin-toggle-row">
-          <input type="checkbox" checked={paused} onChange={(e) => setPaused(e.target.checked)} />
-          <span>Pause new paid reviews</span>
-        </label>
+    <section className="admin-panel mod-avail">
+      <h3>Availability</h3>
+      <div className="mod-slots">
+        <div className="mod-slots-num"><b>{avail ? used : '–'}</b><span>of {avail ? cap : '–'} slots used today</span></div>
+        <div className="mod-bar" aria-hidden="true"><i style={{ width: `${pct}%` }} className={pct >= 100 ? 'full' : ''} /></div>
+        {avail?.paused && <span className="mod-pill mod-pill-warn">Paid reviews are paused</span>}
+      </div>
+
+      <div className="admin-setting mod-set">
+        <div className="admin-setting-main">
+          <div className="admin-setting-text">
+            <strong>Pause new paid reviews</strong>
+            <span>Students see a message and can still upload; their reports start when you reopen.</span>
+          </div>
+          <div className="admin-setting-control"><Switch label="Pause new paid reviews" checked={paused} onChange={setPaused} /></div>
+        </div>
         {paused && (
-          <label className="admin-toggle-row">
+          <label className="mod-field">
             <span>Reopens on</span>
-            <input type="date" value={resume} onChange={(e) => setResume(e.target.value)} style={input} />
-            <span>(shown to students; pause ends on its own on this date)</span>
+            <input type="date" value={resume} onChange={(e) => setResume(e.target.value)} />
+            <small>Shown to students. The pause ends by itself on this date.</small>
           </label>
         )}
-        <label className="admin-toggle-row">
-          <span>Reports taken per day</span>
-          <input type="number" min={1} max={200} value={limit} onChange={(e) => setLimit(e.target.value)} style={{ ...input, width: 90 }} />
-        </label>
-        <div className="admin-toggle-row">
-          <button type="button" className="admin-primary-button" disabled={busy} onClick={() => void save()}>
-            {busy ? 'Saving…' : 'Save'}
-          </button>
-          {msg && <span>{msg}</span>}
-        </div>
+      </div>
+
+      <label className="mod-field mod-limit">
+        <span>Reports taken per day</span>
+        <input type="number" min={1} max={200} value={limit} onChange={(e) => setLimit(e.target.value)} />
+      </label>
+
+      <div className="mod-save">
+        <button type="button" className="admin-primary-button" disabled={busy} onClick={() => void save()}>
+          {busy ? 'Saving…' : 'Save'}
+        </button>
+        {msg && <span className={msg.ok ? 'mod-msg-ok' : 'mod-msg-bad'}>{msg.text}</span>}
       </div>
     </section>
   );
@@ -279,56 +328,91 @@ function ModerationReviewEditor({
     onClose();
   }
 
-  if (error && !data) return <section className="admin-panel"><p>{error}</p><button type="button" className="admin-secondary-button" onClick={onClose}>Back</button></section>;
-  if (!data) return <section className="admin-panel"><p>Loading…</p></section>;
+  if (error && !data) return <section className="admin-panel"><p className="mod-msg-bad">{error}</p><button type="button" className="admin-secondary-button" onClick={onClose}>Back</button></section>;
+  if (!data) return <section className="admin-panel"><p className="mod-empty">Loading…</p></section>;
   const awaiting = data.submission.moderation_status === 'awaiting';
+  const setMark = (code: string, patch: Partial<{ low: string; high: string; band: string; rationale: string }>) =>
+    setMarks({ ...marks, [code]: { ...marks[code], ...patch } });
+  const setFinding = (id: string, patch: Partial<{ issue: string; specific_action: string; why: string }>) =>
+    setFindings({ ...findings, [id]: { ...findings[id], ...patch } });
+  const byCriterion = new Map<string, Finding[]>();
+  for (const f of data.findings) byCriterion.set(f.criterion_code, [...(byCriterion.get(f.criterion_code) ?? []), f]);
+  const total = data.criteria.reduce(
+    (a, c) => [a[0] + (Number(marks[c.criterion]?.low) || 0), a[1] + (Number(marks[c.criterion]?.high) || 0), a[2] + (c.criterion_max_marks ?? 6)],
+    [0, 0, 0],
+  );
 
   return (
-    <section className="admin-panel">
-      <button type="button" className="admin-secondary-button" onClick={onClose}>← Back to queue</button>
-      <h3 style={{ marginTop: 12 }}>{data.submission.original_filename ?? 'IA report'}</h3>
-      <p>{data.submission.student_email} · {data.submission.subject} · due {when(data.submission.due_at)}</p>
-      {!awaiting && <div style={card}>This report is already published and can no longer be edited.</div>}
-      {error && <div style={{ ...card, borderColor: '#c0392b' }} role="alert">{error}</div>}
-
-      <h4>Marks</h4>
-      {data.criteria.map((c) => (
-        <div key={c.criterion} style={card}>
-          <strong>{c.criterion_name ?? c.criterion}</strong> (out of {c.criterion_max_marks ?? 6})
-          <div style={{ display: 'flex', gap: 8, margin: '8px 0', flexWrap: 'wrap' }}>
-            <input style={{ ...input, width: 70 }} disabled={!awaiting} aria-label="Low mark" value={marks[c.criterion]?.low ?? ''} onChange={(e) => setMarks({ ...marks, [c.criterion]: { ...marks[c.criterion], low: e.target.value } })} />
-            <span>to</span>
-            <input style={{ ...input, width: 70 }} disabled={!awaiting} aria-label="High mark" value={marks[c.criterion]?.high ?? ''} onChange={(e) => setMarks({ ...marks, [c.criterion]: { ...marks[c.criterion], high: e.target.value } })} />
-            <input style={{ ...input, flex: 1, minWidth: 140 }} disabled={!awaiting} placeholder="Band" aria-label="Band" value={marks[c.criterion]?.band ?? ''} onChange={(e) => setMarks({ ...marks, [c.criterion]: { ...marks[c.criterion], band: e.target.value } })} />
-          </div>
-          <textarea style={area} disabled={!awaiting} aria-label="Why this mark" value={marks[c.criterion]?.rationale ?? ''} onChange={(e) => setMarks({ ...marks, [c.criterion]: { ...marks[c.criterion], rationale: e.target.value } })} />
+    <div className="mod-editor">
+      <header className="mod-editor-head">
+        <button type="button" className="admin-secondary-button" onClick={onClose}>← Back to queue</button>
+        <div className="mod-editor-title">
+          <h3>{data.submission.original_filename ?? 'IA report'}</h3>
+          <p>
+            {data.submission.student_email}
+            {data.submission.subject ? ` · ${data.submission.subject}` : ''}
+            {data.submission.word_count ? ` · ${data.submission.word_count.toLocaleString()} words` : ''}
+          </p>
         </div>
-      ))}
-
-      <h4>Comments</h4>
-      {data.findings.map((f) => (
-        <div key={f.id} style={card}>
-          <strong>{f.criterion_code} · {f.section_title ?? 'Comment'}</strong>
-          {f.evidence_excerpt && <blockquote style={{ margin: '6px 0', color: '#555' }}>{f.evidence_excerpt}</blockquote>}
-          <label>Issue<textarea style={area} disabled={!awaiting} value={findings[f.id]?.issue ?? ''} onChange={(e) => setFindings({ ...findings, [f.id]: { ...findings[f.id], issue: e.target.value } })} /></label>
-          <label>What to do<textarea style={area} disabled={!awaiting} value={findings[f.id]?.specific_action ?? ''} onChange={(e) => setFindings({ ...findings, [f.id]: { ...findings[f.id], specific_action: e.target.value } })} /></label>
-          <label>Why<textarea style={area} disabled={!awaiting} value={findings[f.id]?.why ?? ''} onChange={(e) => setFindings({ ...findings, [f.id]: { ...findings[f.id], why: e.target.value } })} /></label>
+        <div className="mod-editor-total">
+          <b>{total[0]}–{total[1]}</b>
+          <span>of {total[2]} marks</span>
         </div>
-      ))}
+      </header>
 
-      <button type="button" className="admin-secondary-button" onClick={() => setShowText(!showText)}>
-        {showText ? 'Hide' : 'Show'} the student’s text
-      </button>
-      {showText && <pre style={{ whiteSpace: 'pre-wrap', maxHeight: 400, overflow: 'auto', ...card }}>{data.extracted_text ?? ''}</pre>}
+      {!awaiting && <div className="mod-note">This report is already published and can no longer be edited.</div>}
+      {error && <div className="mod-note mod-note-bad" role="alert">{error}</div>}
+
+      <div className="mod-crit-grid">
+        {data.criteria.map((c) => (
+          <section key={c.criterion} className="admin-panel mod-crit">
+            <div className="mod-crit-head">
+              <h3>{c.criterion_name ?? c.criterion}</h3>
+              <span>out of {c.criterion_max_marks ?? 6}</span>
+            </div>
+            <div className="mod-marks">
+              <label><span>Low</span><input inputMode="numeric" disabled={!awaiting} value={marks[c.criterion]?.low ?? ''} onChange={(e) => setMark(c.criterion, { low: e.target.value })} /></label>
+              <i>to</i>
+              <label><span>High</span><input inputMode="numeric" disabled={!awaiting} value={marks[c.criterion]?.high ?? ''} onChange={(e) => setMark(c.criterion, { high: e.target.value })} /></label>
+              <label className="mod-band"><span>Band</span><input disabled={!awaiting} value={marks[c.criterion]?.band ?? ''} onChange={(e) => setMark(c.criterion, { band: e.target.value })} /></label>
+            </div>
+            <label className="mod-field">
+              <span>Why this mark</span>
+              <textarea disabled={!awaiting} rows={3} value={marks[c.criterion]?.rationale ?? ''} onChange={(e) => setMark(c.criterion, { rationale: e.target.value })} />
+            </label>
+
+            {(byCriterion.get(c.criterion) ?? []).length > 0 && (
+              <details className="mod-findings">
+                <summary>{(byCriterion.get(c.criterion) ?? []).length} comments for this criterion</summary>
+                {(byCriterion.get(c.criterion) ?? []).map((f) => (
+                  <div key={f.id} className="mod-finding">
+                    <strong>{f.section_title ?? 'Comment'}</strong>
+                    {f.evidence_excerpt && <blockquote>{f.evidence_excerpt}</blockquote>}
+                    <label className="mod-field"><span>Issue</span><textarea rows={2} disabled={!awaiting} value={findings[f.id]?.issue ?? ''} onChange={(e) => setFinding(f.id, { issue: e.target.value })} /></label>
+                    <label className="mod-field"><span>What to do</span><textarea rows={2} disabled={!awaiting} value={findings[f.id]?.specific_action ?? ''} onChange={(e) => setFinding(f.id, { specific_action: e.target.value })} /></label>
+                    <label className="mod-field"><span>Why</span><textarea rows={2} disabled={!awaiting} value={findings[f.id]?.why ?? ''} onChange={(e) => setFinding(f.id, { why: e.target.value })} /></label>
+                  </div>
+                ))}
+              </details>
+            )}
+          </section>
+        ))}
+      </div>
+
+      <details className="admin-panel mod-text" open={showText} onToggle={(e) => setShowText((e.target as HTMLDetailsElement).open)}>
+        <summary>The student’s text</summary>
+        <pre>{data.extracted_text ?? ''}</pre>
+      </details>
 
       {awaiting && (
-        <div className="admin-toggle-row" style={{ marginTop: 14 }}>
+        <div className="mod-actionbar">
+          <span>Publishing uses the student’s credit and emails them.</span>
           <button type="button" className="admin-secondary-button" disabled={busy} onClick={() => void onSave()}>Save changes</button>
           <button type="button" className="admin-primary-button" disabled={busy} onClick={() => void onPublish()}>
-            {busy ? 'Working…' : 'Save and publish to student'}
+            {busy ? 'Working…' : 'Save and publish'}
           </button>
         </div>
       )}
-    </section>
+    </div>
   );
 }
