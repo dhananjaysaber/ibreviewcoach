@@ -90,6 +90,8 @@ import { AccountPage } from './components/AccountPage';
 import {
   ModerationAvailabilityNotice,
   WaitingForModerator,
+  ModeratedBadge,
+  useIsModerated,
 } from './components/ModeratorReview';
 import { AdminControlCentre } from './components/AdminControlCentre';
 import {
@@ -5813,6 +5815,8 @@ function CompletionWorkspace({
     'unassigned';
 
   const isFreeReview = accessMode === 'free_review';
+  const moderated = useIsModerated(submission?.id);
+  useEffect(() => { if (moderated) { setReviewSpace('student'); setActiveTab('detailed'); } }, [moderated]);
   const mm = useMarkMap(submission?.id ?? '', isFreeReview);
   const [ticks, setTick] = useTicks(submission?.id ?? '');
   useEffect(() => { if (mm.map) setMarkMapScore({ mark: mm.map.mark, maximum: mm.map.maximum }); }, [mm.map]);
@@ -6262,6 +6266,9 @@ function CompletionWorkspace({
         </div>
 
         <div className="review-results-shell">
+          {moderated && <ModeratedBadge />}
+          {!moderated && (
+          <>
           <div className={`review-space review-space-${reviewSpace}`}>
             <div className="review-space-switch" role="tablist" aria-label="Choose a report">
               <button type="button" role="tab" aria-selected={reviewSpace === 'student'} className={reviewSpace === 'student' ? 'on' : ''} onClick={() => switchReviewSpace('student')}>Student report</button>
@@ -6343,6 +6350,8 @@ function CompletionWorkspace({
             )}
           </nav>
 
+          </>
+          )}
           <div className="review-tab-content">
             {reviewLoadState === 'loading' ? (
               <ReviewDataLoading />

@@ -1,6 +1,6 @@
 // supabase/functions/run-ia-pipeline/index.ts
 //
-// IA Pipeline Orchestrator — v4.4 (free run stops after Research Design; paid reports held for the moderator)
+// IA Pipeline Orchestrator — v4.5 (free run stops after Research Design; paid reports held for the moderator)
 //
 // Workflow: extract-document-text -> extract-structure -> map-to-rubric ->
 // generate-coaching -> generate-annotated-ia -> create-progress-plan
@@ -19,7 +19,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const ORCHESTRATOR_VERSION = "run-ia-pipeline-v4.4-moderated";
+const ORCHESTRATOR_VERSION = "run-ia-pipeline-v4.5-moderated";
 const REQUIRED_DETAIL_VERSION = "detailed-findings-v1";
 const FREE_CRITERION = "ResearchDesign";
 const MIN_EXTRACTED_TEXT_LENGTH = 100;
@@ -197,7 +197,7 @@ async function loadPipelineState(
     .select([
       "id", "student_id", "subject", "status", "commercial_access", "extracted_text",
       "document_blocks_ready_at", "detailed_findings_ready_at", "annotated_artifact_ready_at",
-      "completed_at", "deleted_at",
+      "completed_at", "deleted_at", "moderation_status",
     ].join(","))
     .eq("id", submissionId)
     .maybeSingle();
@@ -413,7 +413,8 @@ function buildStateResponse(options: {
   const { state, stageCompleted, activeStage, childPayload, finalization = null, message } = options;
 
   const isFreeReview = state.isFreeReview;
-  const isHeld = readBooleanValue(finalization?.awaiting_moderator);
+  const isHeld = readBooleanValue(finalization?.awaiting_moderator) ||
+    (state.submission as { moderation_status?: string }).moderation_status === "awaiting";
   const hideAccessDetails = isFreeReview || isHeld;
 
   return {
@@ -678,7 +679,7 @@ function buildCompletedMessage(finalization: Record<string, unknown> | null): st
 function getFriendlyAccessMessage(rawMessage: string): string {
   const message = rawMessage.toLowerCase();
   if (message.includes("already in progress") || message.includes("duplicate key")) {
-    return "Another IA review is already in progress for this account.";
+    return "Your previous IA is still being prepared. Please try again in a moment.";
   }
   if (message.includes("no ia review allowance") || message.includes("no review allowance")) {
     return "No IA review allowance is currently available for this account.";

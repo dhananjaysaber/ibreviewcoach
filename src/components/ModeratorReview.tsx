@@ -140,3 +140,32 @@ export function PendingModeratorReviews() {
     </div>
   );
 }
+
+/** True when this report was released by the moderator (paid reports). */
+export function useIsModerated(submissionId: string | null | undefined): boolean {
+  const [moderated, setModerated] = useState(false);
+  useEffect(() => {
+    setModerated(false);
+    if (!submissionId) return;
+    let alive = true;
+    void supabase
+      .from('ia_submissions')
+      .select('moderation_status')
+      .eq('id', submissionId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (alive && data?.moderation_status === 'published') setModerated(true);
+      });
+    return () => { alive = false; };
+  }, [submissionId]);
+  return moderated;
+}
+
+export function ModeratedBadge() {
+  return (
+    <div style={box} role="note">
+      <strong>{MODERATED_LABEL}</strong>
+      <div>The marks and comments below were reviewed and approved before release.</div>
+    </div>
+  );
+}
