@@ -361,3 +361,9 @@ button.admin-attention-item:hover span { text-decoration: underline; }
   .admin-control-centre input:not([type="checkbox"]):not([type="radio"]),
   .admin-control-centre textarea { font-size: 16px; }
 }
+
+/* Admin report page never grows wider than the screen */
+.mod-report { min-width: 0; max-width: 100%; }
+.mod-report .ws, .mod-report .w-sheet, .mod-report .w-annhead { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.mod-report .w-sheet { overflow-wrap: anywhere; }
+.mod-report-tabs { overflow-x: auto; }
