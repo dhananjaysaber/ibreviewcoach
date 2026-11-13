@@ -255,6 +255,8 @@ function ModerationReviewEditor({
   const [marks, setMarks] = useState<Record<string, { low: string; high: string; band: string; rationale: string }>>({});
   const [findings, setFindings] = useState<Record<string, { issue: string; specific_action: string; why: string }>>({});
   const [showText, setShowText] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [saved, setSaved] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -302,15 +304,15 @@ function ModerationReviewEditor({
   }
 
   async function onSave() {
-    setBusy(true); setError('');
-    if (await persist()) onDone('Saved.');
+    setBusy(true); setError(''); setSaved('');
+    if (await persist()) setSaved('Changes saved.');
     setBusy(false);
   }
 
   async function onPublish() {
     if (!data) return;
-    if (!window.confirm('Publish this report to the student now? Their credit will be used.')) return;
-    setBusy(true); setError('');
+    setConfirming(false);
+    setBusy(true); setError(''); setSaved('');
     if (!(await persist())) { setBusy(false); return; }
     const { error: e } = await supabase.rpc('admin_publish_ia_review', { p_submission_id: submissionId });
     if (e) { setError(e.message || 'Could not publish.'); setBusy(false); return; }
@@ -362,6 +364,7 @@ function ModerationReviewEditor({
 
       {!awaiting && <div className="mod-note">This report is already published and can no longer be edited.</div>}
       {error && <div className="mod-note mod-note-bad" role="alert">{error}</div>}
+      {saved && <div className="mod-note" role="status">{saved}</div>}
 
       <div className="mod-crit-grid">
         {data.criteria.map((c) => (
@@ -406,11 +409,19 @@ function ModerationReviewEditor({
 
       {awaiting && (
         <div className="mod-actionbar">
-          <span>Publishing uses the student’s credit and emails them.</span>
-          <button type="button" className="admin-secondary-button" disabled={busy} onClick={() => void onSave()}>Save changes</button>
-          <button type="button" className="admin-primary-button" disabled={busy} onClick={() => void onPublish()}>
-            {busy ? 'Working…' : 'Save and publish'}
-          </button>
+          {confirming ? (
+            <>
+              <span><strong>Publish this report now?</strong> The student’s credit is used and they are emailed. This cannot be undone.</span>
+              <button type="button" className="admin-secondary-button" disabled={busy} onClick={() => setConfirming(false)}>Cancel</button>
+              <button type="button" className="admin-primary-button" disabled={busy} onClick={() => void onPublish()}>Yes, publish</button>
+            </>
+          ) : (
+            <>
+              <span>Publishing uses the student’s credit and emails them.</span>
+              <button type="button" className="admin-secondary-button" disabled={busy} onClick={() => void onSave()}>{busy ? 'Working…' : 'Save changes'}</button>
+              <button type="button" className="admin-primary-button" disabled={busy} onClick={() => setConfirming(true)}>Save and publish</button>
+            </>
+          )}
         </div>
       )}
     </div>
