@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import './policy-pages.css';
 
 export const CONTACT_EMAIL = 'support@ibiareview.com';
-const UPDATED = '12 November 2026';
+const UPDATED = '13 November 2026';
 
 export const POLICY_ROUTES: Record<string, string> = {
   '/privacy-policy': 'privacy',
@@ -33,7 +33,7 @@ const PAGES: Record<string, { title: string; intro: string; sections: Section[] 
         body: (
           <ul>
             <li>Account details: your name and email address, and your sign-in credentials (passwords are stored hashed by our authentication provider, never in plain text).</li>
-            <li>Your uploads: the IA documents you submit, the subject and academic year you choose, and the reviews, marks and annotated copies generated from them.</li>
+            <li>Your uploads: the IA documents you submit, the subject and academic year you choose, and the reviews, marks and annotated copies prepared from them.</li>
             <li>Purchase records: the review-credit pack you bought, the amount, the date and a payment reference. We do not receive or store your card, UPI or bank details; these are handled by the payment processor.</li>
             <li>Basic technical data such as browser type and error logs, used to keep the service running and secure.</li>
           </ul>
@@ -43,7 +43,7 @@ const PAGES: Record<string, { title: string; intro: string; sections: Section[] 
         heading: 'How we use it',
         body: (
           <ul>
-            <li>To produce your review, mark estimate, annotated copy and fix plan, and to let you reopen them later.</li>
+            <li>To prepare your review, marks, annotated copy and fix plan, and to let you reopen them later.</li>
             <li>To manage your account, review credits, receipts and support requests.</li>
             <li>To maintain, secure and improve the service.</li>
           </ul>
@@ -53,7 +53,7 @@ const PAGES: Record<string, { title: string; intro: string; sections: Section[] 
         heading: 'Your documents',
         body: (
           <p>
-            Your IA is analysed to generate your review. It is not submitted to plagiarism or similarity checkers, and it is not sold or shared with other students. Original uploaded files are kept for up to 6 months so you can download them again. You can use <strong>Delete original IA</strong> on a saved report at any time to remove the uploaded file; you can also ask us to delete your account and data by emailing {mail}.
+            Your IA is analysed on our own hosted model to prepare your review. Your work is not used to train public models, it is not submitted to plagiarism or similarity checkers, and it is not sold or shared with other students. Depending on the review option you choose, your report is either prepared by our system alone (as with the free review) or reviewed, marked and approved by an authorised IB moderator before it is released to you. Where a moderator reviews your report, your document is visible only to you and to that moderator. Original uploaded files are kept for up to 6 months so you can download them again. You can use <strong>Delete original IA</strong> on a saved report at any time to remove the uploaded file; you can also ask us to delete your account and data by emailing {mail}.
           </p>
         ),
       },
@@ -100,51 +100,56 @@ const PAGES: Record<string, { title: string; intro: string; sections: Section[] 
     ],
   },
   refund: {
-    title: 'Refund, Return & Cancellation Policy',
+    title: 'Cancellation and Refund Policy',
     intro:
-      'IB IA Review sells digital review credits. Nothing is shipped, so there is no physical return. This policy explains when you can get your money back.',
+      'IB IA Review sells digital review credits. Nothing is shipped, so there is no physical return. Please read this policy before you buy.',
     sections: [
       {
         heading: 'What you are buying',
         body: (
           <p>
-            A review credit covers one supported IA draft review (mark estimate, annotated copy and fix plan). Credits are sold as one-time packs, not as a subscription, so there is nothing to cancel and no automatic renewal. Each pack shows its validity period on the pricing page.
+            A review credit covers one supported IA draft review (marks, annotated copy and fix plan). Credits are sold as one-time packs, not as a subscription, so there is no automatic renewal. Each pack shows its validity period on the pricing page, and you can use your credits whenever you like within that period.
           </p>
         ),
       },
       {
-        heading: 'When a credit is not used',
+        heading: 'Cancellation',
+        body: (
+          <p>
+            Credits are added to your account as soon as your payment succeeds, so an order cannot be cancelled once payment is complete. If you have not completed payment, no charge is made and nothing needs to be cancelled.
+          </p>
+        ),
+      },
+      {
+        heading: 'No refunds once paid',
+        body: (
+          <p>
+            All payments for review credits are final and non-refundable once payment is complete, whether or not the credits have been used. Please check the pack and amount before you pay.
+          </p>
+        ),
+      },
+      {
+        heading: 'If something goes wrong, you keep your credit',
         body: (
           <ul>
-            <li>A credit is consumed only after a complete review has been delivered successfully.</li>
-            <li>If your document is rejected (for example it is too long or cannot be read), or the review fails on our side, no credit is used and you can try again.</li>
+            <li>A credit is used only when a complete review has been delivered to you successfully.</li>
+            <li>If your document cannot be read, or the review fails or is not produced because of an error on our side, no credit is used. The credit stays in your account and you can submit again at any time.</li>
           </ul>
         ),
       },
       {
-        heading: 'Refund eligibility',
+        heading: 'Payment problems',
         body: (
-          <ul>
-            <li><strong>Unused credits:</strong> you may request a refund within 7 days of purchase if none of the credits in that pack has been used.</li>
-            <li><strong>Duplicate or wrong charge:</strong> if you were charged twice, or charged an amount different from the pack you chose, we will refund the extra amount in full.</li>
-            <li><strong>Failed delivery:</strong> if a review was charged but could not be delivered and we cannot fix it, we will restore the credit or refund it.</li>
-            <li><strong>Not eligible:</strong> credits that have already produced a completed review, and credits that have passed their validity period.</li>
-          </ul>
+          <p>
+            If you are charged twice, charged a different amount from the pack you chose, or your payment succeeds but the credits do not appear in your account, email {mail} with your payment reference. We will correct it by adding the credits or refunding the extra amount to the original payment method. Banks and card issuers usually take 5 to 7 business days to show a refund.
+          </p>
         ),
       },
       {
-        heading: 'How to request a refund',
+        heading: 'Contact',
         body: (
           <p>
             Email {mail} from your account email with your purchase date and payment reference. We aim to reply within 2 business days.
-          </p>
-        ),
-      },
-      {
-        heading: 'Refund timeline',
-        body: (
-          <p>
-            Approved refunds are sent to the original payment method. After we approve it, your bank or card issuer usually takes 5 to 7 business days to show the amount.
           </p>
         ),
       },
@@ -166,7 +171,7 @@ const PAGES: Record<string, { title: string; intro: string; sections: Section[] 
         heading: 'The service',
         body: (
           <p>
-            IB IA Review gives indicative feedback and a mark estimate on IB Internal Assessment drafts. It is an independent educational tool. It is not affiliated with or endorsed by the International Baccalaureate Organization. Final marks are decided by your teacher and the IB.
+            IB IA Review gives feedback and marks against the official criteria on IB Internal Assessment drafts. It is an independent educational tool. It is not affiliated with or endorsed by the International Baccalaureate Organization. Final marks are decided by your teacher and the IB. Depending on the review option you choose, a report is either prepared by our system alone (the free review, which is automated and is not reviewed by a moderator) or reviewed, marked and approved by an authorised IB moderator before it is released to you.
           </p>
         ),
       },
@@ -182,7 +187,7 @@ const PAGES: Record<string, { title: string; intro: string; sections: Section[] 
         heading: 'Accounts and credits',
         body: (
           <p>
-            Keep your sign-in details private. Review credits are personal, non-transferable and valid for the period stated on the pricing page. Prices are shown before you pay and may change for future purchases. Refunds follow the <a href="/refund-policy">Refund Policy</a>.
+            Keep your sign-in details private. Review credits are personal, non-transferable and valid for the period stated on the pricing page. Prices are shown before you pay and may change for future purchases. Payments are non-refundable once complete, and a credit is not used if a review fails because of an error on our side, as set out in the <a href="/refund-policy">Cancellation and Refund Policy</a>.
           </p>
         ),
       },

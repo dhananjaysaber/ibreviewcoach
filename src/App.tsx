@@ -3159,7 +3159,7 @@ function LandingPage({
 
       <section className="landing-marquee" aria-hidden="true">
         <div className="landing-marquee-track">
-          <span>Official 24-mark IB rubric</span>
+          <span>Official IB criteria</span>
           <span>SEHS live now</span>
           <span>Sciences coming soon</span>
           <span>Annotated copy</span>
@@ -3167,7 +3167,7 @@ function LandingPage({
           <span>Exemplar IAs</span>
           <span>Private by design</span>
           <span>Coaching, never ghostwriting</span>
-          <span>Official 24-mark IB rubric</span>
+          <span>Official IB criteria</span>
           <span>SEHS live now</span>
           <span>Sciences coming soon</span>
           <span>Annotated copy</span>

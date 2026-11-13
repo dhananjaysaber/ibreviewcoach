@@ -127,7 +127,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpload, onOpenExemplar }) 
                 </a>
               </li>
               <li><a href="/privacy-policy" className="hover:text-slate-950 dark:hover:text-white transition-colors">Privacy Policy</a></li>
-              <li><a href="/refund-policy" className="hover:text-slate-950 dark:hover:text-white transition-colors">Refund &amp; Cancellation Policy</a></li>
+              <li><a href="/refund-policy" className="hover:text-slate-950 dark:hover:text-white transition-colors">Cancellation &amp; Refund Policy</a></li>
               <li><a href="/terms" className="hover:text-slate-950 dark:hover:text-white transition-colors">Terms of Service</a></li>
               <li><a href="/contact" className="hover:text-slate-950 dark:hover:text-white transition-colors">Contact Us</a></li>
             </ul>
