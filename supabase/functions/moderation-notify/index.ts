@@ -97,7 +97,7 @@ function emailShell(o: { preheader: string; eyebrow: string; title: string; body
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
 <tr><td style="background:#0F172A;border-radius:18px 18px 0 0;padding:28px 32px 26px;">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-    <td style="width:38px;height:38px;border-radius:10px;background:#F59E0B;background-image:linear-gradient(135deg,#FBBF24,#D97706);text-align:center;vertical-align:middle;font:700 15px Georgia,'Times New Roman',serif;color:#0F172A;">IA</td>
+    <td style="width:44px;vertical-align:middle;"><img src="${o.site}/email/logo-mark.png" width="44" height="44" alt="IB IA Review" style="display:block;border:0;border-radius:11px;"></td>
     <td style="padding-left:12px;font:600 15px Georgia,'Times New Roman',serif;color:#FFFFFF;letter-spacing:.2px;">IB IA Review</td>
   </tr></table>
   <div style="margin-top:26px;font:700 11px Arial,Helvetica,sans-serif;letter-spacing:1.6px;text-transform:uppercase;color:#FBBF24;">${e(o.eyebrow)}</div>
