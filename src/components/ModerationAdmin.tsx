@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { loadAppSettings, saveAppSetting } from '../lib/rightClick';
+import { ModeratedAdminReport } from './ModeratedAdminReport';
 
 type QueueRow = {
   submission_id: string;
@@ -15,6 +16,7 @@ type QueueRow = {
   is_due_soon: boolean;
   moderation_status: 'awaiting' | 'published' | 'none';
   published_at: string | null;
+  total_count?: number;
 };
 
 type Criterion = {
@@ -75,36 +77,68 @@ function Switch({ checked, label, onChange }: { checked: boolean; label: string;
   );
 }
 
+const PAGE = 50;
+type Filter = 'waiting' | 'published' | 'all';
+
 export function ModerationAdmin() {
   const [rows, setRows] = useState<QueueRow[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [more, setMore] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
-  const [showPublished, setShowPublished] = useState(false);
+  const [sheet, setSheet] = useState(false);
+  const [filter, setFilter] = useState<Filter>('waiting');
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  const [counts, setCounts] = useState<QueueRow[]>([]);
   const [note, setNote] = useState('');
+  const gen = useRef(0);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase.rpc('admin_list_moderation_queue', { p_include_published: showPublished });
-    if (error) setNote('The queue could not be loaded.');
-    else setRows((data ?? []) as QueueRow[]);
-    setLoading(false);
-  }, [showPublished]);
+  useEffect(() => { const t = setTimeout(() => setQuery(search.trim()), 300); return () => clearTimeout(t); }, [search]);
 
-  useEffect(() => { void load(); }, [load]);
+  const load = useCallback(async (offset = 0) => {
+    const mine = ++gen.current;
+    if (offset === 0) setLoading(true); else setMore(true);
+    const { data, error } = await supabase.rpc('admin_list_moderated_reports', { p_status: filter, p_search: query, p_limit: PAGE, p_offset: offset });
+    if (mine !== gen.current) return; // a newer search or filter replaced this request
+    if (error) setNote('The reports could not be loaded.');
+    else {
+      const list = (data ?? []) as QueueRow[];
+      setRows((prev) => (offset === 0 ? list : [...prev, ...list]));
+      setTotal(Number(list[0]?.total_count ?? (offset === 0 ? 0 : total)));
+    }
+    setLoading(false); setMore(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, query]);
+
+  const loadCounts = useCallback(async () => {
+    const { data } = await supabase.rpc('admin_list_moderated_reports', { p_status: 'waiting', p_search: '', p_limit: 200, p_offset: 0 });
+    setCounts((data ?? []) as QueueRow[]);
+  }, []);
+
+  useEffect(() => { void load(0); }, [load]);
+  useEffect(() => { void loadCounts(); }, [loadCounts]);
+
+  function openRow(r: QueueRow) {
+    setNote('');
+    setSheet(r.moderation_status !== 'published');
+    setOpenId(r.submission_id);
+  }
 
   if (openId) {
+    const close = () => { setOpenId(null); setSheet(false); void load(0); void loadCounts(); };
     return (
       <div className="admin-tab-content">
-        <ModerationReviewEditor
-          submissionId={openId}
-          onClose={() => { setOpenId(null); void load(); }}
-          onDone={(msg) => setNote(msg)}
-        />
+        {sheet ? (
+          <ModerationReviewEditor submissionId={openId} onClose={close} onDone={(msg) => setNote(msg)} />
+        ) : (
+          <ModeratedAdminReport submissionId={openId} onBack={close} onOpenSheet={() => setSheet(true)} />
+        )}
       </div>
     );
   }
 
-  const waiting = rows.filter((r) => r.moderation_status === 'awaiting');
+  const waiting = counts;
   const overdue = waiting.filter((r) => r.is_overdue).length;
   const soon = waiting.filter((r) => r.is_due_soon).length;
 
@@ -119,9 +153,16 @@ export function ModerationAdmin() {
               <p>Most urgent first. Each student is promised 24 hours.</p>
             </div>
             <div className="mod-seg" role="tablist" aria-label="Which reports to show">
-              <button type="button" role="tab" aria-selected={!showPublished} className={!showPublished ? 'on' : ''} onClick={() => setShowPublished(false)}>Waiting</button>
-              <button type="button" role="tab" aria-selected={showPublished} className={showPublished ? 'on' : ''} onClick={() => setShowPublished(true)}>Plus last 14 days</button>
+              {(['waiting', 'published', 'all'] as Filter[]).map((f) => (
+                <button key={f} type="button" role="tab" aria-selected={filter === f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>
+                  {f === 'waiting' ? 'Waiting' : f === 'published' ? 'Published' : 'All'}
+                </button>
+              ))}
             </div>
+          </div>
+          <div className="mod-search">
+            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student email or file name" aria-label="Search reports" />
+            <span>{total.toLocaleString()} {total === 1 ? 'report' : 'reports'}</span>
           </div>
 
           <div className="mod-counts">
@@ -134,8 +175,8 @@ export function ModerationAdmin() {
             <p className="mod-empty">Loading…</p>
           ) : rows.length === 0 ? (
             <div className="mod-empty">
-              <strong>The queue is clear</strong>
-              <span>New paid reports appear here as soon as the review is finished.</span>
+              <strong>{query ? 'No reports match' : filter === 'waiting' ? 'The queue is clear' : 'No reports yet'}</strong>
+              <span>{query ? 'Try a different email or file name.' : 'New paid reports appear here as soon as the review is finished.'}</span>
             </div>
           ) : (
             <ul className="mod-list">
@@ -152,13 +193,18 @@ export function ModerationAdmin() {
                       </span>
                     </div>
                     <span className={`mod-pill mod-pill-${tone}`}>{dueLabel(r)}</span>
-                    <button type="button" className={r.moderation_status === 'published' ? 'admin-secondary-button' : 'admin-primary-button'} onClick={() => { setNote(''); setOpenId(r.submission_id); }}>
+                    <button type="button" className={r.moderation_status === 'published' ? 'admin-secondary-button' : 'admin-primary-button'} onClick={() => openRow(r)}>
                       {r.moderation_status === 'published' ? 'View' : 'Review'}
                     </button>
                   </li>
                 );
               })}
             </ul>
+          )}
+          {rows.length < total && (
+            <button type="button" className="admin-secondary-button mod-more" disabled={more} onClick={() => void load(rows.length)}>
+              {more ? 'Loading…' : `Load more (${total - rows.length} left)`}
+            </button>
           )}
         </section>
 

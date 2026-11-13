@@ -217,3 +217,147 @@ button.admin-attention-item:hover span { text-decoration: underline; }
   .mod-editor-head { grid-template-columns: minmax(0, 1fr); }
   .mod-editor-total { text-align: left; }
 }
+
+/* Moderation: search, paging and the admin report page */
+.mod-search{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.mod-search input{flex:1;min-width:0;padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.15);font:inherit;background:#fff}
+.mod-search span{font-size:.85rem;opacity:.7;white-space:nowrap}
+.mod-more{display:block;margin:16px auto 0}
+.mod-report-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.mod-report-title{flex:1;min-width:200px;display:flex;flex-direction:column}
+.mod-report-title span{font-size:.85rem;opacity:.7}
+.mod-report-tabs{display:flex;gap:6px;margin:16px 0;border-bottom:1px solid rgba(0,0,0,.1)}
+.mod-report-tabs button{padding:10px 16px;border:0;background:none;font:inherit;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;opacity:.7}
+.mod-report-tabs button.on{opacity:1;border-bottom-color:#d97706}
+
+/* ==========================================================================
+   Admin: one set of control sizes, identical in Chrome, Safari, Firefox, Edge.
+   Height 38px, text 13px, radius 9px for every button, dropdown and field.
+   ========================================================================== */
+.admin-control-centre {
+  --ctl-h: 38px;
+  --ctl-fs: 13px;
+  --ctl-radius: 9px;
+  --ctl-border: 1px solid rgba(14, 23, 38, 0.16);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+.admin-control-centre button,
+.admin-control-centre input,
+.admin-control-centre select,
+.admin-control-centre textarea {
+  font-family: inherit;
+  letter-spacing: normal;
+  margin: 0;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Buttons: named admin buttons, plain buttons, and the Search/Save buttons inside forms */
+.admin-control-centre .admin-primary-button,
+.admin-control-centre .admin-secondary-button,
+.admin-control-centre .admin-danger-button,
+.admin-control-centre .admin-refresh-button,
+.admin-control-centre button:not([class]),
+.admin-control-centre button[type="submit"]:not([class]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: var(--ctl-h);
+  min-height: var(--ctl-h);
+  padding: 0 14px;
+  border-radius: var(--ctl-radius);
+  font-size: var(--ctl-fs);
+  line-height: 1;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, filter .15s;
+}
+.admin-control-centre button:not([class]) {
+  color: #0E1726;
+  background: #fff;
+  border: var(--ctl-border);
+}
+.admin-control-centre button:not([class]):hover { background: #F8F6F1; }
+.admin-control-centre .admin-secondary-button:hover,
+.admin-control-centre .admin-refresh-button:hover { background: #F8F6F1; }
+.admin-control-centre .admin-primary-button svg,
+.admin-control-centre .admin-secondary-button svg,
+.admin-control-centre .admin-danger-button svg,
+.admin-control-centre .admin-refresh-button svg { width: 16px; height: 16px; flex: none; }
+.admin-control-centre .admin-text-button { font-size: var(--ctl-fs); height: auto; min-height: 0; }
+
+/* Dropdowns */
+.admin-control-centre select,
+.admin-control-centre .admin-select {
+  height: var(--ctl-h);
+  min-height: var(--ctl-h);
+  padding: 0 34px 0 12px;
+  border: var(--ctl-border);
+  border-radius: var(--ctl-radius);
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%235B6478' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  color: #0E1726;
+  font-size: var(--ctl-fs);
+  line-height: normal;
+  max-width: 100%;
+  cursor: pointer;
+}
+.admin-control-centre select::-ms-expand { display: none; }
+
+/* Text, number, date and search fields */
+.admin-control-centre input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+.admin-control-centre textarea {
+  min-height: var(--ctl-h);
+  padding: 0 12px;
+  border: var(--ctl-border);
+  border-radius: var(--ctl-radius);
+  background-color: #fff;
+  color: #0E1726;
+  font-size: var(--ctl-fs);
+  line-height: normal;
+}
+.admin-control-centre input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]) { height: var(--ctl-h); }
+.admin-control-centre textarea { padding: 9px 12px; height: auto; line-height: 1.5; }
+.admin-control-centre input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.admin-control-centre input[type="search"]::-webkit-search-cancel-button,
+.admin-control-centre input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; }
+.admin-control-centre input::placeholder,
+.admin-control-centre textarea::placeholder { color: #98A2B3; opacity: 1; }
+
+/* The combined search box keeps its own frame */
+.admin-control-centre .admin-search { min-height: var(--ctl-h); border-radius: var(--ctl-radius); }
+.admin-control-centre .admin-search input { border: 0; height: calc(var(--ctl-h) - 2px); min-height: 0; padding: 0 8px; background: transparent; }
+.admin-control-centre .admin-search button { height: auto; min-height: 0; border-radius: 0; font-size: 12px; }
+.admin-control-centre .mod-search input { min-width: 0; }
+
+/* Checkboxes look the same everywhere */
+.admin-control-centre input[type="checkbox"],
+.admin-control-centre input[type="radio"] {
+  -webkit-appearance: auto; appearance: auto;
+  width: 16px; height: 16px; accent-color: #D97706; margin: 0;
+}
+
+/* Same focus ring on every control */
+.admin-control-centre button:focus-visible,
+.admin-control-centre select:focus-visible,
+.admin-control-centre input:focus-visible,
+.admin-control-centre textarea:focus-visible { outline: 2px solid #F59E0B; outline-offset: 2px; }
+
+/* Segmented switches and tabs keep their own compact look but share the font size */
+.admin-control-centre .mod-seg button { font-size: 12.5px; height: 30px; padding: 0 12px; line-height: 1; }
+.admin-control-centre .mod-report-tabs button { font-size: var(--ctl-fs); height: auto; }
+
+/* Phones: Safari zooms into fields under 16px, so only there the field text is 16px */
+@media (max-width: 720px) {
+  .admin-control-centre select,
+  .admin-control-centre input:not([type="checkbox"]):not([type="radio"]),
+  .admin-control-centre textarea { font-size: 16px; }
+}
