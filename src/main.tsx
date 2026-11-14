@@ -17,3 +17,7 @@ createRoot(document.getElementById('root')!).render(
     {policyPage ? <PolicyPage page={policyPage} /> : <App />}
   </StrictMode>
 );
+
+// The page background is painted dark from the first byte on the landing route (see index.html);
+// release it once the app has rendered so the app's own backgrounds take over.
+requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.remove('ibia-boot')));
