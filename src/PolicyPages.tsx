@@ -258,6 +258,7 @@ export function PolicyLinks({ className = '' }: { className?: string }) {
       <a href="/contact">Contact</a>
       <a href="/sehs-ia-guides/">SEHS IA Guides</a>
       <a href="/sehs-ia-criteria/">SEHS IA Criteria</a>
+      <a href="/sehs-ia-new-syllabus/">New SEHS Syllabus</a>
       <a href="/sehs-ia-topic-ideas/">Topic Ideas</a>
     </nav>
   );
