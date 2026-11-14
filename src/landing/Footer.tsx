@@ -134,6 +134,34 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpload, onOpenExemplar }) 
           </div>
         </div>
 
+        {/* SEHS IA guides: crawlable internal links to the static guide pages */}
+        <nav aria-label="IB SEHS IA guides" className="py-8 border-b border-slate-300 dark:border-slate-800/80">
+          <h4 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+            IB SEHS IA Guides
+          </h4>
+          <ul className="flex flex-wrap gap-x-6 gap-y-2">
+            {[
+              ['/sehs-ia-guides/', 'All SEHS IA guides'],
+              ['/sehs-ia-new-syllabus/', 'New syllabus IA (first assessment 2026)'],
+              ['/sehs-ia-criteria/', 'IA criteria and marks'],
+              ['/sehs-ia-checker/', 'IA checker'],
+              ['/sehs-ia-research-question/', 'Research question'],
+              ['/sehs-ia-topic-ideas/', 'Topic ideas'],
+              ['/sehs-ia-data-analysis/', 'Data analysis'],
+              ['/sehs-ia-word-count-and-structure/', 'Word count and structure'],
+              ['/sehs-ia-common-mistakes/', 'Common mistakes'],
+              ['/sehs-ia-checklist/', 'Checklist'],
+              ['/sehs-ia-faq/', 'FAQ'],
+            ].map(([href, label]) => (
+              <li key={href}>
+                <a href={href} className="hover:text-slate-950 dark:hover:text-white transition-colors">
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
         {/* Bottom copyright & official disclaimer */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-500 dark:text-slate-500 text-[11px]">
           <div>
