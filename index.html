@@ -12,6 +12,20 @@
     <meta name="keywords" content="IB SEHS IA review, new SEHS syllabus IA 2026, SEHS IA 2026 criteria, IB Sports Science IA review, sports science IA review, SEHS IA feedback, SEHS IA checker, SEHS IA marking, IB sports exercise and health science IA, IB SEHS internal assessment, SEHS IA help, SEHS IA rubric, SEHS IA criteria, SEHS IA examples, SEHS IA fix plan, annotated IA, IB IA feedback, IB IA checker, IB internal assessment review, IB IA marking service, IB IA moderator" />
     <link rel="canonical" href="https://ibiareview.com/" />
     <meta name="theme-color" content="#090E1A" />
+    <style>
+      /* No cream/white flash before the app mounts. The app's global CSS paints an ivory page until React
+         renders the (dark) landing page, so on the landing route we paint the dark colour first and
+         remove this class once the app has mounted. The crawlable fallback text in #root stays in the
+         DOM but is visually hidden. */
+      html.ibia-boot, html.ibia-boot body { background: #0B1120 !important; color-scheme: dark; }
+      #root > main.seo-fallback { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    </style>
+    <script>
+      try {
+        var isLanding = location.pathname === "/" || location.pathname === "/index.html";
+        if (isLanding && localStorage.getItem("ibia_theme") !== "light") document.documentElement.className += " ibia-boot";
+      } catch (e) {}
+    </script>
     <meta name="robots" content="index,follow,max-image-preview:large" />
 
     <meta property="og:type" content="website" />
@@ -195,7 +209,7 @@
 
   <body>
     <div id="root">
-      <main style="max-width:760px;margin:40px auto;padding:0 20px;font-family:system-ui,sans-serif;line-height:1.6">
+      <main class="seo-fallback">
         <h1>IB SEHS IA Review: Sports Science IA feedback, marks and fix plan</h1>
         <p>IB IA Review helps IB students improve their Sports, Exercise and Health Science (SEHS, also called IB Sports Science) Internal Assessment. Upload your draft and get criteria-based feedback, marks, an annotated copy and a step-by-step fix plan.</p>
         <h2>What you get</h2>
