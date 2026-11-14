@@ -256,6 +256,9 @@ export function PolicyLinks({ className = '' }: { className?: string }) {
       <a href="/refund-policy">Refund Policy</a>
       <a href="/terms">Terms</a>
       <a href="/contact">Contact</a>
+      <a href="/sehs-ia-guides/">SEHS IA Guides</a>
+      <a href="/sehs-ia-criteria/">SEHS IA Criteria</a>
+      <a href="/sehs-ia-topic-ideas/">Topic Ideas</a>
     </nav>
   );
 }
