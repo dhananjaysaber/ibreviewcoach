@@ -3712,6 +3712,7 @@ function PricingSection({
         standalone ? 'landing-pricing-standalone' : ''
       }`}
       id="pricing"
+      data-nosnippet
     >
       <div className="landing-section-heading">
         <span>Review-credit pricing</span>
@@ -3950,7 +3951,7 @@ function MemberReviewAccessGate({
               Complete detailed review, full annotated IA, progress plan, saved
               history and available downloads.
             </span>
-            <small>Credits start at $9.99.</small>
+            <small data-nosnippet>Credits start at $9.99.</small>
           </article>
 
           <article>
