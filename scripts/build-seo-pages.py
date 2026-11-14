@@ -263,18 +263,56 @@ PAGES = [
   body=[], links=[]),
 ]
 BY = {p["slug"]: p for p in PAGES}
+FOOT = ['sehs-ia-guides','sehs-ia-new-syllabus','sehs-ia-criteria','sehs-ia-checker','sehs-ia-research-question','sehs-ia-topic-ideas','sehs-ia-data-analysis','sehs-ia-word-count-and-structure','sehs-ia-common-mistakes','sehs-ia-faq']
+LOGO = '<svg viewBox="0 0 64 64" role="img" aria-label="IB IA Review" focusable="false"><path d="M32 6 48 30 41 47H23l-7-17z" fill="#FBBF24"/><path d="M32 27v20" stroke="var(--cut)" stroke-width="2.8" stroke-linecap="round"/><circle cx="32" cy="27" r="3.4" fill="var(--cut)"/><rect x="18" y="52" width="28" height="5.5" rx="2.75" fill="currentColor"/></svg>'
 
-CSS = """*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0E1726;background:#FAF8F3;line-height:1.65}
-a{color:#92400E}header.top{background:#090E1A;color:#fff}header.top div{max-width:880px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-header.top a{color:#fff;text-decoration:none;font-weight:700}header.top nav a{font-weight:500;font-size:.9rem;margin-left:14px;opacity:.9}
-main{max-width:880px;margin:0 auto;padding:32px 20px 48px}h1{font-size:clamp(1.7rem,4vw,2.4rem);line-height:1.2;margin:0 0 12px;letter-spacing:-.02em}
-.lead{font-size:1.1rem;color:#344054;margin:0 0 24px}h2{font-size:1.35rem;margin:30px 0 8px}ul,ol{padding-left:1.3em}li{margin:6px 0}
-.cta{background:#FEF3C7;border:1px solid rgba(217,119,6,.35);border-radius:14px;padding:20px;margin:32px 0}.cta strong{display:block;font-size:1.1rem;margin-bottom:6px}
-.btn{display:inline-block;background:#D97706;color:#fff;text-decoration:none;font-weight:700;padding:11px 18px;border-radius:10px;margin-top:8px}
-.related{margin-top:28px}.related ul{list-style:none;padding:0;display:grid;gap:8px}.related a{display:block;background:#fff;border:1px solid #E1E5EC;border-radius:10px;padding:12px 14px;text-decoration:none;font-weight:600}
-.hub{list-style:none;padding:0;display:grid;gap:12px}.hub a{display:block;background:#fff;border:1px solid #E1E5EC;border-radius:12px;padding:16px;text-decoration:none;color:#0E1726}.hub b{display:block;color:#92400E;margin-bottom:4px}.hub span{font-size:.92rem;color:#475467}
-details{background:#fff;border:1px solid #E1E5EC;border-radius:10px;padding:12px 14px;margin:10px 0}summary{cursor:pointer;font-weight:700}
-footer{max-width:880px;margin:0 auto;padding:0 20px 40px;font-size:.85rem;color:#475467}footer a{margin-right:14px}.small{font-size:.82rem;color:#667085}"""
+CSS = """*{box-sizing:border-box}
+:root{--bg:#090E1A;--bg2:#0B1120;--card:#121A2D;--card2:#151F38;--line:rgba(148,163,184,.22);--ink:#F1F5F9;--mut:#B6C0D2;--dim:#8E99AE;--amber:#FBBF24;--amber2:#F59E0B;--link:#FCD34D;--cut:#090E1A;--serif:'Fraunces',Georgia,'Times New Roman',serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+:root[data-theme=light]{--bg:#FAF8F5;--bg2:#fff;--card:#fff;--card2:#F5F1EA;--line:#E2DDD2;--ink:#0F172A;--mut:#475569;--dim:#64748B;--link:#B45309;--cut:#fff}
+html{scroll-behavior:smooth}body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--link)}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;background:var(--amber);color:#111;padding:8px 12px;border-radius:8px;z-index:99}
+header.top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg2) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.top .in{max-width:1120px;margin:0 auto;padding:0 20px;height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.lockup{display:inline-flex;align-items:center;gap:12px;color:var(--ink);text-decoration:none}.lockup svg{width:40px;height:40px;flex:none}
+.lockup span{display:grid;line-height:1.1}.lockup strong{font:600 1.22rem var(--serif);letter-spacing:-.005em}
+.lockup small{margin-top:3px;font:600 .6rem var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+:root[data-theme=light] .lockup small{color:#B45309}
+header.top nav{display:flex;align-items:center;gap:22px;font-size:.9rem;font-weight:500}
+header.top nav a{color:var(--mut);text-decoration:none;white-space:nowrap}header.top nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,#FBBF24,#F59E0B);color:#1A1203!important;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:12px;box-shadow:0 6px 20px rgba(245,158,11,.25);transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}header.top .btn{padding:9px 16px;font-size:.88rem;border-radius:10px}
+.btn.ghost{background:var(--card2);color:var(--ink)!important;border:1px solid var(--line);box-shadow:none}
+@media (max-width:820px){header.top nav a.hide-m{display:none}header.top nav{gap:14px}.lockup small{display:none}}
+.hero{border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 80% -20%,rgba(251,191,36,.10),transparent 60%),var(--bg)}
+.hero .in{max-width:860px;margin:0 auto;padding:44px 20px 40px}
+.crumbs{font-size:.8rem;color:var(--dim);margin:0 0 18px}.crumbs a{color:var(--dim);text-decoration:none}.crumbs a:hover{color:var(--ink)}.crumbs i{margin:0 6px;font-style:normal;opacity:.6}
+.eyebrow{display:inline-block;font:600 .68rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);padding:5px 11px;border-radius:999px;margin-bottom:16px}
+:root[data-theme=light] .eyebrow{color:#B45309;background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.35)}
+h1{font:500 clamp(2rem,4.6vw,3rem)/1.13 var(--serif);letter-spacing:-.02em;margin:0 0 16px;text-wrap:balance}
+.lead{font-size:1.12rem;color:var(--mut);margin:0;max-width:62ch}
+main{max-width:860px;margin:0 auto;padding:36px 20px 56px}
+h2{font:500 1.55rem/1.25 var(--serif);letter-spacing:-.01em;margin:38px 0 10px}h2:first-child{margin-top:0}
+p{margin:0 0 14px;color:var(--mut)}ul,ol{padding-left:1.3em;color:var(--mut)}li{margin:7px 0}li::marker{color:var(--amber)}
+strong,b{color:var(--ink)}
+.cta{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:18px;padding:28px;margin:40px 0 8px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.cta:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#FBBF24,#F59E0B)}
+.cta strong{display:block;font:500 1.45rem var(--serif);margin-bottom:6px}.cta p{margin:0 0 14px}
+.related{margin-top:34px}.related h2{font-size:1.2rem}.related ul{list-style:none;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.related a,.hub a{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;font-weight:600;color:var(--ink);transition:border-color .15s,transform .15s}
+.related a:hover,.hub a:hover{border-color:rgba(251,191,36,.55);transform:translateY(-1px)}
+.hub{list-style:none;padding:0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.hub a{padding:18px}
+.hub b{display:block;font:500 1.12rem var(--serif);color:var(--ink);margin-bottom:6px}.hub span{font-size:.9rem;font-weight:400;color:var(--mut);line-height:1.55;display:block}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:10px 0}summary{cursor:pointer;font-weight:600;color:var(--ink)}details p{margin:10px 0 0}
+.small{font-size:.8rem;color:var(--dim);margin-top:26px}
+footer.site{background:var(--bg2);border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+footer.site .in{max-width:1120px;margin:0 auto;padding:52px 20px 28px}
+.fgrid{display:grid;gap:36px;grid-template-columns:1.3fr 1fr 1fr;padding-bottom:34px;border-bottom:1px solid var(--line)}
+@media (max-width:760px){.fgrid{grid-template-columns:1fr}}
+footer.site h4{margin:0 0 12px;font:600 .72rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+footer.site ul{list-style:none;padding:0;margin:0}footer.site li{margin:8px 0}footer.site a{color:var(--mut);text-decoration:none}footer.site a:hover{color:var(--ink)}
+footer.site .brand p{margin:12px 0;color:var(--mut)}.ok{color:#34D399;font-weight:500}
+.fine{padding-top:22px;display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;color:var(--dim);font-size:.72rem}.fine div:last-child{max-width:560px}"""
 
 def head(p, url, extra_ld):
     t = html.escape(p["title"] + " | IB IA Review"); d = html.escape(p["desc"]); k = html.escape(p["kw"])
@@ -290,6 +328,7 @@ def head(p, url, extra_ld):
 <link rel="canonical" href="{url}">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="theme-color" content="#090E1A">
+<script>try{{document.documentElement.setAttribute("data-theme",localStorage.getItem("ibia_theme")==="light"?"light":"dark")}}catch(e){{document.documentElement.setAttribute("data-theme","dark")}}</script>
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="IB IA Review">
 <meta property="og:title" content="{t}">
@@ -298,6 +337,9 @@ def head(p, url, extra_ld):
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="{t}">
 <meta name="twitter:description" content="{d}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400..700&display=swap">
 <style>{CSS}</style>
 <script type="application/ld+json">{json.dumps(extra_ld, ensure_ascii=False)}</script>
 </head>"""
@@ -314,9 +356,12 @@ def page_html(p):
          "publisher": {"@type": "Organization", "name": "IB IA Review", "url": SITE + "/"}}]}
     if p.get("faq"):
         ld["@graph"].append({"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in p["faq"]]})
-    out = [head(p, url, ld), "<body>",
-      '<header class="top"><div><a href="/">IB IA Review</a><nav aria-label="Guides"><a href="/sehs-ia-guides/">Guides</a><a href="/sehs-ia-criteria/">Criteria</a><a href="/sehs-ia-checker/">Review my IA</a></nav></div></header>',
-      "<main>", f"<h1>{html.escape(p['h1'])}</h1>", f'<p class="lead">{p["lead"]}</p>']
+    crumb_html = '<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><i>/</i><a href="/sehs-ia-guides/">SEHS IA guides</a>' + ("" if p.get("hub") else f'<i>/</i><span>{html.escape(p["nav"])}</span>') + '</nav>'
+    out = [head(p, url, ld), "<body>", '<a class="skip" href="#main">Skip to content</a>',
+      '<header class="top"><div class="in"><a class="lockup" href="/" aria-label="IB IA Review home">' + LOGO + '<span><strong>IB IA Review</strong><small>We coach · you write</small></span></a>'
+      '<nav aria-label="Main"><a class="hide-m" href="/sehs-ia-guides/">Guides</a><a class="hide-m" href="/sehs-ia-criteria/">SEHS Criteria</a><a class="hide-m" href="/sehs-ia-new-syllabus/">New syllabus</a><a class="btn" href="/">Try free review</a></nav></div></header>',
+      '<div class="hero"><div class="in">' + crumb_html + '<span class="eyebrow">IB SEHS IA guide</span>' + f"<h1>{html.escape(p['h1'])}</h1>" + f'<p class="lead">{p["lead"]}</p></div></div>',
+      '<main id="main">']
     for h, b in p["body"]:
         out.append(f"<h2>{h}</h2>{b}")
     if p.get("faq"):
@@ -324,11 +369,15 @@ def page_html(p):
             out.append(f"<details><summary>{html.escape(q)}</summary><p>{html.escape(a)}</p></details>")
     if p.get("hub"):
         out.append('<ul class="hub">' + "".join(f'<li><a href="/{x["slug"]}/"><b>{html.escape(x["nav"])}</b><span>{html.escape(x["desc"])}</span></a></li>' for x in PAGES if not x.get("hub")) + "</ul>")
-    out.append('<div class="cta"><strong>Get your SEHS IA reviewed</strong><p>Upload your draft for criteria-based feedback, an annotated copy and a step-by-step fix plan. Your first review is free. We coach, you write.</p><a class="btn" href="/">Try your first review free</a></div>')
+    out.append('<div class="cta"><strong>Get your SEHS IA reviewed</strong><p>Upload your draft for criteria-based feedback, an annotated copy and a step-by-step fix plan. Your first review is free. We coach, you write.</p><a class="btn" href="/">Try your first review free &rarr;</a> <a class="btn ghost" href="/sehs-ia-criteria/">See the criteria</a></div>')
     if p.get("links"):
         out.append('<nav class="related" aria-label="Related guides"><h2>Related guides</h2><ul>' + "".join(f'<li><a href="/{s}/">{html.escape(BY[s]["nav"])}: {html.escape(BY[s]["h1"])}</a></li>' for s in p["links"]) + '<li><a href="/sehs-ia-guides/">All SEHS IA guides</a></li></ul></nav>')
     out.append(f'<p class="small">{html.escape(DISCLAIMER)}</p></main>')
-    out.append('<footer><a href="/privacy-policy">Privacy Policy</a><a href="/refund-policy">Refund Policy</a><a href="/terms">Terms</a><a href="/contact">Contact</a></footer></body></html>')
+    gl = "".join(f'<li><a href="/{x["slug"]}/">{html.escape(x["nav"])}</a></li>' for x in PAGES if x["slug"] in FOOT)
+    out.append('<footer class="site"><div class="in"><div class="fgrid"><div class="brand"><a class="lockup" href="/">' + LOGO + '<span><strong>IB IA Review</strong><small>We coach · you write</small></span></a><p>Examiner-grade Internal Assessment criteria feedback, annotated manuscripts and actionable fix plans for IB Diploma students worldwide.</p><div class="ok">&#10003; IB Academic Honesty Compliant</div></div>'
+      '<div><h4>IB SEHS IA Guides</h4><ul>' + gl + '</ul></div>'
+      '<div><h4>Candidate Actions</h4><ul><li><a href="/">Start an IA Review</a></li><li><a href="/#pricing">Review Credit Pricing</a></li><li><a href="/#faq">FAQ &amp; Academic Policy</a></li><li><a href="/privacy-policy">Privacy Policy</a></li><li><a href="/refund-policy">Cancellation &amp; Refund Policy</a></li><li><a href="/terms">Terms of Service</a></li><li><a href="/contact">Contact Us</a></li></ul></div></div>'
+      '<div class="fine"><div>&copy; 2026 IB IA Review &middot; All rights reserved.</div><div>Independent educational tool. International Baccalaureate&reg; and IB&reg; are registered trademarks of the International Baccalaureate Organization, which does not endorse or affiliate with this service.</div></div></div></footer></body></html>')
     return "\n".join(out)
 
 def main():
