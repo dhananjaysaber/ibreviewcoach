@@ -50,7 +50,7 @@ type Props = { pack: PayPalCreditPack; onClose: () => void; onStartReview: () =>
 
 export function RazorpayCheckoutModal({ pack, onClose, onStartReview, successActionLabel = 'Start an IA review', onBack }: Props) {
   const [state, setState] = useState<State>('ready');
-  const [message, setMessage] = useState('Pay in Indian rupees with UPI, debit or credit card, or netbanking. The exact rupee total is shown on the next screen.');
+  const [message, setMessage] = useState('Various payment methods available. The rupee total is shown on the next screen.');
   const [credits, setCredits] = useState<number | null>(null);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -88,7 +88,7 @@ export function RazorpayCheckoutModal({ pack, onClose, onStartReview, successAct
   async function pay() {
     try {
       setState('creating');
-      setMessage('Opening secure payment window…');
+      setMessage('Opening secure Razorpay checkout…');
       const [Razorpay, created] = await Promise.all([
         loadSdk(),
         supabase.functions.invoke<CreateOrderResponse>('razorpay-create-order', { body: { pack_code: pack.pack_code } }),
@@ -99,7 +99,7 @@ export function RazorpayCheckoutModal({ pack, onClose, onStartReview, successAct
       }
       if (!mounted.current) return;
       setState('paying');
-      setMessage(`Complete the payment of ${inr(data.amount)} in the secure payment window.`);
+      setMessage(`Complete the payment of ${inr(data.amount)} in the Razorpay window.`);
       const rz = new Razorpay({
         key: data.keyId,
         order_id: data.razorpayOrderId,
@@ -161,7 +161,7 @@ export function RazorpayCheckoutModal({ pack, onClose, onStartReview, successAct
 
         {(state === 'ready' || state === 'cancelled' || state === 'error') && (
           <button className="paypal-primary-action paypal-wide-action" type="button" onClick={() => void pay()}>
-            {state === 'ready' ? <><CreditCard aria-hidden="true" /> Pay securely with UPI, card or netbanking</> : 'Try again'}
+            {state === 'ready' ? <><CreditCard aria-hidden="true" /> Pay securely with Razorpay</> : 'Try again'}
           </button>
         )}
         {state === 'ready' && onBack && <button className="paypal-secondary-action paypal-wide-action" type="button" onClick={onBack}>Choose another payment method</button>}
@@ -173,7 +173,7 @@ export function RazorpayCheckoutModal({ pack, onClose, onStartReview, successAct
           </div>
         )}
 
-        <div className="paypal-security-note"><LockKeyhole aria-hidden="true" /><span>Prices and credit quantities are checked on the server. Card, UPI and bank details are handled by our secure payment partner (Razorpay) and never reach us. Charged in Indian rupees at today&apos;s conversion.</span></div>
+        <div className="paypal-security-note"><LockKeyhole aria-hidden="true" /><span>Prices and credit quantities are checked on the server. Card, UPI and bank details are handled by Razorpay and never reach us. Charged in Indian rupees at today&apos;s conversion.</span></div>
         <div className="paypal-integrity-note"><ShieldCheck aria-hidden="true" /><span>One credit covers one supported SEHS IA draft. See our <a href="/refund-policy">Cancellation and Refund Policy</a>.</span></div>
       </section>
     </div>
