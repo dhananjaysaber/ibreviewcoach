@@ -21,3 +21,8 @@ createRoot(document.getElementById('root')!).render(
 // The page background is painted dark from the first byte on the landing route (see index.html);
 // release it once the app has rendered so the app's own backgrounds take over.
 requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.remove('ibia-boot')));
+
+// Installable PWA: register the minimal service worker (production only).
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => undefined); });
+}
