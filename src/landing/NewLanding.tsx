@@ -14,6 +14,7 @@ import { Footer } from './Footer';
 
 type Props = {
   packs: LandingPack[];
+  packsLoading?: boolean;
   paymentsEnabled: boolean;
   onStart: () => void;
   onSignIn: () => void;
@@ -21,7 +22,7 @@ type Props = {
   onChoosePack: (pack: LandingPack) => void;
 };
 
-export function NewLanding({ packs, paymentsEnabled, onStart, onSignIn, onOpenExemplars, onChoosePack }: Props) {
+export function NewLanding({ packs, packsLoading = false, paymentsEnabled, onStart, onSignIn, onOpenExemplars, onChoosePack }: Props) {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try { return (localStorage.getItem('ibia_theme') as 'light' | 'dark') || 'dark'; } catch { return 'dark'; }
   });
@@ -37,7 +38,7 @@ export function NewLanding({ packs, paymentsEnabled, onStart, onSignIn, onOpenEx
         <HowItWorks onOpenUpload={onStart} />
         <CriteriaExplorer onOpenUpload={onStart} />
         <AcademicIntegrity />
-        <PricingSection packs={packs} paymentsEnabled={paymentsEnabled} onChoosePack={onChoosePack} onStart={onStart} />
+        <PricingSection packs={packs} loading={packsLoading} paymentsEnabled={paymentsEnabled} onChoosePack={onChoosePack} onStart={onStart} />
         <FaqSection />
         <section className="py-20 bg-gradient-to-b from-[#f4f1ea] to-[#eeeae2] dark:from-[#0d1527] dark:to-[#090e1a] border-t border-slate-200/80 dark:border-slate-700/80 relative overflow-hidden">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">

@@ -14,6 +14,7 @@ export interface LandingPack {
 
 interface PricingSectionProps {
   packs: LandingPack[];
+  loading?: boolean;
   paymentsEnabled: boolean;
   onChoosePack: (pack: LandingPack) => void;
   onStart: () => void;
@@ -29,7 +30,7 @@ const FEATURES = [
   'Report saved in My IA Reports',
 ];
 
-export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsEnabled, onChoosePack, onStart }) => {
+export const PricingSection: React.FC<PricingSectionProps> = ({ packs, loading = false, paymentsEnabled, onChoosePack, onStart }) => {
   return (
     <section id="pricing" className="py-20 bg-[#f4f1ea] dark:bg-[#0b1120] border-t border-slate-200/80 dark:border-slate-800/80 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,6 +76,13 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, paymentsE
               Try my free review
             </button>
           </div>
+          {loading && packs.length === 0 && [0, 1, 2].map((placeholder) => (
+            <div
+              key={`price-placeholder-${placeholder}`}
+              aria-hidden="true"
+              className="rounded-3xl p-8 min-h-[420px] border border-slate-300/60 dark:border-slate-700/60 bg-white/40 dark:bg-slate-800/30 animate-pulse"
+            />
+          ))}
           {packs.map((pack) => {
             const popular = pack.is_featured;
             return (
