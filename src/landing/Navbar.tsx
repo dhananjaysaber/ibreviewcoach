@@ -1,4 +1,5 @@
 import { LogoLockup } from '../components/LogoMark';
+import { HIDE_PRICING } from '../lib/siteMode';
 import React, { useState } from 'react';
 import { ArrowUpRight, Menu, X, Sun, Moon } from 'lucide-react';
 
@@ -54,12 +55,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
             >
               SEHS Criteria
             </a>
+            {!HIDE_PRICING && (
             <a
               href="#pricing"
               className="hover:text-slate-950 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
             >
               Pricing
             </a>
+            )}
             <a
               href="#faq"
               className="hover:text-slate-950 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
@@ -153,6 +156,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
             >
               SEHS Criteria
             </a>
+            {!HIDE_PRICING && (
             <a
               href="#pricing"
               onClick={() => setMobileMenuOpen(false)}
@@ -160,6 +164,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
             >
               Pricing
             </a>
+            )}
             <a
               href="#faq"
               onClick={() => setMobileMenuOpen(false)}
