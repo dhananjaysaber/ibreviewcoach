@@ -3043,10 +3043,11 @@ function LandingShell({
   onChoosePack: (pack: CreditPack) => void;
   paymentsEnabled: boolean;
 }) {
-  const { packs } = usePublicCommercialSettings(paymentsEnabled);
+  const { packs, packsLoaded } = usePublicCommercialSettings(paymentsEnabled);
   return (
     <NewLanding
       packs={packs}
+      packsLoading={!packsLoaded}
       paymentsEnabled={paymentsEnabled}
       onStart={onStart}
       onSignIn={onSignIn}
@@ -3771,6 +3772,16 @@ function PricingSection({
           </small>
         </article>
 
+        {packs.length === 0 &&
+          [0, 1, 2].map((placeholder) => (
+            <article
+              className="landing-price-card"
+              key={`price-placeholder-${placeholder}`}
+              aria-hidden="true"
+              style={{ minHeight: 320, opacity: 0.45 }}
+            />
+          ))}
+
         {packs.map((pack) => (
           <article
             className={`landing-price-card ${
@@ -4220,8 +4231,12 @@ function usePublicCommercialSettings(
 ): {
   packs: CreditPack[];
   limits: ReviewLimits;
+  packsLoaded: boolean;
 } {
-  const [packs, setPacks] = useState<CreditPack[]>(DEFAULT_CREDIT_PACKS);
+  // No prices are shown until the live packs (set by the admin) have loaded, so a visitor never sees an
+  // outdated number flash up first. If the live packs cannot be read, the fallback copy is used instead.
+  const [packs, setPacks] = useState<CreditPack[]>([]);
+  const [packsLoaded, setPacksLoaded] = useState(false);
 
   const [limits, setLimits] = useState<ReviewLimits>(DEFAULT_REVIEW_LIMITS);
 
@@ -4256,19 +4271,22 @@ function usePublicCommercialSettings(
         return;
       }
 
+      let livePacks: CreditPack[] = [];
+
       if (packsResult.error) {
         console.error('Credit packs could not be loaded, showing fallback prices', packsResult.error);
       } else if (Array.isArray(packsResult.data)) {
-        const normalizedPacks = packsResult.data
+        livePacks = packsResult.data
           .map(normalizeCreditPack)
           .filter((pack): pack is CreditPack => pack !== null);
 
-        if (normalizedPacks.length > 0) {
-          setPacks(normalizedPacks);
-        } else if (packsResult.data.length > 0) {
+        if (livePacks.length === 0 && packsResult.data.length > 0) {
           console.error('Credit packs were returned in an unexpected shape, showing fallback prices', packsResult.data[0]);
         }
       }
+
+      setPacks(livePacks.length > 0 ? livePacks : DEFAULT_CREDIT_PACKS);
+      setPacksLoaded(true);
 
       if (!limitsResult.error && limitsResult.data) {
         const normalizedLimits = normalizeReviewLimits(limitsResult.data);
@@ -4281,19 +4299,29 @@ function usePublicCommercialSettings(
 
     void loadSettings();
 
+    // Pick up price changes made in Admin without a full page reload: refresh when the tab is used again.
+    const refresh = () => {
+      if (document.visibilityState === 'visible') {
+        void loadSettings();
+      }
+    };
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('focus', refresh);
+
     return () => {
       active = false;
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('focus', refresh);
     };
   }, [enabled]);
 
   return {
     packs,
     limits,
+    packsLoaded,
   };
 }
 
-// Fallback only, used until (or if) the live packs load. The real prices are the ones the admin sets in
-// Admin > Pricing (table ia_credit_packs); keep these close to them so a slow or failed load never shows stale prices.
 const DEFAULT_CREDIT_PACKS: CreditPack[] = [
   {
     pack_code: 'single-review',
