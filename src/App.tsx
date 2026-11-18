@@ -38,7 +38,6 @@ import {
   Target,
   ChevronRight,
   Pencil,
-  UserPlus,
   UploadCloud,
   X,
 } from 'lucide-react';
@@ -86,7 +85,7 @@ import {
 } from './components/PayPalCheckoutModal';
 
 import { AccountPage } from './components/AccountPage';
-import { AdminControlCentre } from './components/AdminControlCentre';
+import { SITE_HIDES_PRICING, SITE_HIDES_SIGNUP } from './lib/siteMode';
 import {
   PremiumWorkspaceShell,
   type PremiumWorkspaceView,
@@ -312,10 +311,6 @@ function App() {
   const [mainView, setMainView] = useState<MainWorkspaceView>(() => {
     const currentPath = window.location.pathname;
 
-    if (currentPath === '/admin') {
-      return 'admin';
-    }
-
     if (currentPath === '/my-account') {
       return 'account';
     }
@@ -479,7 +474,7 @@ function App() {
 
         if (accountState === 'permanent') {
           try {
-            const { data: roleData, error: roleError } = await supabase.rpc(
+            const { error: roleError } = await supabase.rpc(
               'get_my_ia_role'
             );
 
@@ -487,7 +482,7 @@ function App() {
               throw roleError;
             }
 
-            currentIsAdmin = isRecord(roleData) && roleData.is_admin === true;
+            currentIsAdmin = false; // Admin console is removed on this site
 
             setIsAdmin(currentIsAdmin);
           } catch (roleError) {
@@ -512,10 +507,6 @@ function App() {
           setStatus('ready');
         } else if (currentPath === '/admin') {
           setMainView('landing');
-          setAuthPanelMode('sign-in');
-          setAuthMessage(
-            'Sign in with an Admin account to open the Admin Control Centre.'
-          );
           replaceAppRoute('/');
           setStatus('ready');
         } else if (
@@ -1020,13 +1011,13 @@ function App() {
     }
 
     try {
-      const { data, error } = await supabase.rpc('get_my_ia_role');
+      const { error } = await supabase.rpc('get_my_ia_role');
 
       if (error) {
         throw error;
       }
 
-      const nextIsAdmin = isRecord(data) && data.is_admin === true;
+      const nextIsAdmin = false; // Admin console is removed on this site
 
       setIsAdmin(nextIsAdmin);
       return nextIsAdmin;
@@ -1202,7 +1193,7 @@ function App() {
 
   async function openReviewWorkspace() {
     if (accountState !== 'permanent') {
-      setAuthPanelMode('create');
+      setAuthPanelMode('sign-in');
       setAuthError('');
       setAuthMessage(
         'Create and verify your account before starting an IA review.'
@@ -1364,7 +1355,7 @@ function App() {
     }
 
     if (accountState !== 'permanent') {
-      setAuthPanelMode('create');
+      setAuthPanelMode('sign-in');
       setAuthError('');
       setAuthMessage(
         `Create and verify your account before purchasing the ${pack.display_name}.`
@@ -1618,6 +1609,11 @@ function App() {
   }
 
   async function handleCreateAccount(email: string) {
+    if (SITE_HIDES_SIGNUP) {
+      setAuthError('New accounts cannot be created on this site.');
+      return;
+    }
+
     setAuthBusy(true);
     setAuthError('');
     setAuthMessage('');
@@ -1949,9 +1945,7 @@ function App() {
 
   const pageContent: ReactNode =
     accountState === 'permanent' ? (
-      mainView === 'admin' && isAdmin ? (
-        <AdminControlCentre />
-      ) : mainView === 'compare' ? (
+      mainView === 'compare' ? (
         <CompareIas />
       ) : mainView === 'exemplars' ? (
         <ExemplarsPage
@@ -2054,7 +2048,6 @@ function App() {
       />
     ) : mainView === 'workspace' && status !== 'complete' ? (
       <ReviewAccessGate
-        onCreateAccount={() => openAccountPanel('create')}
         onSignIn={() => openAccountPanel('sign-in')}
         onOpenPricing={() => void openPricingPage()}
         paymentsEnabled={paymentsEnabled}
@@ -2209,7 +2202,7 @@ function App() {
                   onClick={() => openAccountPanel()}
                 >
                   <LogIn aria-hidden="true" />
-                  Sign in / Create account
+                  Sign in
                 </button>
               </div>
             </div>
@@ -2244,7 +2237,7 @@ function App() {
           onModeChange={(mode) => {
             setAuthError('');
             setAuthMessage('');
-            setAuthPanelMode(mode);
+            setAuthPanelMode(SITE_HIDES_SIGNUP && mode === 'create' ? 'sign-in' : mode);
           }}
           onCreateAccount={handleCreateAccount}
           onSetPassword={handleSetAccountPassword}
@@ -2626,15 +2619,6 @@ function AuthPanel({
             )}
 
             <button
-              className="auth-primary-button"
-              type="button"
-              onClick={() => onModeChange('create')}
-            >
-              <UserPlus aria-hidden="true" />
-              Create account
-            </button>
-
-            <button
               className="auth-secondary-button"
               type="button"
               onClick={() => onModeChange('sign-in')}
@@ -2795,14 +2779,6 @@ function AuthPanel({
                 Forgot password?
               </button>
 
-              <button
-                className="auth-text-button"
-                type="button"
-                onClick={() => onModeChange('create')}
-                disabled={busy}
-              >
-                Create account
-              </button>
             </div>
           </form>
         )}
@@ -3498,10 +3474,10 @@ function LandingPage({
       <section className="landing-final-cta">
         <div>
           <span>Ready to improve your next draft?</span>
-          <h2>Choose a review credit and get your IA reviewed.</h2>
+          <h2>Get your IA reviewed.</h2>
           <p>
-            Create a verified account, look at the exemplar reviews, and buy a
-            review credit when you are ready.
+            Sign in, look at the exemplar reviews, and start a review when you
+            are ready.
           </p>
         </div>
 
@@ -3828,12 +3804,10 @@ function MemberReviewAccessGate({
 }
 
 function ReviewAccessGate({
-  onCreateAccount,
   onSignIn,
   onOpenPricing,
   paymentsEnabled,
 }: {
-  onCreateAccount: () => void;
   onSignIn: () => void;
   onOpenPricing: () => void;
   paymentsEnabled: boolean;
@@ -3846,7 +3820,7 @@ function ReviewAccessGate({
         </span>
 
         <span className="landing-kicker">Protected review workspace</span>
-        <h1>Create or sign in to your account</h1>
+        <h1>Sign in to your account</h1>
         <p>
           {paymentsEnabled
             ? 'A verified account is required before using a paid review credit. This protects review ownership, allowances and private report history.'
@@ -3854,15 +3828,6 @@ function ReviewAccessGate({
         </p>
 
         <div className="review-access-actions">
-          <button
-            className="landing-primary-button"
-            type="button"
-            onClick={onCreateAccount}
-          >
-            <UserPlus aria-hidden="true" />
-            Create account
-          </button>
-
           <button
             className="landing-secondary-button"
             type="button"
@@ -3953,7 +3918,8 @@ function usePaymentCollectionStatus(enabled = true): {
   const [paymentStatusLoaded, setPaymentStatusLoaded] = useState(false);
 
   const refreshPaymentStatus = useCallback(async (): Promise<boolean> => {
-    if (!enabled) {
+    // This site never shows prices or checkout, whatever the database says.
+    if (!enabled || SITE_HIDES_PRICING) {
       setPaymentsEnabled(false);
       setPaymentStatusLoaded(true);
       return false;
@@ -3999,7 +3965,7 @@ function usePaymentCollectionStatus(enabled = true): {
           : null;
 
       if (detail && typeof detail.paymentsEnabled === 'boolean') {
-        setPaymentsEnabled(detail.paymentsEnabled);
+        setPaymentsEnabled(!SITE_HIDES_PRICING && detail.paymentsEnabled);
         setPaymentStatusLoaded(true);
         return;
       }

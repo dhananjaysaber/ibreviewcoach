@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ibiareview.netlify.app/sitemap.xml
