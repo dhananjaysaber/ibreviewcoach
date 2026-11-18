@@ -1,3 +1,4 @@
+import { HIDE_PRICING } from './lib/siteMode';
 import { PolicyLinks } from './PolicyPages';
 import { CheckoutRouter } from './components/CheckoutRouter';
 import {
@@ -346,7 +347,7 @@ function App() {
     }
 
     if (currentPath === '/pricing') {
-      return 'pricing';
+      return HIDE_PRICING ? 'landing' : 'pricing';
     }
 
     if (currentPath === '/review') {
@@ -3965,7 +3966,9 @@ function MemberReviewAccessGate({
               Complete detailed review, full annotated IA, progress plan, saved
               history and available downloads.
             </span>
-            <small data-nosnippet>{fromPrice !== null ? `Credits start at ${formatUsd(fromPrice)}.` : 'See pricing for current credit packs.'}</small>
+            {!HIDE_PRICING && (
+              <small data-nosnippet>{fromPrice !== null ? `Credits start at ${formatUsd(fromPrice)}.` : 'See pricing for current credit packs.'}</small>
+            )}
           </article>
 
           <article>
@@ -4134,7 +4137,7 @@ function usePaymentCollectionStatus(enabled = true): {
   const [paymentStatusLoaded, setPaymentStatusLoaded] = useState(false);
 
   const refreshPaymentStatus = useCallback(async (): Promise<boolean> => {
-    if (!enabled) {
+    if (!enabled || HIDE_PRICING) {
       setPaymentsEnabled(false);
       setPaymentStatusLoaded(true);
       return false;
@@ -4147,8 +4150,9 @@ function usePaymentCollectionStatus(enabled = true): {
         throw error;
       }
 
+      // A site built with VITE_HIDE_PRICING never exposes checkout, whatever the database says.
       const nextEnabled =
-        isRecord(data) && data.payments_enabled === true;
+        !HIDE_PRICING && isRecord(data) && data.payments_enabled === true;
 
       setPaymentsEnabled(nextEnabled);
       setPaymentStatusLoaded(true);

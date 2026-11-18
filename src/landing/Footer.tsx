@@ -1,3 +1,4 @@
+import { HIDE_PRICING } from '../lib/siteMode';
 import { LogoLockup } from '../components/LogoMark';
 import React from 'react';
 import { ShieldCheck } from 'lucide-react';
@@ -133,11 +134,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpload }) => {
                   Start an IA Review
                 </button>
               </li>
-              <li>
-                <a href="#pricing" className="hover:text-slate-950 dark:hover:text-white transition-colors">
-                  Review Credit Pricing
-                </a>
-              </li>
+              {!HIDE_PRICING && (
+<li>
+<a href="#pricing" className="hover:text-slate-950 dark:hover:text-white transition-colors">Review Credit Pricing</a>
+</li>
+)}
               <li>
                 <a href="#faq" className="hover:text-slate-950 dark:hover:text-white transition-colors">
                   FAQ & Academic Policy

@@ -1,3 +1,4 @@
+import { HIDE_PRICING } from '../lib/siteMode';
 import { useEffect, useState } from 'react';
 import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import './landing-tw.css';
@@ -38,7 +39,7 @@ export function NewLanding({ packs, packsLoading = false, paymentsEnabled, onSta
         <HowItWorks onOpenUpload={onStart} />
         <CriteriaExplorer onOpenUpload={onStart} />
         <AcademicIntegrity />
-        <PricingSection packs={packs} loading={packsLoading} paymentsEnabled={paymentsEnabled} onChoosePack={onChoosePack} onStart={onStart} />
+        {!HIDE_PRICING && <PricingSection packs={packs} loading={packsLoading} paymentsEnabled={paymentsEnabled} onChoosePack={onChoosePack} onStart={onStart} />}
         <FaqSection />
         <section className="py-20 bg-gradient-to-b from-[#f4f1ea] to-[#eeeae2] dark:from-[#0d1527] dark:to-[#090e1a] border-t border-slate-200/80 dark:border-slate-700/80 relative overflow-hidden">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
