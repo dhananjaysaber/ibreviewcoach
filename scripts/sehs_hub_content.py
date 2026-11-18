@@ -111,7 +111,7 @@ def hub_html():
 <nav class="toc" aria-label="On this page"><a href="#criteria">Criteria</a><a href="#word-count">Word count</a><a href="#topics">Topic ideas</a><a href="#examples">Examples</a><a href="#data">Data analysis</a><a href="#statistics">Statistics</a><a href="#ethics">Ethics</a><a href="#timeline">Timeline</a><a href="#mistakes">Mistakes</a><a href="#boundaries">Grade boundaries</a><a href="#downloads">Free downloads</a><a href="#faq">FAQ</a></nav></section>
 
 <section id="criteria"><span class="sec-k">1 · Criteria and marks</span><h2>The four SEHS IA criteria</h2>
-<p class="lede">The IB Sports Science (SEHS) IA, first assessment May 2026, is marked out of 24 by your teacher, then externally moderated by the IB. Each criterion has levels 0, 1&ndash;2, 3&ndash;4 and 5&ndash;6, marked on a best-fit basis. Conclusion and Evaluation together carry half of the marks.</p>
+<p class="lede">The IB Sports Science (SEHS) IA, first assessment May 2026, is marked out of 24 by your teacher, then externally moderated by the IB. Each criterion has levels 0, 1&ndash;2 (low band), 3&ndash;4 (mid band) and 5&ndash;6 (high band), marked on a best-fit basis. Conclusion and Evaluation together carry half of the marks.</p>
 <div class="cards">{cc}</div><a class="more" href="/sehs-ia-criteria/">Read the full criteria and marks guide &rarr;</a></section>
 
 <section id="word-count"><span class="sec-k">2 · Word count</span><h2>SEHS IA word count: 3,200 words</h2>

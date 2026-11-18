@@ -13,7 +13,7 @@ NOTE = ("Independent educational resource from IB IA Review (ibiareview.com). No
         "Always follow your teacher's instructions and the current IB Sports, Exercise and Health Science guide.")
 LOGO = '<svg viewBox="0 0 64 64" width="34" height="34"><rect width="64" height="64" rx="14" fill="#0B1120"/><path d="M32 8 47 30 41 46H23l-6-16z" fill="#FBBF24"/><path d="M32 28v18" stroke="#0B1120" stroke-width="2.6" stroke-linecap="round"/><circle cx="32" cy="28" r="3.2" fill="#0B1120"/><rect x="19" y="50" width="26" height="5" rx="2.5" fill="#F8FAFC"/></svg>'
 
-CSS = """h2{break-after:avoid}@page{size:A4;margin:16mm 15mm 18mm}
+CSS = """h2{break-after:avoid}@page{size:A4;margin:14mm 15mm 24mm}
 h2{break-after:avoid}
 *{box-sizing:border-box}body{font:10.5pt/1.5 'Inter','Helvetica Neue',Arial,sans-serif;color:#1E293B;margin:0}
 .top{display:flex;align-items:center;gap:10px;border-bottom:3px solid #FBBF24;padding-bottom:10px;margin-bottom:14px}
@@ -29,10 +29,15 @@ td{border:1px solid #CBD5E1;padding:6px 8px;vertical-align:top}tr{break-inside:a
 .foot{margin-top:18px;padding-top:8px;border-top:1px solid #E2E8F0;font-size:7.5pt;color:#64748B}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.k{font-weight:600;color:#0B1120}"""
 
+FOOTER_T = ('<div style="width:100%;margin:0 15mm;font-family:Arial,Helvetica,sans-serif;font-size:7px;color:#64748B;border-top:1px solid #E2E8F0;padding-top:5px;">'
+  '<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:700;color:#B45309;letter-spacing:.08em;">IB IA REVIEW &middot; WE COACH, YOU WRITE &middot; ibiareview.com</span>'
+  '<span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>'
+  '<div style="margin-top:3px;line-height:1.35;">' + NOTE + '</div></div>')
+
 def shell(title, sub, body):
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>{CSS}</style></head><body>
 <div class="top">{LOGO}<div><b>IB IA Review</b><small>We coach · you write</small></div><div class="tag">Free download<br>ibiareview.com</div></div>
-<h1>{title}</h1><p class="sub">{sub}</p>{body}<div class="foot">{NOTE}</div></body></html>"""
+<h1>{title}</h1><p class="sub">{sub}</p>{body}</body></html>"""
 
 def checklist(items): return '<ul class="c">' + "".join(f"<li>{html.escape(i)}</li>" for i in items) + "</ul>"
 
@@ -94,7 +99,7 @@ P4 = ("sehs-ia-statistics-chooser.pdf", shell("SEHS IA statistics and sample siz
 with sync_playwright() as p:
     b = p.chromium.launch()
     for name, h in (P1, P2, P3, P4):
-        pg = b.new_page(); pg.set_content(h); pg.pdf(path=os.path.join(OUT, name), format="A4", print_background=True); pg.close()
+        pg = b.new_page(); pg.set_content(h); pg.pdf(path=os.path.join(OUT, name), format="A4", print_background=True, display_header_footer=True, header_template="<span></span>", footer_template=FOOTER_T, margin={"top":"14mm","bottom":"24mm","left":"15mm","right":"15mm"}); pg.close()
     b.close()
 
 # ---------- DOCX helpers ----------
@@ -102,7 +107,10 @@ def base(title, sub):
     d = Document()
     s = d.sections[0]; s.left_margin = s.right_margin = Cm(2); s.top_margin = s.bottom_margin = Cm(1.8)
     d.styles["Normal"].font.name = "Calibri"; d.styles["Normal"].font.size = Pt(11)
-    h = d.add_paragraph(); r = h.add_run("IB IA Review · ibiareview.com"); r.font.size = Pt(9); r.font.color.rgb = RGBColor(0xB4,0x53,0x09)
+    h = d.add_paragraph()
+    try: h.add_run().add_picture(os.path.join(OUT, "..", "icons", "icon-192.png"), width=Cm(0.9))
+    except Exception: pass
+    r = h.add_run("  IB IA Review · ibiareview.com"); r.font.size = Pt(9); r.font.color.rgb = RGBColor(0xB4,0x53,0x09)
     t = d.add_paragraph(); r = t.add_run(title); r.bold = True; r.font.size = Pt(20); r.font.name = "Georgia"; r.font.color.rgb = RGBColor(0x0B,0x11,0x20)
     p2 = d.add_paragraph(sub); p2.runs[0].font.color.rgb = RGBColor(0x47,0x55,0x69)
     return d
@@ -119,8 +127,10 @@ def table(d, header, rows, widths=None):
         for row in tb.rows:
             for i, w in enumerate(widths): row.cells[i].width = Cm(w)
     return tb
-def foot(d): 
-    p = d.add_paragraph(NOTE); p.runs[0].font.size = Pt(8); p.runs[0].font.color.rgb = RGBColor(0x64,0x74,0x8B)
+def foot(d):
+    f = d.sections[0].footer; f.is_linked_to_previous = False
+    p = f.paragraphs[0]; r = p.add_run("IB IA Review · We coach, you write · ibiareview.com\n"); r.bold = True; r.font.size = Pt(8); r.font.color.rgb = RGBColor(0xB4,0x53,0x09)
+    r2 = p.add_run(NOTE); r2.font.size = Pt(7.5); r2.font.color.rgb = RGBColor(0x64,0x74,0x8B)
 
 # ---------- 5. Consent form ----------
 d = base("Participant information and consent form", "Template for a SEHS scientific investigation. Adapt it to your investigation and your school's rules, and get your teacher's approval before you use it.")
