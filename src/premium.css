@@ -456,3 +456,5 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .landing-price-free { border: 2px solid #f59e0b; box-shadow: 0 12px 32px rgba(245, 158, 11, .25); }
 .paypal-primary-action.paypal-wide-action { display: flex !important; flex-direction: row !important; align-items: center; justify-content: center; gap: 12px; }
 .paypal-primary-action.paypal-wide-action svg { flex: 0 0 auto; width: 26px !important; height: 26px !important; margin: 0 !important; stroke-width: 2; }
+.paypal-checkout-icon svg, .paypal-checkout-icon svg * { color: #0B1120 !important; stroke: #0B1120 !important; opacity: 1 !important; }
+.paypal-checkout-icon svg { width: 34px !important; height: 34px !important; stroke-width: 2 !important; }
