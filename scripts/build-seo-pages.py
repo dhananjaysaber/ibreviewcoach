@@ -324,7 +324,7 @@ p{margin:0 0 14px;color:var(--mut)}ul,ol{padding-left:1.3em;color:var(--mut)}li{
 strong,b{color:var(--ink)}
 .cta{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:18px;padding:28px;margin:40px 0 8px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
 .cta:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#FBBF24,#F59E0B)}
-.cta strong{display:block;font:500 1.45rem var(--serif);margin-bottom:6px}.cta p{margin:0 0 14px}
+.cta strong{display:block;font:500 1.45rem var(--serif);margin-bottom:6px}.cta p{margin:0 0 14px}.cta p.priv{font-size:.88rem;color:var(--dim)}
 .related{margin-top:34px}.related h2{font-size:1.2rem}.related ul{list-style:none;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
 .related a,.hub a{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;font-weight:600;color:var(--ink);transition:border-color .15s,transform .15s}
 .related a:hover,.hub a:hover{border-color:rgba(251,191,36,.55);transform:translateY(-1px)}
@@ -400,7 +400,7 @@ def page_html(p):
             out.append(f"<details><summary>{html.escape(q)}</summary><p>{html.escape(a)}</p></details>")
     if p.get("hub"):
         out.append('<ul class="hub">' + "".join(f'<li><a href="/{x["slug"]}/"><b>{html.escape(x["nav"])}</b><span>{html.escape(x["desc"])}</span></a></li>' for x in PAGES if not x.get("hub")) + "</ul>")
-    out.append('<div class="cta"><strong>Get your SEHS IA reviewed</strong><p>Upload your draft for criteria-based feedback, an annotated copy and a step-by-step fix plan. Your first review is free. We coach, you write.</p><a class="btn" href="/">Try your first review free &rarr;</a> <a class="btn ghost" href="/sehs-ia-criteria/">See the criteria</a></div>')
+    out.append('<div class="cta"><strong>Get your SEHS IA reviewed</strong><p>Upload your draft for criteria-based feedback, an annotated copy and a step-by-step fix plan. Your first review is free. We coach, you write.</p><p class="priv">Private by design: your original file is deleted about an hour after upload, is never shared publicly and is never used as an example.</p><a class="btn" href="/">Try your first review free &rarr;</a> <a class="btn ghost" href="/sehs-ia-criteria/">See the criteria</a></div>')
     if p.get("links"):
         out.append('<nav class="related" aria-label="Related guides"><h2>Related guides</h2><ul>' + "".join(f'<li><a href="/{s}/">{html.escape(BY[s]["nav"])}: {html.escape(BY[s]["h1"])}</a></li>' for s in p["links"]) + '<li><a href="/ib-sports-science-ia/">IB Sports Science (SEHS) IA hub: criteria, topics and free downloads</a></li><li><a href="/sehs-ia-guides/">All SEHS IA guides</a></li></ul></nav>')
     out.append(f'<p class="small">{html.escape(DISCLAIMER)}</p></main>')

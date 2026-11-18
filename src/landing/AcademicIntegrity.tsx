@@ -112,7 +112,7 @@ export const AcademicIntegrity: React.FC = () => {
                   Encrypted Uploads & Data Deletion
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-xl">
-                  Your draft stays in your private account, is never submitted to similarity checkers, and the original file is removed on a fixed schedule.
+                  Your draft stays in your private account, is never submitted to similarity checkers, and your original file is deleted automatically within about an hour.
                 </p>
               </div>
 
@@ -156,18 +156,18 @@ export const AcademicIntegrity: React.FC = () => {
                   </div>
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold tracking-wide bg-emerald-100/70 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300/60 dark:border-emerald-600/60">
                     <Clock className="w-3 h-3" />
-                    180-DAY AUTO-PURGE
+                    1-HOUR AUTO-DELETE
                   </span>
                 </div>
                 <h4 className="text-base font-semibold text-slate-900 dark:text-white mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                   Automated Data Deletion Policy
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-200 leading-relaxed mb-4">
-                  Your original uploaded file is kept for 6 months, then deleted automatically. You can delete the original yourself at any time. Your annotated review and fix plan stay in your account.
+                  Your original uploaded file is permanently deleted about an hour after upload. It is never shared on a public domain, never stored as an example and never used to train models. If you choose to save a report to your account, the original can be kept for up to 6 months so you can download it again, and you can delete it yourself at any time. Your annotated review and fix plan stay in your account.
                 </p>
                 <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/80 text-xs font-medium text-slate-500 dark:text-slate-400">
                   <FileCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>6-month automatic deletion · Delete the original any time</span>
+                  <span>Deleted within about an hour · Never used as an example</span>
                 </div>
               </div>
 
@@ -209,7 +209,7 @@ export const AcademicIntegrity: React.FC = () => {
                   Model Retraining Exemption
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-200 leading-relaxed mb-4">
-                  Reviews run on our own hosted model. Your work is not used to train public models.
+                  Reviews run on our own hosted model. Your work is never used as an example and is not used to train models.
                 </p>
                 <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/80 text-xs font-medium text-slate-500 dark:text-slate-400">
                   <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
@@ -226,7 +226,7 @@ export const AcademicIntegrity: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Trash2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span><strong className="text-slate-900 dark:text-white">6-month</strong> automatic original-file deletion</span>
+                <span><strong className="text-slate-900 dark:text-white">1-hour</strong> automatic original-file deletion</span>
               </div>
               <div className="flex items-center gap-2">
                 <EyeOff className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />

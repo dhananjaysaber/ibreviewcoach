@@ -58,6 +58,7 @@ HUB_FAQ = [
     ("Do I need consent forms for my SEHS IA?", "If your investigation involves people, your supervising teacher must approve it and you need written permission from each participant. Participants under 16 need consent from a parent or guardian. You must not give participants any substance or use body fluids."),
     ("How many participants do I need?", "The IB does not set one fixed number. Ask your teacher what your school expects. More participants give a more reliable mean, and very small groups make a statistical test unreliable. A pilot test shows how much your measurements vary."),
     ("Can I work in a group?", "Collaboration is optional, in groups of up to three. Each student has their own research question, their own data and their own report."),
+    ("Is my IA draft kept private?", "Yes. Your file is stored in a private bucket, never on a public domain, and the original is deleted about an hour after upload. We never use uploaded work as an example. If you choose to save a report to your account, the original can be kept for up to 6 months so you can download it again, and you can delete it at any time."),
     ("Can IB IA Review check my SEHS IA draft?", "Yes. You upload your draft and get criteria-based feedback against the four SEHS criteria, an annotated copy and a step-by-step fix plan. Your first review is free. We coach, you write."),
 ]
 
