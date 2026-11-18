@@ -37,8 +37,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
               Subjects
             </a>
             <a
+              href="/ib-sports-science-ia/"
+              className="text-amber-600 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 transition-colors whitespace-nowrap shrink-0"
+            >
+              SEHS IA Hub
+            </a>
+            <a
               href="#interactive-demo"
-              className="hover:text-slate-950 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
+              className="hidden lg:inline hover:text-slate-950 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
             >
               Live Annotation
             </a>
@@ -125,6 +131,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#10182b] px-4 pt-3 pb-5 space-y-3">
           <nav className="flex flex-col space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <a
+              href="/ib-sports-science-ia/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-md text-amber-600 dark:text-amber-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              SEHS IA Hub (first assessment 2026)
+            </a>
             <a
               href="#subjects"
               onClick={() => setMobileMenuOpen(false)}
