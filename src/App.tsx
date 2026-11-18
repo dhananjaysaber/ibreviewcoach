@@ -3860,6 +3860,9 @@ function MemberReviewAccessGate({
   onOpenPricing,
   onOpenReports,
 }: MemberReviewAccessGateProps) {
+  const { packs: gatePacks } = usePublicCommercialSettings(true);
+  const fromPrice = gatePacks.length ? Math.min(...gatePacks.map((pack) => pack.price_usd)) : null;
+
   if (!paymentsEnabled) {
     return (
       <main className="member-review-gate-main">
@@ -3951,7 +3954,7 @@ function MemberReviewAccessGate({
               Complete detailed review, full annotated IA, progress plan, saved
               history and available downloads.
             </span>
-            <small data-nosnippet>Credits start at $9.99.</small>
+            <small data-nosnippet>{fromPrice !== null ? `Credits start at ${formatUsd(fromPrice)}.` : 'See pricing for current credit packs.'}</small>
           </article>
 
           <article>
@@ -4253,13 +4256,17 @@ function usePublicCommercialSettings(
         return;
       }
 
-      if (!packsResult.error && Array.isArray(packsResult.data)) {
+      if (packsResult.error) {
+        console.error('Credit packs could not be loaded, showing fallback prices', packsResult.error);
+      } else if (Array.isArray(packsResult.data)) {
         const normalizedPacks = packsResult.data
           .map(normalizeCreditPack)
           .filter((pack): pack is CreditPack => pack !== null);
 
         if (normalizedPacks.length > 0) {
           setPacks(normalizedPacks);
+        } else if (packsResult.data.length > 0) {
+          console.error('Credit packs were returned in an unexpected shape, showing fallback prices', packsResult.data[0]);
         }
       }
 
@@ -4285,14 +4292,16 @@ function usePublicCommercialSettings(
   };
 }
 
+// Fallback only, used until (or if) the live packs load. The real prices are the ones the admin sets in
+// Admin > Pricing (table ia_credit_packs); keep these close to them so a slow or failed load never shows stale prices.
 const DEFAULT_CREDIT_PACKS: CreditPack[] = [
   {
     pack_code: 'single-review',
     display_name: 'Single IA Review',
     description:
-      'One complete paid SEHS IA review with saved report and downloads.',
+      'One complete SEHS IA review, marked and approved by an authorised IB moderator, with saved report and downloads.',
     review_credits: 1,
-    price_usd: 9.99,
+    price_usd: 25,
     validity_days: 365,
     is_featured: false,
     display_order: 10,
@@ -4301,9 +4310,9 @@ const DEFAULT_CREDIT_PACKS: CreditPack[] = [
     pack_code: 'draft-improvement-3',
     display_name: 'Draft Improvement Pack',
     description:
-      'Three review credits for an initial, improved and final draft.',
+      'Three moderator-marked reviews for an initial, improved and final draft.',
     review_credits: 3,
-    price_usd: 24.99,
+    price_usd: 65,
     validity_days: 365,
     is_featured: true,
     display_order: 20,
@@ -4312,9 +4321,9 @@ const DEFAULT_CREDIT_PACKS: CreditPack[] = [
     pack_code: 'complete-ia-5',
     display_name: 'Complete IA Pack',
     description:
-      'Five review credits for multiple drafting and improvement cycles.',
+      'Five moderator-marked reviews for multiple drafting and improvement cycles.',
     review_credits: 5,
-    price_usd: 34.99,
+    price_usd: 99,
     validity_days: 365,
     is_featured: false,
     display_order: 30,
@@ -4330,6 +4339,15 @@ const DEFAULT_REVIEW_LIMITS: ReviewLimits = {
   paid_credit_validity_days: 365,
 };
 
+function asPackNumber(value: unknown): number | null {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
 function normalizeCreditPack(value: unknown): CreditPack | null {
   if (!isRecord(value)) {
     return null;
@@ -4338,10 +4356,11 @@ function normalizeCreditPack(value: unknown): CreditPack | null {
   const packCode = asText(value.pack_code);
   const displayName = asText(value.display_name);
   const description = asText(value.description);
-  const reviewCredits = asNumber(value.review_credits);
-  const priceUsd = asNumber(value.price_usd);
-  const validityDays = asNumber(value.validity_days);
-  const displayOrder = asNumber(value.display_order);
+  // The database can hand numbers back as strings (numeric columns), so accept both.
+  const reviewCredits = asPackNumber(value.review_credits);
+  const priceUsd = asPackNumber(value.price_usd);
+  const validityDays = asPackNumber(value.validity_days);
+  const displayOrder = asPackNumber(value.display_order);
 
   if (
     !packCode ||
