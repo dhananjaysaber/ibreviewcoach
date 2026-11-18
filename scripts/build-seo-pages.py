@@ -6,7 +6,9 @@ import json, os, html
 
 SITE = "https://ibiareview.com"
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public")
-UPDATED = "2026-11-14"
+UPDATED = "2026-11-18"
+import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from sehs_hub_content import HUB_CSS, HUB_FAQ, hub_html
 DISCLAIMER = ("IB IA Review is an independent coaching service and is not affiliated with the IB. "
               "Always check requirements with your teacher and the current IB SEHS guide. "
               "Marks shown anywhere on this site are indicative.")
@@ -254,6 +256,14 @@ PAGES = [
    ("Collaboration is not collusion", UL("Agree the plan with your teacher before you start.","Do your own analysis, graphs, conclusion and evaluation.","Never copy a partner's analysis or wording.","Cite every source properly. Missing or improper referencing is academic malpractice.")),
   ], links=["sehs-ia-new-syllabus","sehs-ia-ethics-and-safety","sehs-ia-guide"]),
 
+ dict(slug="ib-sports-science-ia", nav="IB Sports Science IA hub", custom=True,
+  title="IB Sports Science (SEHS) IA 2026: Criteria, Word Count, Topics and Free Downloads",
+  desc="Everything for the IB Sports, Exercise and Health Science (SEHS) IA, new 2026 syllabus: four criteria, 24 marks, 3,200 words, topic ideas, statistics, ethics, timeline and free downloads.",
+  h1="IB Sports Science (SEHS) IA: the complete 2026 guide",
+  kw="IB sports science IA, SEHS IA, Sports Exercise and Health Science IA, SEHS IA 2026, SEHS IA criteria, SEHS IA topic ideas, SEHS IA word count, SEHS IA examples",
+  lead="The IB Sports, Exercise and Health Science (SEHS) scientific investigation for the new syllabus, first assessment May 2026. Criteria, word count, topic ideas, statistics, ethics and free downloads in one place. Updated 18 November 2026.",
+  body=[], faq=HUB_FAQ, links=["sehs-ia-new-syllabus","sehs-ia-criteria","sehs-ia-checklist"]),
+
  dict(slug="sehs-ia-guides", nav="All guides", hub=True,
   title="IB SEHS IA Guides: Criteria, Topic Ideas, Checklist and Help",
   desc="All our IB SEHS (Sports Science) IA guides in one place: criteria, research questions, topic ideas, data analysis, conclusion and evaluation, checklist and FAQ.",
@@ -263,7 +273,7 @@ PAGES = [
   body=[], links=[]),
 ]
 BY = {p["slug"]: p for p in PAGES}
-FOOT = [('sehs-ia-guides','All SEHS IA guides'),('sehs-ia-new-syllabus','New syllabus IA (2026)'),('sehs-ia-criteria','IA criteria and marks'),('sehs-ia-checker','IA checker'),('sehs-ia-research-question','Research question'),('sehs-ia-topic-ideas','Topic ideas'),('sehs-ia-data-analysis','Data analysis'),('sehs-ia-word-count-and-structure','Word count and structure'),('sehs-ia-common-mistakes','Common mistakes'),('sehs-ia-faq','FAQ')]
+FOOT = [('ib-sports-science-ia','IB Sports Science IA hub'),('sehs-ia-guides','All SEHS IA guides'),('sehs-ia-new-syllabus','New syllabus IA (2026)'),('sehs-ia-criteria','IA criteria and marks'),('sehs-ia-checker','IA checker'),('sehs-ia-research-question','Research question'),('sehs-ia-topic-ideas','Topic ideas'),('sehs-ia-data-analysis','Data analysis'),('sehs-ia-word-count-and-structure','Word count and structure'),('sehs-ia-common-mistakes','Common mistakes'),('sehs-ia-faq','FAQ')]
 SIDE = {x for x in ['sehs-ia-guide','sehs-ia-new-syllabus','sehs-ia-criteria','sehs-ia-research-question','sehs-ia-topic-ideas','sehs-ia-data-analysis','sehs-ia-conclusion-and-evaluation','sehs-ia-word-count-and-structure','sehs-ia-common-mistakes','sehs-ia-checklist','sehs-ia-ethics-and-safety','sehs-ia-group-work','sehs-ia-examples','sehs-ia-checker','sehs-ia-faq']}
 LOGO = '<svg viewBox="0 0 64 64" role="img" aria-label="IB IA Review" focusable="false"><path d="M32 6 48 30 41 47H23l-7-17z" fill="#FBBF24"/><path d="M32 27v20" stroke="var(--cut)" stroke-width="2.8" stroke-linecap="round"/><circle cx="32" cy="27" r="3.4" fill="var(--cut)"/><rect x="18" y="52" width="28" height="5.5" rx="2.75" fill="currentColor"/></svg>'
 
@@ -343,7 +353,7 @@ def head(p, url, extra_ld):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400..700&display=swap">
-<style>{CSS}</style>
+<style>{CSS}{HUB_CSS if p.get("custom") else ""}</style>
 <script type="application/ld+json">{json.dumps(extra_ld, ensure_ascii=False)}</script>
 </head>"""
 
@@ -362,12 +372,13 @@ def page_html(p):
     crumb_html = '<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><i>/</i><a href="/sehs-ia-guides/">SEHS IA guides</a>' + ("" if p.get("hub") else f'<i>/</i><span>{html.escape(p["nav"])}</span>') + '</nav>'
     out = [head(p, url, ld), "<body>", '<a class="skip" href="#main">Skip to content</a>',
       '<header class="top"><div class="in"><a class="lockup" href="/" aria-label="IB IA Review home">' + LOGO + '<span><strong>IB IA Review</strong><small>We coach · you write</small></span></a>'
-      '<nav aria-label="Main"><a href="/">Home</a><a class="hide-m" href="/sehs-ia-guides/">Guides</a><a class="hide-m" href="/sehs-ia-criteria/">SEHS Criteria</a><a class="hide-m" href="/sehs-ia-new-syllabus/">New syllabus</a><a class="hide-m" href="/#pricing">Pricing</a><a class="btn" href="/">Try free review</a></nav></div></header>',
+      '<nav aria-label="Main"><a href="/">Home</a><a class="hide-m" href="/ib-sports-science-ia/">SEHS hub</a><a class="hide-m" href="/sehs-ia-guides/">Guides</a><a class="hide-m" href="/sehs-ia-criteria/">SEHS Criteria</a><a class="hide-m" href="/sehs-ia-new-syllabus/">New syllabus</a><a class="hide-m" href="/#pricing">Pricing</a><a class="btn" href="/">Try free review</a></nav></div></header>',
       '<div class="hero"><div class="in">' + crumb_html + '<span class="eyebrow">IB SEHS IA guide</span>' + f"<h1>{html.escape(p['h1'])}</h1>" + f'<p class="lead">{p["lead"]}</p></div></div>',
-      f'<div class="wrap layout{" one" if p.get("hub") else ""}"><main id="main">']
+      f'<div class="wrap layout{" one" if (p.get("hub") or p.get("custom")) else ""}"><main id="main">']
+    if p.get("custom"): out.append(hub_html())
     for h, b in p["body"]:
         out.append(f"<h2>{h}</h2>{b}")
-    if p.get("faq"):
+    if p.get("faq") and not p.get("custom"):
         for q, a in p["faq"]:
             out.append(f"<details><summary>{html.escape(q)}</summary><p>{html.escape(a)}</p></details>")
     if p.get("hub"):
@@ -376,7 +387,7 @@ def page_html(p):
     if p.get("links"):
         out.append('<nav class="related" aria-label="Related guides"><h2>Related guides</h2><ul>' + "".join(f'<li><a href="/{s}/">{html.escape(BY[s]["nav"])}: {html.escape(BY[s]["h1"])}</a></li>' for s in p["links"]) + '<li><a href="/sehs-ia-guides/">All SEHS IA guides</a></li></ul></nav>')
     out.append(f'<p class="small">{html.escape(DISCLAIMER)}</p></main>')
-    if not p.get("hub"):
+    if not (p.get("hub") or p.get("custom")):
         side = "".join(f'<li><a{" class=cur" if x["slug"]==p["slug"] else ""} href="/{x["slug"]}/">{html.escape(x["nav"])}</a></li>' for x in PAGES if x["slug"] in SIDE)
         out.append('<aside class="side" aria-label="Guides"><div class="box"><h3>IB SEHS IA Guides</h3><ul>' + side + '</ul></div><div class="box"><h3>Review your IA</h3><p>Criteria-based feedback, an annotated copy and a fix plan. Your first review is free.</p><a class="btn" href="/">Try free review</a></div></aside>')
     out.append('</div>')
