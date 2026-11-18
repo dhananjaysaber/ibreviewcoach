@@ -3860,6 +3860,9 @@ function MemberReviewAccessGate({
   onOpenPricing,
   onOpenReports,
 }: MemberReviewAccessGateProps) {
+  const { packs: gatePacks } = usePublicCommercialSettings(true);
+  const fromPrice = gatePacks.length ? Math.min(...gatePacks.map((pack) => pack.price_usd)) : null;
+
   if (!paymentsEnabled) {
     return (
       <main className="member-review-gate-main">
@@ -3951,7 +3954,7 @@ function MemberReviewAccessGate({
               Complete detailed review, full annotated IA, progress plan, saved
               history and available downloads.
             </span>
-            <small data-nosnippet>Credits start at $9.99.</small>
+            <small data-nosnippet>{fromPrice !== null ? `Credits start at ${formatUsd(fromPrice)}.` : 'See pricing for current credit packs.'}</small>
           </article>
 
           <article>
@@ -4285,14 +4288,16 @@ function usePublicCommercialSettings(
   };
 }
 
+// Fallback only, used until (or if) the live packs load. The real prices are the ones the admin sets in
+// Admin > Pricing (table ia_credit_packs); keep these close to them so a slow or failed load never shows stale prices.
 const DEFAULT_CREDIT_PACKS: CreditPack[] = [
   {
     pack_code: 'single-review',
     display_name: 'Single IA Review',
     description:
-      'One complete paid SEHS IA review with saved report and downloads.',
+      'One complete SEHS IA review, marked and approved by an authorised IB moderator, with saved report and downloads.',
     review_credits: 1,
-    price_usd: 9.99,
+    price_usd: 25,
     validity_days: 365,
     is_featured: false,
     display_order: 10,
@@ -4301,9 +4306,9 @@ const DEFAULT_CREDIT_PACKS: CreditPack[] = [
     pack_code: 'draft-improvement-3',
     display_name: 'Draft Improvement Pack',
     description:
-      'Three review credits for an initial, improved and final draft.',
+      'Three moderator-marked reviews for an initial, improved and final draft.',
     review_credits: 3,
-    price_usd: 24.99,
+    price_usd: 65,
     validity_days: 365,
     is_featured: true,
     display_order: 20,
@@ -4312,9 +4317,9 @@ const DEFAULT_CREDIT_PACKS: CreditPack[] = [
     pack_code: 'complete-ia-5',
     display_name: 'Complete IA Pack',
     description:
-      'Five review credits for multiple drafting and improvement cycles.',
+      'Five moderator-marked reviews for multiple drafting and improvement cycles.',
     review_credits: 5,
-    price_usd: 34.99,
+    price_usd: 99,
     validity_days: 365,
     is_featured: false,
     display_order: 30,
