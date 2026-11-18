@@ -1,6 +1,6 @@
 import { LogoLockup } from '../components/LogoMark';
 import React, { useState } from 'react';
-import { ArrowUpRight, Menu, X, Sun, Moon } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, Menu, X, Sun, Moon } from 'lucide-react';
 
 interface NavbarProps {
   onOpenUpload: () => void;
@@ -12,6 +12,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenExemplars, theme, onToggleTheme }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [subjectsOpen, setSubjectsOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 dark:bg-[#0b1120]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
@@ -30,18 +31,36 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, onSignIn, onOpenEx
             aria-label="Main Navigation"
             className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-200"
           >
-            <a
-              href="#subjects"
-              className="hover:text-slate-950 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
+            <div
+              className="relative shrink-0"
+              onMouseEnter={() => setSubjectsOpen(true)}
+              onMouseLeave={() => setSubjectsOpen(false)}
             >
-              Subjects
-            </a>
-            <a
-              href="/ib-sports-science-ia/"
-              className="text-amber-600 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 transition-colors whitespace-nowrap shrink-0"
-            >
-              SEHS IA Hub
-            </a>
+              <button
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={subjectsOpen}
+                onClick={() => setSubjectsOpen((v) => !v)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setSubjectsOpen(false); }}
+                className="inline-flex items-center gap-1 hover:text-slate-950 dark:hover:text-white transition-colors whitespace-nowrap"
+              >
+                Subjects <ChevronDown className="w-4 h-4" />
+              </button>
+              {subjectsOpen && (
+                <div className="absolute left-0 top-full pt-2 w-72">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#10182b] shadow-xl p-2">
+                    <a href="/ib-sports-science-ia/" className="block rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">
+                      <span className="block text-slate-900 dark:text-white">IB Sports Science (SEHS)</span>
+                      <span className="block text-xs text-amber-600 dark:text-amber-300">Live · first assessment 2026 · guides and free downloads</span>
+                    </a>
+                    <a href="#subjects" onClick={() => setSubjectsOpen(false)} className="block rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">
+                      <span className="block text-slate-900 dark:text-white">All subjects</span>
+                      <span className="block text-xs text-slate-500 dark:text-slate-400">Biology, Chemistry, Physics and more coming soon</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
             <a
               href="#interactive-demo"
               className="hidden lg:inline hover:text-slate-950 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
