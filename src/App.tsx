@@ -4256,13 +4256,17 @@ function usePublicCommercialSettings(
         return;
       }
 
-      if (!packsResult.error && Array.isArray(packsResult.data)) {
+      if (packsResult.error) {
+        console.error('Credit packs could not be loaded, showing fallback prices', packsResult.error);
+      } else if (Array.isArray(packsResult.data)) {
         const normalizedPacks = packsResult.data
           .map(normalizeCreditPack)
           .filter((pack): pack is CreditPack => pack !== null);
 
         if (normalizedPacks.length > 0) {
           setPacks(normalizedPacks);
+        } else if (packsResult.data.length > 0) {
+          console.error('Credit packs were returned in an unexpected shape, showing fallback prices', packsResult.data[0]);
         }
       }
 
@@ -4335,6 +4339,15 @@ const DEFAULT_REVIEW_LIMITS: ReviewLimits = {
   paid_credit_validity_days: 365,
 };
 
+function asPackNumber(value: unknown): number | null {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
 function normalizeCreditPack(value: unknown): CreditPack | null {
   if (!isRecord(value)) {
     return null;
@@ -4343,10 +4356,11 @@ function normalizeCreditPack(value: unknown): CreditPack | null {
   const packCode = asText(value.pack_code);
   const displayName = asText(value.display_name);
   const description = asText(value.description);
-  const reviewCredits = asNumber(value.review_credits);
-  const priceUsd = asNumber(value.price_usd);
-  const validityDays = asNumber(value.validity_days);
-  const displayOrder = asNumber(value.display_order);
+  // The database can hand numbers back as strings (numeric columns), so accept both.
+  const reviewCredits = asPackNumber(value.review_credits);
+  const priceUsd = asPackNumber(value.price_usd);
+  const validityDays = asPackNumber(value.validity_days);
+  const displayOrder = asPackNumber(value.display_order);
 
   if (
     !packCode ||
