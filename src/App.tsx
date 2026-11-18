@@ -150,6 +150,7 @@ import './scholar.css';
 import './premium.css';
 import './theme-amber.css';
 import './admin-redesign.css';
+import './guest-theme.css';
 import { TeacherCopyPanel } from './components/TeacherCopyPanel';
 
 type AppStatus =
@@ -2238,7 +2239,7 @@ function App() {
                   onClick={() => openAccountPanel()}
                 >
                   <LogIn aria-hidden="true" />
-                  Sign in / Create account
+                  Sign in<span className="hdr-create"> / Create account</span>
                 </button>
               </div>
             </div>
