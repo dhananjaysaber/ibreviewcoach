@@ -265,7 +265,7 @@ export const FREQUENT_QUESTIONS = [
   },
   {
     q: 'How fast do I receive my annotated report and fix plan?',
-    a: 'The free review is an automated review prepared by our model and is ready within 30 minutes. Paid reviews are marked and approved by an authorised IB moderator and are ready within 24 hours. Your report then appears in My IA Reports and you are emailed when it is ready.'
+    a: 'The free review is an automated review prepared by our model and is ready within 30 minutes. Paid reviews are marked and approved by an IB moderator with 20+ years of teaching experience and are ready within 24 hours. Your report then appears in My IA Reports and you are emailed when it is ready.'
   },
   {
     q: 'What file formats can I upload?',
@@ -273,7 +273,7 @@ export const FREQUENT_QUESTIONS = [
   },
   {
     q: 'Is my uploaded draft kept private?',
-    a: 'Yes. Your file sits in a private account and is never submitted to Turnitin or any similarity database. The original upload is kept for 6 months and then deleted, and you can delete the original yourself at any time. Your annotated review stays in your account.'
+    a: 'Yes. Your file sits in a private account and is never submitted to Turnitin or any similarity database. The original upload is permanently deleted about an hour after you upload it. It is never placed on a public domain, never stored as an example and never used to train models. If you choose to save a report to your account, you can keep the original for up to 6 months so you can download it again, and you can delete it at any time. Your annotated review stays in your account.'
   },
   {
     q: 'Can my IB teacher see or use this feedback?',

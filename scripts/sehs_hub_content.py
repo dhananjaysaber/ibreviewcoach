@@ -58,6 +58,7 @@ HUB_FAQ = [
     ("Do I need consent forms for my SEHS IA?", "If your investigation involves people, your supervising teacher must approve it and you need written permission from each participant. Participants under 16 need consent from a parent or guardian. You must not give participants any substance or use body fluids."),
     ("How many participants do I need?", "The IB does not set one fixed number. Ask your teacher what your school expects. More participants give a more reliable mean, and very small groups make a statistical test unreliable. A pilot test shows how much your measurements vary."),
     ("Can I work in a group?", "Collaboration is optional, in groups of up to three. Each student has their own research question, their own data and their own report."),
+    ("Is my IA draft kept private?", "Yes. Your file is stored in a private bucket, never on a public domain, and the original is deleted about an hour after upload. We never use uploaded work as an example. If you choose to save a report to your account, the original can be kept for up to 6 months so you can download it again, and you can delete it at any time."),
     ("Can IB IA Review check my SEHS IA draft?", "Yes. You upload your draft and get criteria-based feedback against the four SEHS criteria, an annotated copy and a step-by-step fix plan. Your first review is free. We coach, you write."),
 ]
 
@@ -111,7 +112,7 @@ def hub_html():
 <nav class="toc" aria-label="On this page"><a href="#criteria">Criteria</a><a href="#word-count">Word count</a><a href="#topics">Topic ideas</a><a href="#examples">Examples</a><a href="#data">Data analysis</a><a href="#statistics">Statistics</a><a href="#ethics">Ethics</a><a href="#timeline">Timeline</a><a href="#mistakes">Mistakes</a><a href="#boundaries">Grade boundaries</a><a href="#downloads">Free downloads</a><a href="#faq">FAQ</a></nav></section>
 
 <section id="criteria"><span class="sec-k">1 · Criteria and marks</span><h2>The four SEHS IA criteria</h2>
-<p class="lede">The IB Sports Science (SEHS) IA, first assessment May 2026, is marked out of 24 by your teacher, then externally moderated by the IB. Each criterion has levels 0, 1&ndash;2, 3&ndash;4 and 5&ndash;6, marked on a best-fit basis. Conclusion and Evaluation together carry half of the marks.</p>
+<p class="lede">The IB Sports Science (SEHS) IA, first assessment May 2026, is marked out of 24 by your teacher, then externally moderated by the IB. Each criterion has levels 0, 1&ndash;2 (low band), 3&ndash;4 (mid band) and 5&ndash;6 (high band), marked on a best-fit basis. Conclusion and Evaluation together carry half of the marks.</p>
 <div class="cards">{cc}</div><a class="more" href="/sehs-ia-criteria/">Read the full criteria and marks guide &rarr;</a></section>
 
 <section id="word-count"><span class="sec-k">2 · Word count</span><h2>SEHS IA word count: 3,200 words</h2>
