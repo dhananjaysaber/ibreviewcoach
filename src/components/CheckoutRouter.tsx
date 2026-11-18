@@ -25,7 +25,7 @@ export function CheckoutRouter(props: Props) {
           <div><small>Choose how to pay</small><h2 id="pay-method-title">{pack.display_name}</h2></div>
         </div>
         <div className="pay-choose-options">
-        <button className="pay-opt pay-opt-primary" type="button" onClick={() => setMethod('razorpay')}><strong>Pay in rupees</strong><span>UPI, cards, netbanking · Razorpay</span></button>
+        <button className="pay-opt pay-opt-primary" type="button" onClick={() => setMethod('razorpay')}><strong>Pay in rupees</strong><span>Various payment methods available</span></button>
         <button className="pay-opt" type="button" onClick={() => setMethod('paypal')}><strong>Pay in US dollars</strong><span>PayPal · ${pack.price_usd.toFixed(2)}</span></button>
         </div>
         <p className="pay-choose-note">Secure checkout. Your card details never touch our servers.</p>

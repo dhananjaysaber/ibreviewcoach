@@ -50,7 +50,7 @@ type Props = { pack: PayPalCreditPack; onClose: () => void; onStartReview: () =>
 
 export function RazorpayCheckoutModal({ pack, onClose, onStartReview, successActionLabel = 'Start an IA review', onBack }: Props) {
   const [state, setState] = useState<State>('ready');
-  const [message, setMessage] = useState('You will pay securely with UPI, cards or netbanking through Razorpay. The rupee total is shown on the next screen.');
+  const [message, setMessage] = useState('Various payment methods available. The rupee total is shown on the next screen.');
   const [credits, setCredits] = useState<number | null>(null);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -74,9 +74,11 @@ export function RazorpayCheckoutModal({ pack, onClose, onStartReview, successAct
       setCredits(data.credits?.total_paid_or_complimentary_credits ?? null);
       setState('success');
       setMessage(data.message ?? 'Payment completed. Your review credits are ready.');
+      window.dispatchEvent(new CustomEvent('ia-credit-balance-changed'));
     } else if (data?.paymentPending || data?.paymentCompleted) {
       setState('pending');
       setMessage(data.message ?? 'Your payment is being processed. Do not pay again.');
+      window.dispatchEvent(new CustomEvent('ia-credit-balance-changed'));
     } else {
       setState('error');
       setMessage(data?.message ?? 'The payment could not be verified. No review credits were added.');
@@ -159,7 +161,7 @@ export function RazorpayCheckoutModal({ pack, onClose, onStartReview, successAct
 
         {(state === 'ready' || state === 'cancelled' || state === 'error') && (
           <button className="paypal-primary-action paypal-wide-action" type="button" onClick={() => void pay()}>
-            {state === 'ready' ? 'Continue to Razorpay' : 'Try again'}
+            {state === 'ready' ? <><CreditCard aria-hidden="true" /> Pay securely with Razorpay</> : 'Try again'}
           </button>
         )}
         {state === 'ready' && onBack && <button className="paypal-secondary-action paypal-wide-action" type="button" onClick={onBack}>Choose another payment method</button>}

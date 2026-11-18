@@ -454,3 +454,4 @@ h3, h4, h5 { font-family: var(--p-sans) !important; font-weight: 650; letter-spa
 .premium-access-free-hero .premium-access-free-icon { background: rgba(255,255,255,.55) !important; color: #1a1205 !important; }
 .premium-access-free-hero > button { background: #0b1120 !important; color: #fbbf24 !important; border: 0 !important; font-weight: 700; }
 .landing-price-free { border: 2px solid #f59e0b; box-shadow: 0 12px 32px rgba(245, 158, 11, .25); }
+.paypal-primary-action svg { width: 18px; height: 18px; margin-right: 8px; vertical-align: -3px; }

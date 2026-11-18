@@ -320,6 +320,7 @@ export function PayPalCheckoutModal({
 
             setAvailableCredits(totalCredits);
             setCheckoutState('success');
+            window.dispatchEvent(new CustomEvent('ia-credit-balance-changed'));
             setMessage(
               captureData.message ||
                 'Payment completed. Your review credits are ready.'

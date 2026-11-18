@@ -1410,6 +1410,8 @@ function App() {
 
   function closePayPalCheckout() {
     setSelectedCreditPack(null);
+    // A payment may have completed while the window was open; refresh balances everywhere.
+    window.dispatchEvent(new CustomEvent('ia-credit-balance-changed'));
   }
 
   async function startReviewAfterPayment() {
