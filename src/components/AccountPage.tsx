@@ -8,7 +8,6 @@ import {
   FileText,
   LayoutDashboard,
   LoaderCircle,
-  ReceiptText,
   ShieldCheck,
   Sparkles,
   UploadCloud,
@@ -36,14 +35,12 @@ type AccountPageProps = {
   onStartReview: () => void;
   onOpenCredits: () => void;
   paymentsEnabled?: boolean;
-  focusBilling?: boolean;
 };
 
 type DashboardTab =
   | 'overview'
   | 'reviews'
-  | 'access'
-  | 'billing';
+  | 'access';
 
 type RecentReportRow = {
   submission_id: string;
@@ -106,12 +103,6 @@ const DASHBOARD_TABS: TabDefinition[] = [
     shortLabel: 'Access',
     icon: <CreditCard aria-hidden="true" />,
   },
-  {
-    key: 'billing',
-    label: 'Billing & Receipts',
-    shortLabel: 'Billing',
-    icon: <ReceiptText aria-hidden="true" />,
-  },
 ];
 
 export function AccountPage({
@@ -122,11 +113,10 @@ export function AccountPage({
   onStartReview,
   onOpenCredits,
   paymentsEnabled = true,
-  focusBilling = false,
 }: AccountPageProps) {
   const [activeTab, setActiveTab] =
     useState<DashboardTab>(
-      focusBilling ? 'billing' : 'overview'
+      'overview'
     );
 
   const [reports, setReports] =
@@ -145,12 +135,6 @@ export function AccountPage({
     useState(true);
 
   useEffect(() => {
-    if (focusBilling) {
-      setActiveTab('billing');
-    }
-  }, [focusBilling]);
-
-  useEffect(() => {
     if (!paymentsEnabled && activeTab === 'access') {
       setActiveTab('overview');
     }
@@ -158,7 +142,7 @@ export function AccountPage({
 
   useEffect(() => {
     setActiveTab(
-      focusBilling ? 'billing' : 'overview'
+      'overview'
     );
   }, [session?.user.id]);
 
@@ -456,9 +440,6 @@ export function AccountPage({
               ? setActiveTab('access')
               : onStartReview()
           }
-          onOpenBilling={() =>
-            setActiveTab('billing')
-          }
           onOpenReviews={() =>
             setActiveTab('reviews')
           }
@@ -516,32 +497,6 @@ export function AccountPage({
           </div>
         </section>
       )}
-
-      {activeTab === 'billing' && (
-        <section className="student-dashboard-tab-page">
-          <TabPageHeader
-            eyebrow="Billing & receipts"
-            title="Purchases and invoices"
-            description="Your PayPal payment records, invoices and printable receipts are kept together in one place."
-          />
-
-          <div className="student-dashboard-commerce student-dashboard-commerce-billing">
-            <AccountCommercePanel
-              session={session}
-              onStartReview={
-                onStartReview
-              }
-              onOpenPricing={
-                onOpenCredits
-              }
-              onOpenReports={
-                onOpenReports
-              }
-              expandPurchases
-            />
-          </div>
-        </section>
-      )}
     </div>
   );
 }
@@ -555,7 +510,6 @@ function OverviewTab({
   nextAction,
   onStartReview,
   onOpenCredits,
-  onOpenBilling,
   onOpenReviews,
   onOpenReport,
 }: {
@@ -567,7 +521,6 @@ function OverviewTab({
   nextAction: NextActionPresentation;
   onStartReview: () => void;
   onOpenCredits: () => void;
-  onOpenBilling: () => void;
   onOpenReviews: () => void;
   onOpenReport: (
     submissionId: string
@@ -687,32 +640,6 @@ function OverviewTab({
           actionLabel="Open reviews"
           onClick={
             onOpenReviews
-          }
-        />
-
-        <MetricCard
-          icon={
-            <ReceiptText
-              aria-hidden="true"
-            />
-          }
-          label="Payments"
-          value={
-            commerceLoading
-              ? '—'
-              : String(
-                  commerce.paymentCount
-                )
-          }
-          helper={
-            commerce.paidPaymentCount >
-            0
-              ? `${commerce.paidPaymentCount} completed`
-              : 'Invoices and receipts'
-          }
-          actionLabel="Open billing"
-          onClick={
-            onOpenBilling
           }
         />
       </section>

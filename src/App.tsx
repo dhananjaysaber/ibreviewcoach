@@ -335,7 +335,7 @@ function App() {
   >('start');
 
   const [accountSection, setAccountSection] = useState<'dashboard' | 'billing'>(
-    () => (window.location.hash === '#billing' ? 'billing' : 'dashboard')
+    () => 'dashboard'
   );
 
   const [reviewReadyUnread, setReviewReadyUnread] = useState(false);
@@ -1910,7 +1910,6 @@ function App() {
           onStartReview={() => void openReviewWorkspace()}
           onOpenCredits={() => void openBuyCredits()}
           paymentsEnabled={paymentsEnabled}
-          focusBilling={accountSection === 'billing'}
         />
       )
     ) : mainView === 'landing' ? (

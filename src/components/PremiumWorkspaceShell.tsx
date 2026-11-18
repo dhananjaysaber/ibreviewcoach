@@ -11,7 +11,6 @@ import {
   LoaderCircle,
   LogOut,
   Menu,
-  ReceiptText,
   ShieldCheck,
   UploadCloud,
   UserRound,
@@ -154,13 +153,6 @@ export function PremiumWorkspaceShell({
                   },
                 ]
               : []),
-            {
-              key: 'billing',
-              label: 'Billing',
-              description: 'Purchases and invoices',
-              icon: <ReceiptText aria-hidden="true" />,
-              action: onOpenBilling,
-            },
           ],
     [
       isAdmin,
