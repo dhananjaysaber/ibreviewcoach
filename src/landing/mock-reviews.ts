@@ -265,7 +265,7 @@ export const FREQUENT_QUESTIONS = [
   },
   {
     q: 'How fast do I receive my annotated report and fix plan?',
-    a: 'The free review is an automated review prepared by our model and is ready within 30 minutes. Paid reviews are marked and approved by a certified IB moderator with 20+ years of IB experience and are ready within 24 hours. Your report then appears in My IA Reports and you are emailed when it is ready.'
+    a: 'The free review is an automated review prepared by our model and is ready within 30 minutes. Paid reviews are marked and approved by an IB moderator with 20+ years of teaching experience and are ready within 24 hours. Your report then appears in My IA Reports and you are emailed when it is ready.'
   },
   {
     q: 'What file formats can I upload?',

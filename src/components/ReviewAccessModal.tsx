@@ -144,7 +144,7 @@ export function ReviewAccessModal({
                     An automated review prepared by our model, not reviewed by a
                     moderator. Ready within 30 minutes, with Research Design
                     feedback only and no marks. Paid reviews are marked and
-                    approved by a certified IB moderator with 20+ years of IB experience and are ready within
+                    approved by an IB moderator with 20+ years of teaching experience and are ready within
                     24 hours.
                   </p>
                 </div>
