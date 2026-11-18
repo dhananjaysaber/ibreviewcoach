@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+      name="description"
+      content="Improve your IB SEHS Internal Assessment with evidence-linked feedback, an interactive annotated IA and a clear revision plan."
+    />
+    <meta name="theme-color" content="#10264a" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="IB IA Review" />
+    <meta
+      property="og:title"
+      content="IB SEHS IA Review & Feedback | IB IA Review"
+    />
+    <meta
+      property="og:description"
+      content="Evidence-linked IB SEHS IA feedback, interactive annotations and a clear revision plan."
+    />
+    <meta property="og:url" content="https://iareview.netlify.app/" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="IB SEHS IA Review & Feedback | IB IA Review"
+    />
+    <meta
+      name="twitter:description"
+      content="Evidence-linked IB SEHS IA feedback, interactive annotations and a clear revision plan."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>IB SEHS IA Review & Feedback | IB IA Review</title>
+
+    <script>
+      (function () {
+        var cleanPath =
+          window.location.pathname.replace(/\/+$/, "") || "/";
+
+        var pages = {
+          "/": {
+            title: "IB SEHS IA Review & Feedback | IB IA Review",
+            description:
+              "Improve your IB SEHS Internal Assessment with evidence-linked feedback, an interactive annotated IA and a clear revision plan.",
+            canonical: "https://iareview.netlify.app/"
+          },
+          "/pricing": {
+            title: "IB SEHS IA Review Pricing | IB IA Review",
+            description:
+              "Compare IB SEHS IA review credits for a free limited preview, a single full review or multiple draft-improvement reviews.",
+            canonical: "https://iareview.netlify.app/pricing"
+          }
+        };
+
+        var page = pages[cleanPath];
+
+        function upsertMeta(selector, attribute, value) {
+          var element = document.querySelector(selector);
+
+          if (!element) {
+            element = document.createElement("meta");
+
+            if (selector.indexOf("property=") !== -1) {
+              element.setAttribute(
+                "property",
+                selector.match(/property="([^"]+)"/)[1]
+              );
+            } else {
+              element.setAttribute(
+                "name",
+                selector.match(/name="([^"]+)"/)[1]
+              );
+            }
+
+            document.head.appendChild(element);
+          }
+
+          element.setAttribute(attribute, value);
+        }
+
+        function setCanonical(url) {
+          var canonical = document.querySelector('link[rel="canonical"]');
+
+          if (!canonical) {
+            canonical = document.createElement("link");
+            canonical.setAttribute("rel", "canonical");
+            document.head.appendChild(canonical);
+          }
+
+          canonical.setAttribute("href", url);
+        }
+
+        if (page) {
+          document.title = page.title;
+
+          upsertMeta(
+            'meta[name="description"]',
+            "content",
+            page.description
+          );
+
+          upsertMeta(
+            'meta[name="robots"]',
+            "content",
+            "index,follow,max-image-preview:large"
+          );
+
+          upsertMeta(
+            'meta[property="og:title"]',
+            "content",
+            page.title
+          );
+
+          upsertMeta(
+            'meta[property="og:description"]',
+            "content",
+            page.description
+          );
+
+          upsertMeta(
+            'meta[property="og:url"]',
+            "content",
+            page.canonical
+          );
+
+          upsertMeta(
+            'meta[name="twitter:title"]',
+            "content",
+            page.title
+          );
+
+          upsertMeta(
+            'meta[name="twitter:description"]',
+            "content",
+            page.description
+          );
+
+          setCanonical(page.canonical);
+        } else {
+          document.title = "IB IA Review";
+
+          upsertMeta(
+            'meta[name="robots"]',
+            "content",
+            "noindex,nofollow,noarchive,nosnippet"
+          );
+        }
+
+        if (page) {
+          var structuredData = document.createElement("script");
+          structuredData.type = "application/ld+json";
+          structuredData.text = JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: "IB IA Review",
+            url: "https://iareview.netlify.app/",
+            applicationCategory: "EducationalApplication",
+            operatingSystem: "Web",
+            description:
+              "Evidence-linked feedback and annotated review support for IB SEHS Internal Assessment drafts."
+          });
+          document.head.appendChild(structuredData);
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

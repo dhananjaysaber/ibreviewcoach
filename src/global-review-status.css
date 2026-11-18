@@ -1,0 +1,171 @@
+/* ==========================================================================
+   Global active-review status
+   Create at: src/global-review-status.css
+   ========================================================================== */
+
+   .global-review-status {
+    position: sticky;
+    top: 72px;
+    z-index: 850;
+    border-bottom: 1px solid #d7e1ee;
+    background: rgba(247, 250, 255, 0.97);
+    box-shadow: 0 10px 28px rgba(18, 43, 78, 0.1);
+    backdrop-filter: blur(12px);
+  }
+  
+  .global-review-status-inner {
+    width: min(1180px, calc(100% - 32px));
+    min-height: 72px;
+    margin: 0 auto;
+    padding: 10px 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .global-review-status-icon {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    color: #ffffff;
+    background: linear-gradient(145deg, #173f73, #315da8);
+  }
+  
+  .global-review-status-complete .global-review-status-icon {
+    background: linear-gradient(145deg, #17684e, #2c8b6b);
+  }
+  
+  .global-review-status-error .global-review-status-icon {
+    background: linear-gradient(145deg, #8b382f, #b34e42);
+  }
+  
+  .global-review-status-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .global-review-status-spinner {
+    animation: global-review-spin 850ms linear infinite;
+  }
+  
+  @keyframes global-review-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .global-review-status-copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+  
+  .global-review-status-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+  }
+  
+  .global-review-status-title-row > strong {
+    color: #142a50;
+    font-size: 0.85rem;
+  }
+  
+  .global-review-status-title-row > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #315da8;
+    font-size: 0.68rem;
+    font-weight: 850;
+  }
+  
+  .global-review-status-title-row > span svg {
+    width: 13px;
+    height: 13px;
+  }
+  
+  .global-review-status-copy p,
+  .global-review-status-copy small {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .global-review-status-copy p {
+    color: #5e6e85;
+    font-size: 0.72rem;
+  }
+  
+  .global-review-status-copy small {
+    color: #8894a5;
+    font-size: 0.62rem;
+  }
+  
+  .global-review-status-inner > button {
+    min-height: 38px;
+    padding: 8px 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid #315da8;
+    border-radius: 11px;
+    color: #ffffff;
+    background: #315da8;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 850;
+  }
+  
+  .global-review-status-inner > button:hover {
+    border-color: #173f73;
+    background: #173f73;
+  }
+  
+  .global-review-status-inner > button svg {
+    width: 15px;
+    height: 15px;
+  }
+  
+  .global-review-status-track {
+    height: 3px;
+    overflow: hidden;
+    background: #dfe7f2;
+  }
+  
+  .global-review-status-track span {
+    height: 100%;
+    display: block;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #315da8, #5d84c7);
+    transition: width 300ms ease;
+  }
+  
+  @media (max-width: 720px) {
+    .global-review-status {
+      top: 64px;
+    }
+  
+    .global-review-status-inner {
+      width: min(100% - 20px, 1180px);
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+  
+    .global-review-status-inner > button {
+      grid-column: 1 / -1;
+      width: 100%;
+    }
+  
+    .global-review-status-copy p,
+    .global-review-status-copy small {
+      white-space: normal;
+    }
+  }
+  
