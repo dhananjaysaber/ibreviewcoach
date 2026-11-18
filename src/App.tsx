@@ -4330,7 +4330,7 @@ const DEFAULT_CREDIT_PACKS: CreditPack[] = [
     pack_code: 'single-review',
     display_name: 'Single IA Review',
     description:
-      'One complete SEHS IA review, marked and approved by an authorised IB moderator, with saved report and downloads.',
+      'One complete SEHS IA review, marked and approved by a certified IB moderator with 20+ years of IB experience, with saved report and downloads.',
     review_credits: 1,
     price_usd: 25,
     validity_days: 365,

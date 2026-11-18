@@ -173,12 +173,12 @@ PAGES = [
 
  dict(slug="sehs-ia-checker", nav="IA checker and review",
   title="SEHS IA Review and Checker: Get Feedback on Your IB Sports Science IA",
-  desc="Upload your IB SEHS IA draft and get criteria-based feedback, an annotated copy and a step-by-step fix plan. Free preview available. Reports are approved by an authorised IB moderator.",
+  desc="Upload your IB SEHS IA draft and get criteria-based feedback, an annotated copy and a step-by-step fix plan. Free preview available. Reports are approved by a certified IB moderator with 20+ years of IB experience.",
   h1="SEHS IA review and checker for IB Sports Science students",
   kw="SEHS IA review, SEHS IA checker, SEHS IA feedback, sports science IA review, IB SEHS IA marking service, check my SEHS IA, IB IA feedback online, annotated IA, SEHS IA fix plan, IB IA moderator review",
   lead="IB IA Review reads your SEHS IA draft against the four criteria and shows you what to fix before you hand it in. We coach your writing. We never write it for you.",
   body=[
-   ("What you get", UL("Feedback against Research design, Data analysis, Conclusion and Evaluation.","An annotated copy of your IA, with comments placed where they apply.","A step-by-step fix plan: what to change, why it matters and how to check it is done.","A progress view that tracks the fixes you have completed.","Paid reviews are marked and approved by an authorised IB moderator before they are released to you.")),
+   ("What you get", UL("Feedback against Research design, Data analysis, Conclusion and Evaluation.","An annotated copy of your IA, with comments placed where they apply.","A step-by-step fix plan: what to change, why it matters and how to check it is done.","A progress view that tracks the fixes you have completed.","Paid reviews are marked and approved by a certified IB moderator with 20+ years of IB experience before they are released to you.")),
    ("Try it free", P("Your first review is free. It shows the Research design feedback so you can see how the review works before you decide on a full review.")),
    ("How it works", OL("Upload your draft as a document.","We read it against the criteria.","You get your feedback, annotated copy and fix plan.","Fix the gaps and upload your next draft to see your progress.")),
    ("Who it is for", UL("IB Sports, Exercise and Health Science students working on the scientific investigation.","Teachers and tutors who want a second view of a draft.")),
@@ -202,7 +202,7 @@ PAGES = [
    ("Can I get my SEHS IA checked before I submit it?","Yes. You can ask your teacher for feedback within your school's rules, and you can upload your draft to IB IA Review for criteria-based feedback, an annotated copy and a fix plan."),
    ("Does IB IA Review write my IA?","No. It coaches your writing by showing what to fix and why. You write your own work."),
    ("Is IB IA Review free?","Your first review is free and shows the Research design feedback. A full review covers all four criteria."),
-   ("Who approves the reports?","Paid reviews are marked and approved by an authorised IB moderator before release."),
+   ("Who approves the reports?","Paid reviews are marked and approved by a certified IB moderator with 20+ years of IB experience before release."),
    ("Is IB IA Review official?","No. It is an independent coaching service and is not affiliated with the IB. Your teacher gives your official marks."),
    ("What makes a good SEHS research question?","It names one independent variable, one measurable dependent variable and a clear group, and it can be tested safely at school."),
    ("Is Personal engagement still marked in the SEHS IA?","No. In the course first assessed in 2026, Personal engagement and Communication are no longer a separate criterion. The four criteria are Research design, Data analysis, Conclusion and Evaluation."),

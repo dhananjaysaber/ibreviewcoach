@@ -11,7 +11,7 @@ export type ModerationAvailability = {
   turnaround_hours: number;
 };
 
-export const MODERATED_LABEL = 'Marked and approved by an authorised IB moderator';
+export const MODERATED_LABEL = 'Marked and approved by a certified IB moderator with 20+ years of IB experience';
 
 export function formatReadyBy(value: string | null | undefined): string {
   if (!value) return 'within 24 hours';
@@ -92,7 +92,7 @@ export function WaitingForModerator({
             <span className="processing-eyebrow">With your moderator</span>
             <h1>Your report is being marked and approved</h1>
             <p>
-              An authorised IB moderator is reviewing and marking your report before it is released to you.
+              A certified IB moderator with 20+ years of IB experience is reviewing and marking your report before it is released to you.
               It will be ready by <strong>{formatReadyBy(dueAt)}</strong>. You do not need to keep this page open.
             </p>
           </div>

@@ -21,7 +21,7 @@ interface PricingSectionProps {
 }
 
 const FEATURES = [
-  'Marked and approved by an authorised IB moderator before release',
+  'Marked and approved by a certified IB moderator with 20+ years of IB experience before release',
   'Ready within 24 hours',
   'All four criteria reviewed, marked out of 24',
   'Detailed findings for every criterion',
@@ -43,7 +43,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ packs, loading =
             Simple review-credit pricing
           </h2>
           <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-            Your first review is free: an automated review prepared by our model, covering Research Design only. Paid reviews are marked and approved by an authorised IB moderator and are ready within 24 hours. Purchased credits stay valid for 365 days, so you can revise at your own pace.
+            Your first review is free: an automated review prepared by our model, covering Research Design only. Paid reviews are marked and approved by a certified IB moderator with 20+ years of IB experience and are ready within 24 hours. Purchased credits stay valid for 365 days, so you can revise at your own pace.
           </p>
         </div>
 
