@@ -67,6 +67,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpload }) => {
             </h4>
             <ul className="space-y-2">
               <li>
+                <a href="/ib-sports-science-ia/" className="hover:text-slate-950 dark:hover:text-white transition-colors">
+                  IB Sports Science (SEHS) IA hub
+                </a>
+              </li>
+              <li>
                 <a href="/sehs-ia-guides/" className="hover:text-slate-950 dark:hover:text-white transition-colors">
                   All SEHS IA guides
                 </a>
