@@ -133,7 +133,7 @@
   top: 82px;
   z-index: 30;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
   padding: 5px;
   border: 1px solid var(--pw-border, rgba(16, 24, 40, 0.11));
@@ -313,7 +313,7 @@
 
 .student-dashboard-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
