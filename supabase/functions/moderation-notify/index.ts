@@ -69,7 +69,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
           title: "Your IA report is ready",
           bodyHtml:
             `<p style="margin:0 0 14px;">Hello,</p>` +
-            `<p style="margin:0 0 14px;">Your report for <strong style="color:#0F172A;">${file}</strong> has been marked and approved by an authorised IB moderator, and it is now ready for you.</p>` +
+            `<p style="margin:0 0 14px;">Your report for <strong style="color:#0F172A;">${file}</strong> has been marked and approved by an IB moderator with 20+ years of teaching experience, and it is now ready for you.</p>` +
             `<p style="margin:0;">Open it to see your marks, the reasoning behind them and what to improve next.</p>`,
           ctaLabel: "Open My IA Reports",
           ctaUrl: `${site}/my-reports`,

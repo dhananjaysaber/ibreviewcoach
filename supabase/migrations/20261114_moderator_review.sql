@@ -636,7 +636,7 @@ grant execute on function public.admin_publish_ia_review(uuid) to authenticated,
 
 -- 8. Starting prices (editable later from Admin > pack editor) --------------------------------------
 update public.ia_credit_packs set price_usd = 25, validity_days = 365,
-  description = 'One complete SEHS IA review, marked and approved by an authorised IB moderator, with saved report and downloads.'
+  description = 'One complete SEHS IA review, marked and approved by an IB moderator with 20+ years of teaching experience, with saved report and downloads.'
   where pack_code = 'single-review';
 update public.ia_credit_packs set price_usd = 65, validity_days = 365,
   description = 'Three moderator-marked reviews for an initial, improved and final draft.'
